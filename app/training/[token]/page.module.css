@@ -1,0 +1,336 @@
+.enrollPage {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.enrollCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeInUp 0.5s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.enrollEmoji {
+  font-size: 3.5rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.enrollCard h2 {
+  font-size: 1.5rem;
+}
+
+.trainingTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-light);
+  padding: 8px 16px;
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.enrollMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.enrollMeta span {
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.googleBtn:hover { background: rgba(79, 70, 229, 0.04); }
+
+/* ─── Completed ─────────────────────────────────────────────────────────── */
+.completedPage {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.completedCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 48px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  animation: fadeInUp 0.5s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.completedBadge {
+  font-size: 4rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.scoreGrid {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 20px;
+  background: var(--bg-input);
+  border-radius: var(--radius-lg);
+}
+
+.scoreItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoreLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.scoreValue {
+  font-family: 'Sora', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.completedActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ─── Quiz Page ──────────────────────────────────────────────────────────── */
+.quizPage {
+  min-height: calc(100vh - 70px);
+  padding: 40px 24px;
+}
+
+/* ─── Training Layout ────────────────────────────────────────────────────── */
+.trainingLayout {
+  display: flex;
+  min-height: calc(100vh - 70px);
+}
+
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 70px);
+}
+
+.sidebarHeader {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebarTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.progressPct {
+  color: var(--primary-light);
+  font-weight: 700;
+}
+
+.progressSub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.moduleList {
+  flex: 1;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+
+.moduleListHeader {
+  padding: 8px 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.moduleItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--text-secondary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+}
+
+.moduleItem:hover {
+  background: rgba(79, 70, 229, 0.05);
+  color: var(--text-primary);
+}
+
+.moduleItem.current {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary-light);
+  border-right: 3px solid var(--primary);
+}
+
+.moduleItem.done {
+  color: var(--text-muted);
+}
+
+.moduleNum {
+  font-size: 0.8rem;
+  min-width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.moduleName {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.lockIcon {
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.quizItem {
+  cursor: default;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 18px;
+}
+
+.sidebarScores {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebarScore {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ─── Main Content ───────────────────────────────────────────────────────── */
+.mainContent {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.tabNav {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  background: var(--bg-secondary);
+}
+
+.tabBtn {
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tabBtn:hover { color: var(--text-secondary); }
+.tabBtn.activeTab {
+  color: var(--primary-light);
+  border-bottom-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .trainingLayout { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+  .enrollCard, .completedCard { padding: 28px 20px; }
+}

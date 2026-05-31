@@ -1,0 +1,262 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { createTraining, updateTraining, deleteTraining } from '@/lib/db';
+import { Timestamp } from 'firebase/firestore';
+import Link from 'next/link';
+import styles from './page.module.css';
+
+const DEFAULT_COVER = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
+
+export default function NewTrainingPage() {
+  const { user, isAdmin, loading } = useAuth();
+  const router = useRouter();
+
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed',
+    coverColor: DEFAULT_COVER,
+    startDate: '',
+    endDate: '',
+    showLeaderboard: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const calculateStatus = (startStr: string, endStr: string): 'upcoming' | 'ongoing' | 'completed' => {
+    if (!startStr) return 'ongoing';
+    const now = new Date();
+    const start = new Date(startStr);
+    const end = endStr ? new Date(endStr) : null;
+
+    if (now < start) return 'upcoming';
+    if (end && now > end) return 'completed';
+    return 'ongoing';
+  };
+
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) router.push('/login');
+  }, [user, isAdmin, loading]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) { setError('Nama pelatihan wajib diisi.'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const computedStatus = calculateStatus(form.startDate, form.endDate);
+      const { id, token } = await createTraining({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        status: computedStatus,
+        coverColor: form.coverColor,
+        startDate: form.startDate ? Timestamp.fromDate(new Date(form.startDate)) : null,
+        endDate: form.endDate ? Timestamp.fromDate(new Date(form.endDate)) : null,
+        showLeaderboard: form.showLeaderboard,
+      });
+      router.push(`/admin/trainings/${id}`);
+    } catch (err: any) {
+      console.error("Gagal menyimpan pelatihan:", err);
+      setError(`Gagal menyimpan pelatihan: ${err.message || err.code || err}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="loading-screen"><div className="spinner" /></div>;
+  }
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.breadcrumb}>
+          <Link href="/admin">Admin</Link>
+          <span>›</span>
+          <span>Pelatihan Baru</span>
+        </div>
+
+        <h1 className={styles.title}>Buat Pelatihan Baru</h1>
+        <p className={styles.subtitle}>
+          Token akan digenerate otomatis setelah pelatihan disimpan.
+        </p>
+
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Nama Pelatihan *</label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Contoh: Pelatihan Kepemimpinan Tingkat Dasar"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Deskripsi</label>
+            <textarea
+              className="form-textarea"
+              placeholder="Deskripsikan pelatihan ini..."
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={4}
+            />
+          </div>
+
+          <div className={styles.row}>
+            <div className="form-group">
+              <label className="form-label">Status (Otomatis)</label>
+              <div style={{
+                padding: '10px 14px',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                height: '42px',
+                fontSize: '0.9rem'
+              }}>
+                {form.status === 'ongoing' ? '🟢 Berlangsung' : form.status === 'upcoming' ? '🟡 Akan Datang' : '⚫ Selesai'}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Tanggal & Jam Mulai</label>
+              <input
+                className="form-input"
+                type="datetime-local"
+                value={form.startDate}
+                onChange={(e) => {
+                  const start = e.target.value;
+                  setForm({ ...form, startDate: start, status: calculateStatus(start, form.endDate) });
+                }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Tanggal & Jam Selesai</label>
+              <input
+                className="form-input"
+                type="datetime-local"
+                value={form.endDate}
+                onChange={(e) => {
+                  const end = e.target.value;
+                  setForm({ ...form, endDate: end, status: calculateStatus(form.startDate, end) });
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Gambar Cover (Maksimal 1 MB)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {form.coverColor && (form.coverColor.startsWith('data:') || form.coverColor.startsWith('http') || !form.coverColor.includes('gradient')) ? (
+                <div style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '160px',
+                  borderRadius: '8px',
+                  backgroundImage: `url(${form.coverColor})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  border: '1px solid var(--border)',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  padding: '12px'
+                }}>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    style={{ position: 'absolute', top: '10px', right: '10px', padding: '6px 10px', minWidth: 'auto', zIndex: 10 }}
+                    onClick={() => setForm({ ...form, coverColor: DEFAULT_COVER })}
+                  >
+                    🗑️ Hapus Gambar
+                  </button>
+                </div>
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100px',
+                  borderRadius: '8px',
+                  background: DEFAULT_COVER,
+                  border: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.85rem'
+                }}>
+                  Menggunakan cover warna default (Klik upload untuk mengubah)
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (!file.type.startsWith('image/')) {
+                    alert('Format file tidak didukung. Pilih file gambar (JPG, PNG, WEBP).');
+                    return;
+                  }
+                  if (file.size > 1048576) {
+                    alert(`Ukuran file terlalu besar (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maksimal ukuran file adalah 1 MB.`);
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    const base64 = event.target?.result as string;
+                    setForm({ ...form, coverColor: base64 });
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                className="form-input"
+                style={{ display: 'block', padding: '8px' }}
+              />
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Format JPG, PNG, WEBP. Maksimal ukuran file 1 MB.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.toggleRow}>
+            <div>
+              <p className={styles.toggleLabel}>Tampilkan Leaderboard ke Peserta</p>
+              <p className={styles.toggleHint}>Jika aktif, peserta dapat melihat peringkat</p>
+            </div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={form.showLeaderboard}
+                onChange={(e) => setForm({ ...form, showLeaderboard: e.target.checked })}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {error && (
+            <div style={{ padding: '12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 'var(--radius-md)', color: '#f87171', fontSize: '0.875rem' }}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          <div className={styles.formActions}>
+            <Link href="/admin" className="btn btn-secondary">Batal</Link>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> Menyimpan...</> : '✅ Simpan & Lanjut ke Pengaturan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

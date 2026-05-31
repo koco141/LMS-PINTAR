@@ -1,65 +1,241 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getAllTrainings, getTrainingByToken, Training } from '@/lib/db';
+import TrainingCard from '@/components/TrainingCard';
+import styles from './page.module.css';
+
+type FilterType = 'all' | 'ongoing' | 'upcoming' | 'completed';
+
+export default function HomePage() {
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [token, setToken] = useState('');
+  const [tokenLoading, setTokenLoading] = useState(false);
+  const [tokenError, setTokenError] = useState('');
+  const [tokenSuccess, setTokenSuccess] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    getAllTrainings().then((data) => {
+      setTrainings(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleTokenSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token.trim()) return;
+    setTokenLoading(true);
+    setTokenError('');
+    setTokenSuccess(false);
+    try {
+      const training = await getTrainingByToken(token.trim());
+      if (!training) {
+        setTokenError('Token tidak ditemukan. Periksa kembali kode pelatihan Anda.');
+        setTokenLoading(false);
+        return;
+      }
+      setTokenSuccess(true);
+      setTimeout(() => {
+        router.push(`/training/${token.trim().toUpperCase()}`);
+      }, 600);
+    } catch {
+      setTokenError('Terjadi kesalahan. Coba lagi.');
+      setTokenLoading(false);
+    }
+  };
+
+  const filteredTrainings = trainings.filter((t) =>
+    filter === 'all' ? true : t.status === filter
+  );
+
+  const counts = {
+    all: trainings.length,
+    ongoing: trainings.filter((t) => t.status === 'ongoing').length,
+    upcoming: trainings.filter((t) => t.status === 'upcoming').length,
+    completed: trainings.filter((t) => t.status === 'completed').length,
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className={styles.page}>
+      {/* Hero Section */}
+      <section className={styles.hero}>
+        <div className={styles.heroBg}>
+          <div className={styles.heroOrb1} />
+          <div className={styles.heroOrb2} />
+          <div className={styles.heroOrb3} />
+        </div>
+
+        <div className={styles.heroContent}>
+          <div className={styles.heroBadge}>
+            <span>🚀</span> Platform Pembelajaran Profesional
+          </div>
+          <h1 className={styles.heroTitle}>
+            Tingkatkan Kompetensi
+            <br />
+            <span className={styles.heroGradient}>Bersama PINTAR</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className={styles.heroSubtitle}>
+            Platform Pintar untuk Training — Akses pelatihan berkualitas, lacak progress,
+            dan buktikan kemampuanmu dengan evaluasi yang terstruktur.
           </p>
+
+          {/* Token Search — HIGHLIGHT */}
+          <form className={styles.tokenForm} onSubmit={handleTokenSearch}>
+            <div className={`${styles.tokenInputWrapper} ${tokenError ? styles.error : ''} ${tokenSuccess ? styles.success : ''}`}>
+              <span className={styles.tokenIcon}>🔑</span>
+              <input
+                id="token-search"
+                type="text"
+                value={token}
+                onChange={(e) => {
+                  setToken(e.target.value.toUpperCase());
+                  setTokenError('');
+                  setTokenSuccess(false);
+                }}
+                placeholder="Masukkan TOKEN pelatihan Anda (contoh: ABC123)"
+                className={styles.tokenInput}
+                maxLength={6}
+                disabled={tokenLoading}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {token && (
+                <button
+                  type="button"
+                  onClick={() => { setToken(''); setTokenError(''); }}
+                  className={styles.clearBtn}
+                >
+                  ✕
+                </button>
+              )}
+              <button
+                type="submit"
+                className={styles.tokenBtn}
+                disabled={tokenLoading || !token.trim()}
+              >
+                {tokenLoading ? (
+                  <span className={styles.miniSpinner} />
+                ) : tokenSuccess ? (
+                  '✓'
+                ) : (
+                  'Cari'
+                )}
+              </button>
+            </div>
+            {tokenError && (
+              <p className={styles.tokenError}>
+                ⚠️ {tokenError}
+              </p>
+            )}
+            {tokenSuccess && (
+              <p className={styles.tokenSuccess}>
+                ✅ Pelatihan ditemukan! Mengalihkan...
+              </p>
+            )}
+            <p className={styles.tokenHint}>
+              Dapatkan token pelatihan dari instruktur atau koordinator Anda
+            </p>
+          </form>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Stats */}
+        <div className={styles.heroStats}>
+          <div className={styles.heroStat}>
+            <span className={styles.heroStatValue}>{counts.ongoing}</span>
+            <span className={styles.heroStatLabel}>Sedang Berjalan</span>
+          </div>
+          <div className={styles.heroStatDivider} />
+          <div className={styles.heroStat}>
+            <span className={styles.heroStatValue}>{counts.upcoming}</span>
+            <span className={styles.heroStatLabel}>Akan Datang</span>
+          </div>
+          <div className={styles.heroStatDivider} />
+          <div className={styles.heroStat}>
+            <span className={styles.heroStatValue}>{counts.completed}</span>
+            <span className={styles.heroStatLabel}>Selesai</span>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Trainings List */}
+      <section className={styles.trainingsSection}>
+        <div className="container">
+          <div className={styles.sectionHeader}>
+            <h2>Daftar Pelatihan</h2>
+            <p>Temukan pelatihan yang sesuai dengan kebutuhan Anda</p>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className={styles.filterTabs}>
+            {(
+              [
+                { key: 'all', label: 'Semua', emoji: '📚' },
+                { key: 'ongoing', label: 'Berlangsung', emoji: '🟢' },
+                { key: 'upcoming', label: 'Akan Datang', emoji: '🟡' },
+                { key: 'completed', label: 'Selesai', emoji: '⚫' },
+              ] as { key: FilterType; label: string; emoji: string }[]
+            ).map((f) => (
+              <button
+                key={f.key}
+                className={`${styles.filterTab} ${filter === f.key ? styles.active : ''}`}
+                onClick={() => setFilter(f.key)}
+              >
+                <span>{f.emoji}</span>
+                {f.label}
+                <span className={styles.filterCount}>{counts[f.key]}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Trainings Grid */}
+          {loading ? (
+            <div className="loading-screen">
+              <div className="spinner" />
+              <p>Memuat pelatihan...</p>
+            </div>
+          ) : filteredTrainings.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📭</div>
+              <h3>Belum ada pelatihan</h3>
+              <p>
+                {filter === 'all'
+                  ? 'Belum ada pelatihan yang tersedia saat ini.'
+                  : `Tidak ada pelatihan dengan status "${filter}" saat ini.`}
+              </p>
+            </div>
+          ) : (
+            <div className={styles.trainingsGrid}>
+              {filteredTrainings.map((training, idx) => (
+                <TrainingCard key={training.id} training={training} index={idx} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className={styles.footer}>
+        <div className="container">
+          <div className={styles.footerContent}>
+            <div className={styles.footerLogo}>
+              <span>🎓</span>
+              <span>
+                PIN<span style={{ color: 'var(--primary-light)' }}>TAR</span>
+              </span>
+            </div>
+            <p className={styles.footerText}>
+              Platform Pintar untuk Training — Belajar lebih cerdas, lebih terstruktur.
+            </p>
+          </div>
+          <div className={styles.footerBottom}>
+            <p>© {new Date().getFullYear()} PINTAR. Semua hak dilindungi.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

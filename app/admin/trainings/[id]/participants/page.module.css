@@ -1,0 +1,43 @@
+.page { padding: 40px 0 80px; min-height: calc(100vh - 70px); }
+
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;
+}
+.breadcrumb a { color: var(--primary-light); }
+.breadcrumb a:hover { color: var(--text-primary); }
+
+.pageHeader {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 20px; margin-bottom: 24px;
+}
+
+.pageHeader h1 { font-size: 1.8rem; }
+.pageSubtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+.exportBtns { display: flex; gap: 8px; flex-shrink: 0; }
+
+.searchBar { margin-bottom: 16px; max-width: 400px; }
+
+.participantCell { display: flex; align-items: center; gap: 10px; }
+
+.avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.avatarFallback {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; color: white;
+}
+
+.participantName { font-weight: 600; font-size: 0.875rem; color: var(--text-primary); }
+.participantEmail { font-size: 0.75rem; color: var(--text-muted); }
+
+.progressCell {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .pageHeader { flex-direction: column; }
+  .exportBtns { flex-wrap: wrap; }
+}

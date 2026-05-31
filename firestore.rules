@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: cek apakah pengguna adalah admin
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.token.email == 'gkoso2@gmail.com';
+    }
+
+    // Helper: cek apakah pengguna sudah login
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // ─── Trainings (publik baca, admin CRUD) ──────────────────────────────
+    match /trainings/{trainingId} {
+      allow read: if true; // Semua orang bisa baca (untuk beranda)
+      allow create, update, delete: if isAdmin();
+
+      // Modules — publik baca, admin CRUD
+      match /modules/{moduleId} {
+        allow read: if true;
+        allow create, update, delete: if isAdmin();
+      }
+
+      // Quizzes — peserta terdaftar bisa baca, admin CRUD
+      match /quizzes/{quizId} {
+        allow read: if isLoggedIn();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    // ─── Users ────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isLoggedIn();
+      allow create, update: if request.auth.uid == userId || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Enrollments ──────────────────────────────────────────────────────
+    match /enrollments/{enrollmentId} {
+      // Peserta bisa baca enrollment-nya sendiri, admin bisa baca semua
+      allow read: if isLoggedIn() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Peserta bisa buat enrollment untuk dirinya sendiri
+      allow create: if isLoggedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      // Peserta bisa update enrollment-nya sendiri (progress, skor)
+      allow update: if isLoggedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      // Hanya admin yang bisa hapus
+      allow delete: if isAdmin();
+    }
+  }
+}

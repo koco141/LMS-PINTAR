@@ -1,0 +1,129 @@
+.page {
+  padding: 40px 0 80px;
+  min-height: calc(100vh - 70px);
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.pageHeader h1 { font-size: 2rem; }
+.pageHeader p { color: var(--text-muted); margin-top: 4px; }
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.userEmail {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chartCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  margin-bottom: 32px;
+}
+
+.chartCard h3 {
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+}
+
+.chartWrapper {
+  height: 300px;
+  position: relative;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+}
+
+.enrollmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.enrollmentCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  transition: all var(--transition);
+}
+
+.enrollmentCard:hover {
+  border-color: var(--border-hover);
+}
+
+.enrollmentHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.enrollmentTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.enrollmentStats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.enrollStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.enrollStatLabel {
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.enrollStatVal {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .pageHeader { flex-direction: column; }
+  .userInfo { display: none; }
+  .chartWrapper { height: 220px; }
+}

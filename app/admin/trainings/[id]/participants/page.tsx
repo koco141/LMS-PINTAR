@@ -1,0 +1,292 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment } from '@/lib/db';
+import Link from 'next/link';
+import styles from './page.module.css';
+
+interface ParticipantRow {
+  userId: string;
+  name: string;
+  email: string;
+  photoURL: string | null;
+  preTestScore: number | null;
+  postTestScore: number | null;
+  improvement: number | null;
+  completedModules: number;
+  totalModules: number;
+  progress: number;
+  enrolledAt: any;
+}
+
+export default function ParticipantsPage() {
+  const { id } = useParams<{ id: string }>();
+  const { user, isAdmin, loading } = useAuth();
+  const router = useRouter();
+
+  const [training, setTraining] = useState<Training | null>(null);
+  const [participants, setParticipants] = useState<ParticipantRow[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [exportLoading, setExportLoading] = useState<'excel' | 'pdf' | null>(null);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) { router.push('/login'); return; }
+    if (!loading && user && isAdmin) loadData();
+  }, [user, isAdmin, loading, id]);
+
+  const loadData = async () => {
+    const [t, enrollments, modules] = await Promise.all([
+      getTrainingById(id),
+      getTrainingEnrollments(id),
+      getModules(id),
+    ]);
+    setTraining(t);
+
+    const rows = await Promise.all(
+      enrollments.map(async (e) => {
+        const u: any = await getUserById(e.userId);
+        const improvement = e.preTestScore !== null && e.postTestScore !== null
+          ? e.postTestScore - e.preTestScore
+          : null;
+        return {
+          userId: e.userId,
+          name: u?.name || 'Anonim',
+          email: u?.email || '',
+          photoURL: u?.photoURL || null,
+          preTestScore: e.preTestScore,
+          postTestScore: e.postTestScore,
+          improvement,
+          completedModules: e.completedModules.length,
+          totalModules: modules.length,
+          progress: modules.length > 0 ? Math.round((e.completedModules.length / modules.length) * 100) : 0,
+          enrolledAt: e.enrolledAt,
+        };
+      })
+    );
+
+    rows.sort((a, b) => (b.postTestScore || 0) - (a.postTestScore || 0));
+    setParticipants(rows);
+    setPageLoading(false);
+  };
+
+  const filteredParticipants = participants.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleExportExcel = async () => {
+    setExportLoading('excel');
+    try {
+      const XLSX = await import('xlsx');
+      const data = filteredParticipants.map((p, idx) => ({
+        'No': idx + 1,
+        'Nama': p.name,
+        'Email': p.email,
+        'Pre-Test': p.preTestScore ?? 'Belum',
+        'Post-Test': p.postTestScore ?? 'Belum',
+        'Peningkatan': p.improvement !== null ? p.improvement : '—',
+        'Modul Selesai': `${p.completedModules}/${p.totalModules}`,
+        'Progress (%)': p.progress,
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Peserta');
+      XLSX.writeFile(wb, `PINTAR_${training?.title || 'Peserta'}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (err) {
+      alert('Gagal export Excel. Coba lagi.');
+    } finally {
+      setExportLoading(null);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExportLoading('pdf');
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+      const doc = new jsPDF({ orientation: 'landscape' });
+
+      doc.setFontSize(16);
+      doc.text(`PINTAR — ${training?.title}`, 14, 16);
+      doc.setFontSize(10);
+      doc.text(`Daftar Peserta | Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 24);
+
+      autoTable(doc, {
+        startY: 30,
+        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Peningkatan', 'Progress']],
+        body: filteredParticipants.map((p, idx) => [
+          idx + 1,
+          p.name,
+          p.email,
+          p.preTestScore ?? 'Belum',
+          p.postTestScore ?? 'Belum',
+          p.improvement !== null ? (p.improvement >= 0 ? '+' : '') + p.improvement : '—',
+          `${p.progress}%`,
+        ]),
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 245, 250] },
+      });
+
+      doc.save(`PINTAR_${training?.title || 'Peserta'}_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      alert('Gagal export PDF. Coba lagi.');
+    } finally {
+      setExportLoading(null);
+    }
+  };
+
+  if (pageLoading) {
+    return <div className="loading-screen"><div className="spinner" /></div>;
+  }
+
+  const avgPre = participants.filter((p) => p.preTestScore !== null).reduce((s, p) => s + (p.preTestScore || 0), 0) / (participants.filter((p) => p.preTestScore !== null).length || 1);
+  const avgPost = participants.filter((p) => p.postTestScore !== null).reduce((s, p) => s + (p.postTestScore || 0), 0) / (participants.filter((p) => p.postTestScore !== null).length || 1);
+
+  return (
+    <div className={styles.page}>
+      <div className="container">
+        <div className={styles.breadcrumb}>
+          <Link href="/admin">Admin</Link>
+          <span>›</span>
+          <Link href={`/admin/trainings/${id}`}>{training?.title}</Link>
+          <span>›</span>
+          <span>Peserta</span>
+        </div>
+
+        <div className={styles.pageHeader}>
+          <div>
+            <h1>👥 Peserta</h1>
+            <p className={styles.pageSubtitle}>{training?.title}</p>
+          </div>
+          <div className={styles.exportBtns}>
+            <button
+              className="btn btn-secondary"
+              onClick={handleExportExcel}
+              disabled={exportLoading !== null}
+            >
+              {exportLoading === 'excel' ? '⏳ Exporting...' : '📊 Export Excel'}
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={handleExportPDF}
+              disabled={exportLoading !== null}
+            >
+              {exportLoading === 'pdf' ? '⏳ Exporting...' : '📄 Export PDF'}
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid-4" style={{ marginBottom: '24px' }}>
+          <div className="stat-card">
+            <span className="stat-label">Total Peserta</span>
+            <span className="stat-value">{participants.length}</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Sudah Post-Test</span>
+            <span className="stat-value" style={{ color: 'var(--status-ongoing)' }}>
+              {participants.filter((p) => p.postTestScore !== null).length}
+            </span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Rata-rata Pre-Test</span>
+            <span className="stat-value" style={{ color: 'var(--status-upcoming)' }}>
+              {participants.filter((p) => p.preTestScore !== null).length > 0 ? Math.round(avgPre) : '—'}
+            </span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Rata-rata Post-Test</span>
+            <span className="stat-value" style={{ color: 'var(--primary-light)' }}>
+              {participants.filter((p) => p.postTestScore !== null).length > 0 ? Math.round(avgPost) : '—'}
+            </span>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className={styles.searchBar}>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="🔍 Cari nama atau email peserta..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Table */}
+        {filteredParticipants.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">👥</div>
+            <h3>Belum ada peserta</h3>
+            <p>Peserta akan muncul setelah mendaftar menggunakan token pelatihan.</p>
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nama Peserta</th>
+                  <th>Pre-Test</th>
+                  <th>Post-Test</th>
+                  <th>Peningkatan</th>
+                  <th>Progress Materi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredParticipants.map((p, idx) => (
+                  <tr key={p.userId}>
+                    <td>{idx + 1}</td>
+                    <td>
+                      <div className={styles.participantCell}>
+                        {p.photoURL ? (
+                          <img src={p.photoURL} alt="" className={styles.avatar} />
+                        ) : (
+                          <div className={styles.avatarFallback}>{p.name[0]}</div>
+                        )}
+                        <div>
+                          <div className={styles.participantName}>{p.name}</div>
+                          <div className={styles.participantEmail}>{p.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{ color: 'var(--status-upcoming)', fontWeight: '700' }}>
+                        {p.preTestScore !== null ? `${p.preTestScore}` : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ color: 'var(--status-ongoing)', fontWeight: '700' }}>
+                        {p.postTestScore !== null ? `${p.postTestScore}` : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      {p.improvement !== null ? (
+                        <span style={{ color: p.improvement >= 0 ? 'var(--status-ongoing)' : '#ef4444', fontWeight: '700' }}>
+                          {p.improvement >= 0 ? '+' : ''}{p.improvement}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td>
+                      <div className={styles.progressCell}>
+                        <div className="progress-bar" style={{ width: '80px' }}>
+                          <div className="progress-fill" style={{ width: `${p.progress}%` }} />
+                        </div>
+                        <span>{p.progress}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
