@@ -103,10 +103,6 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     const newAnswers = [...answers];
     newAnswers[qIdx] = optOriginalIdx;
     setAnswers(newAnswers);
-    // Auto-advance to next question after selecting an option
-    if (qIdx < shuffledQuestions.length - 1) {
-      setTimeout(() => setCurrentQ(qIdx + 1), 450);
-    }
   };
 
   const handleSubmit = () => {
@@ -195,6 +191,19 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
 
           {/* Question */}
           <div className={styles.questionArea}>
+            <div className={styles.qDots}>
+              {shuffledQuestions.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`${styles.qDot} ${idx === currentQ ? styles.qDotActive : ''} ${answers[idx] !== null ? styles.qDotAnswered : ''}`}
+                  onClick={() => setCurrentQ(idx)}
+                  title={`Pertanyaan ${idx + 1}`}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+            </div>
+
             <div className={styles.questionCard}>
               <div className={styles.qNum}>Pertanyaan {currentQ + 1} ({shuffledQuestions[currentQ].points || 10} Poin)</div>
               <h2 className={styles.question}>{shuffledQuestions[currentQ].question}</h2>
@@ -226,16 +235,6 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
               >
                 ← Sebelumnya
               </button>
-              <div className={styles.qDots}>
-                {shuffledQuestions.map((_, idx) => (
-                  <button
-                    key={idx}
-                    className={`${styles.qDot} ${idx === currentQ ? styles.qDotActive : ''} ${answers[idx] !== null ? styles.qDotAnswered : ''}`}
-                    onClick={() => setCurrentQ(idx)}
-                    title={`Pertanyaan ${idx + 1}`}
-                  />
-                ))}
-              </div>
               {currentQ < totalQuestions - 1 ? (
                 <button
                   className="btn btn-primary"

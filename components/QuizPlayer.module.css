@@ -159,26 +159,43 @@
 
 .qDots {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
 }
 
 .qDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(79, 70, 229, 0.15);
-  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
   cursor: pointer;
   transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'Sora', sans-serif;
 }
 
-.qDot.qDotAnswered { background: var(--primary-light); }
+.qDot:hover {
+  border-color: var(--border-hover);
+}
+
+.qDot.qDotAnswered { 
+  background: rgba(79, 70, 229, 0.08);
+  border-color: var(--primary-light);
+  color: var(--primary);
+}
+
 .qDot.qDotActive {
-  width: 24px;
-  border-radius: 5px;
   background: var(--primary);
+  border-color: var(--primary);
+  color: white;
 }
 
 /* ─── Result Area ─────────────────────────────────────────────────────────── */
