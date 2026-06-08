@@ -291,10 +291,7 @@ export default function TrainingAdminPage() {
                   Pilih level maksimal (Target/Tujuan) kompetensi yang diharapkan dapat dicapai peserta setelah menyelesaikan pelatihan ini.
                 </p>
               </div>
-              <div className="form-group">
-                <label className="form-label">Link Pengumpulan Tugas / Materi (Google Drive / Form)</label>
-                <input className="form-input" placeholder="Opsional (misal: https://drive.google.com/...)" value={infoForm.assignmentLink} onChange={(e) => setInfoForm({ ...infoForm, assignmentLink: e.target.value })} />
-              </div>
+
               <div className={styles.formRow3}>
                 <div className="form-group">
                   <label className="form-label">Status (Otomatis)</label>
