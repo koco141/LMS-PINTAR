@@ -17,15 +17,15 @@ function StarRating({ value, onChange, disabled }: { value: number, onChange: (v
       {[1, 2, 3, 4, 5].map((star) => (
         <div 
           key={star} 
-          style={{ position: 'relative', width: '32px', height: '32px' }}
+          style={{ position: 'relative', width: '28px', height: '28px' }}
         >
           {/* Background star (empty) */}
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-color, #ccc)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--border-color, #ccc)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
 
           {/* Filled star */}
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ 
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ 
             position: 'absolute', top: 0, left: 0, pointerEvents: 'none',
             clipPath: displayValue >= star ? 'none' : (displayValue >= star - 0.5 ? 'inset(0 50% 0 0)' : 'inset(0 100% 0 0)')
           }}>
@@ -67,7 +67,7 @@ export default function EvaluationViewer({
 }) {
   const categories = module.ratingCategories && module.ratingCategories.length > 0 
     ? module.ratingCategories 
-    : ['Rating Keseluruhan'];
+    : ['Rating'];
 
   
   const [ratings, setRatings] = useState<Record<string, number>>(existingEvaluation?.ratings || {});
@@ -89,10 +89,6 @@ export default function EvaluationViewer({
         return;
       }
     }
-    if (!testimonial.trim()) {
-      setError('Harap isi kolom testimoni.');
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -106,64 +102,66 @@ export default function EvaluationViewer({
   };
 
   return (
-    <div className={styles.moduleContent}>
-      <h2 style={{ marginBottom: '16px' }}>⭐ Evaluasi: {module.title}</h2>
-      
-      {module.description && (
-        <div className={styles.moduleDescription} style={{ marginBottom: '24px' }}>
-          <p>{module.description}</p>
-        </div>
-      )}
-
-      {existingEvaluation && (
-        <div className="alert alert-success" style={{ marginBottom: '24px', backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--success)' }}>
-          <p>✅ Anda sudah mengisi evaluasi ini. Terima kasih atas masukannya!</p>
-        </div>
-      )}
-
-      <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '24px', borderRadius: '8px' }}>
-        <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Berikan Rating Anda</h3>
+    <div className={styles.moduleContent} style={{ display: 'flex', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '600px' }}>
+        <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>⭐ Evaluasi</h2>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-          {categories.map((cat, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
-              <span style={{ fontWeight: 500 }}>{cat}</span>
-              <StarRating 
-                value={ratings[cat] || 0} 
-                onChange={(val) => handleStarClick(cat, val)} 
-                disabled={!!existingEvaluation} 
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="form-group" style={{ marginBottom: '24px' }}>
-          <label className="form-label" style={{ fontWeight: 500 }}>Testimoni / Ulasan</label>
-          <textarea
-            className="form-input"
-            rows={5}
-            placeholder="Tuliskan testimoni atau ulasan Anda tentang pelatihan ini..."
-            value={testimonial}
-            onChange={(e) => setTestimonial(e.target.value)}
-            disabled={!!existingEvaluation}
-            style={{ width: '100%', padding: '12px', resize: 'vertical' }}
-          ></textarea>
-        </div>
-
-        {error && (
-          <p style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '0.9rem' }}>{error}</p>
+        {module.description && (
+          <div className={styles.moduleDescription} style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <p>{module.description}</p>
+          </div>
         )}
 
-        {!existingEvaluation && (
-          <button
-            className="btn btn-primary"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            style={{ width: '100%', padding: '12px' }}
-          >
-            {isSubmitting ? 'Menyimpan...' : 'Kirim Evaluasi'}
-          </button>
+        {existingEvaluation && (
+          <div className="alert alert-success" style={{ marginBottom: '24px', backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--success)' }}>
+            <p>✅ Anda sudah mengisi evaluasi ini. Terima kasih atas masukannya!</p>
+          </div>
         )}
+
+        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '24px', borderRadius: '8px' }}>
+          <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Berikan Rating Anda: {module.title}</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+            {categories.map((cat, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
+                <span style={{ fontWeight: 500, minWidth: '80px' }}>{cat}</span>
+                <StarRating 
+                  value={ratings[cat] || 0} 
+                  onChange={(val) => handleStarClick(cat, val)} 
+                  disabled={!!existingEvaluation} 
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <label className="form-label" style={{ fontWeight: 500 }}>Ulasan (Opsional)</label>
+            <textarea
+              className="form-input"
+              rows={5}
+              placeholder="Tuliskan ulasan Anda tentang pelatihan ini..."
+              value={testimonial}
+              onChange={(e) => setTestimonial(e.target.value)}
+              disabled={!!existingEvaluation}
+              style={{ width: '100%', padding: '12px', resize: 'vertical' }}
+            ></textarea>
+          </div>
+
+          {error && (
+            <p style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>{error}</p>
+          )}
+
+          {!existingEvaluation && (
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              style={{ width: '100%', padding: '12px' }}
+            >
+              {isSubmitting ? 'Menyimpan...' : 'Kirim Evaluasi'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
