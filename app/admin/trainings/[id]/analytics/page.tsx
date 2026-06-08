@@ -77,15 +77,19 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   }
 
   // --- Calculations ---
-  const validEnrollments = enrollments.filter(e => e.preTestScore !== undefined);
-  const participantCount = validEnrollments.length;
+  const preTestEnrollments = enrollments.filter(e => e.preTestScore !== undefined && e.preTestScore !== null);
+  const postTestEnrollments = enrollments.filter(e => e.postTestScore !== undefined && e.postTestScore !== null);
+  
+  const participantCount = preTestEnrollments.length;
 
   let avgPreTestScore = 0;
   let avgPostTestScore = 0;
 
-  if (participantCount > 0) {
-    avgPreTestScore = validEnrollments.reduce((sum, e) => sum + (e.preTestScore || 0), 0) / participantCount;
-    avgPostTestScore = validEnrollments.reduce((sum, e) => sum + (e.postTestScore || 0), 0) / participantCount;
+  if (preTestEnrollments.length > 0) {
+    avgPreTestScore = preTestEnrollments.reduce((sum, e) => sum + (e.preTestScore || 0), 0) / preTestEnrollments.length;
+  }
+  if (postTestEnrollments.length > 0) {
+    avgPostTestScore = postTestEnrollments.reduce((sum, e) => sum + (e.postTestScore || 0), 0) / postTestEnrollments.length;
   }
 
   const delta = avgPostTestScore - avgPreTestScore;
@@ -107,7 +111,8 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
   // Radar Chart Data Logic
   const calculateCategoryAverages = (quiz: Quiz | null, testType: 'preTestAnswers' | 'postTestAnswers') => {
-    if (!quiz || validEnrollments.length === 0) return CATEGORIES.map(() => 0);
+    const validEnrs = testType === 'preTestAnswers' ? preTestEnrollments : postTestEnrollments;
+    if (!quiz || validEnrs.length === 0) return CATEGORIES.map(() => 0);
 
     return CATEGORIES.map(cat => {
       // Find all questions in this category
@@ -121,7 +126,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
       // Calculate total earned points across all users
       let totalEarned = 0;
-      validEnrollments.forEach(enr => {
+      validEnrs.forEach(enr => {
         const answers = enr[testType] || [];
         catQuestions.forEach(item => {
           if (answers[item.index] === item.q.correctAnswer) {
@@ -131,7 +136,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
       });
 
       // Average percentage
-      const avgScore = (totalEarned / (maxPoints * participantCount)) * 100;
+      const avgScore = (totalEarned / (maxPoints * validEnrs.length)) * 100;
       return avgScore;
     });
   };
@@ -186,14 +191,15 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
   // Question Analysis Logic
   const getQuestionStats = (quiz: Quiz | null, testType: 'preTestAnswers' | 'postTestAnswers') => {
+    const validEnrs = testType === 'preTestAnswers' ? preTestEnrollments : postTestEnrollments;
     if (!quiz) return [];
     return quiz.questions.map((q, i) => {
       let correctCount = 0;
-      validEnrollments.forEach(enr => {
+      validEnrs.forEach(enr => {
         const answers = enr[testType] || [];
         if (answers[i] === q.correctAnswer) correctCount++;
       });
-      const rate = validEnrollments.length > 0 ? (correctCount / validEnrollments.length) * 100 : 0;
+      const rate = validEnrs.length > 0 ? (correctCount / validEnrs.length) * 100 : 0;
       return { question: q.question, category: q.category || 'Teori', rate };
     });
   };
