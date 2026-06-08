@@ -4,6 +4,54 @@ import { useState } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
 
+function StarRating({ value, onChange, disabled }: { value: number, onChange: (v: number) => void, disabled?: boolean }) {
+  const [hoverValue, setHoverValue] = useState<number | null>(null);
+
+  const displayValue = hoverValue !== null ? hoverValue : value;
+
+  return (
+    <div 
+      style={{ display: 'flex', gap: '4px' }}
+      onMouseLeave={() => setHoverValue(null)}
+    >
+      {[1, 2, 3, 4, 5].map((star) => (
+        <div 
+          key={star} 
+          style={{ position: 'relative', width: '32px', height: '32px' }}
+        >
+          {/* Background star (empty) */}
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-color, #ccc)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+
+          {/* Filled star */}
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ 
+            position: 'absolute', top: 0, left: 0, pointerEvents: 'none',
+            clipPath: displayValue >= star ? 'none' : (displayValue >= star - 0.5 ? 'inset(0 50% 0 0)' : 'inset(0 100% 0 0)')
+          }}>
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+
+          {/* Hit areas */}
+          <div 
+            style={{ position: 'absolute', top: 0, left: 0, width: '50%', height: '100%', cursor: disabled ? 'default' : 'pointer' }}
+            onMouseEnter={() => !disabled && setHoverValue(star - 0.5)}
+            onClick={() => !disabled && onChange(star - 0.5)}
+          />
+          <div 
+            style={{ position: 'absolute', top: 0, right: 0, width: '50%', height: '100%', cursor: disabled ? 'default' : 'pointer' }}
+            onMouseEnter={() => !disabled && setHoverValue(star)}
+            onClick={() => !disabled && onChange(star)}
+          />
+        </div>
+      ))}
+      <span style={{ marginLeft: '8px', fontWeight: 600, color: '#f59e0b', alignSelf: 'center', minWidth: '24px' }}>
+        {displayValue > 0 ? displayValue : ''}
+      </span>
+    </div>
+  );
+}
+
 export default function EvaluationViewer({
   module,
   isCompleted,
@@ -17,7 +65,10 @@ export default function EvaluationViewer({
   onSubmitEvaluation: (ratings: Record<string, number>, testimonial: string) => Promise<void>;
   existingEvaluation?: { ratings: Record<string, number>, testimonial: string };
 }) {
-  const categories = module.ratingCategories || [];
+  const categories = module.ratingCategories && module.ratingCategories.length > 0 
+    ? module.ratingCategories 
+    : ['Rating Keseluruhan'];
+
   
   const [ratings, setRatings] = useState<Record<string, number>>(existingEvaluation?.ratings || {});
   const [testimonial, setTestimonial] = useState(existingEvaluation?.testimonial || '');
@@ -73,38 +124,18 @@ export default function EvaluationViewer({
       <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '24px', borderRadius: '8px' }}>
         <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Berikan Rating Anda</h3>
         
-        {categories.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-            {categories.map((cat, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
-                <span style={{ fontWeight: 500 }}>{cat}</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => handleStarClick(cat, star)}
-                      disabled={!!existingEvaluation}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '1.5rem',
-                        cursor: existingEvaluation ? 'default' : 'pointer',
-                        color: (ratings[cat] || 0) >= star ? '#f59e0b' : 'var(--border-color)',
-                        transition: 'color 0.2s',
-                      }}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '24px' }}>
-            Tidak ada kategori rating spesifik yang ditentukan.
-          </p>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+          {categories.map((cat, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
+              <span style={{ fontWeight: 500 }}>{cat}</span>
+              <StarRating 
+                value={ratings[cat] || 0} 
+                onChange={(val) => handleStarClick(cat, val)} 
+                disabled={!!existingEvaluation} 
+              />
+            </div>
+          ))}
+        </div>
 
         <div className="form-group" style={{ marginBottom: '24px' }}>
           <label className="form-label" style={{ fontWeight: 500 }}>Testimoni / Ulasan</label>
