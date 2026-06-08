@@ -413,6 +413,10 @@ export async function updateUserProfile(userId: string, data: Partial<AppUser>) 
   await updateDoc(doc(db, 'users', userId), data);
 }
 
+export async function deleteUserProfile(userId: string) {
+  await deleteDoc(doc(db, 'users', userId));
+}
+
 export async function getAllUsers(): Promise<AppUser[]> {
   try {
     const snap = await getDocs(query(collection(db, 'users'), orderBy('joinedAt', 'desc')));

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getAllUsers, updateUserProfile, AppUser } from '@/lib/db';
+import { getAllUsers, updateUserProfile, deleteUserProfile, AppUser } from '@/lib/db';
 import Link from 'next/link';
 import styles from '../page.module.css';
 
@@ -39,6 +39,16 @@ export default function UsersDashboard() {
       setEditingUser(null);
     } catch (err: any) {
       alert(`Gagal menyimpan: ${err.message || err}`);
+    }
+  };
+
+  const handleDelete = async (u: AppUser) => {
+    if (!confirm(`Hapus peserta ${u.fullName || u.name}? Tindakan ini akan menghapus data profil peserta.`)) return;
+    try {
+      await deleteUserProfile(u.id);
+      setUsers(prev => prev.filter(user => user.id !== u.id));
+    } catch (err: any) {
+      alert(`Gagal menghapus: ${err.message || err}`);
     }
   };
 
@@ -113,12 +123,20 @@ export default function UsersDashboard() {
                       <td>{u.email || '-'}</td>
                       <td>{u.gender || '-'}</td>
                       <td>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handleEdit(u)}
-                        >
-                          ✏️ Edit
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => handleEdit(u)}
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDelete(u)}
+                          >
+                            🗑️ Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
