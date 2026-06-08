@@ -375,12 +375,23 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
               </p>
               
               <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
-                <h4 style={{ color: 'var(--primary)', marginBottom: '6px', fontSize: '1.1rem' }}>
+                <h4 style={{ color: level >= targetLevel ? 'var(--primary)' : '#ef4444', marginBottom: '6px', fontSize: '1.1rem' }}>
                   Level {level} - {levelLabel}
                 </h4>
-                <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '12px' }}>
                   {levelDesc}
                 </p>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  background: level >= targetLevel ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  color: level >= targetLevel ? 'var(--primary)' : '#ef4444'
+                }}>
+                  {level >= targetLevel ? `✅ Telah memenuhi target pelatihan (Target: Level ${targetLevel})` : `⚠️ Belum memenuhi target pelatihan (Target: Level ${targetLevel})`}
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
