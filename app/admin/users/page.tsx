@@ -12,6 +12,7 @@ export default function UsersDashboard() {
   const router = useRouter();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
   const [editName, setEditName] = useState('');
@@ -50,6 +51,13 @@ export default function UsersDashboard() {
     );
   }
 
+  const filteredUsers = users.filter((u) => {
+    const q = searchQuery.toLowerCase();
+    const nameMatch = (u.fullName || u.name || '').toLowerCase().includes(q);
+    const emailMatch = (u.email || '').toLowerCase().includes(q);
+    return nameMatch || emailMatch;
+  });
+
   return (
     <div className={styles.page}>
       <div className="container">
@@ -65,13 +73,27 @@ export default function UsersDashboard() {
         </div>
 
         <div className={styles.tableCard}>
-          <div className={styles.tableHeader}>
+          <div className={styles.tableHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Daftar Peserta</h3>
+            <div style={{ position: 'relative', width: '300px' }}>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Cari nama atau email..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ width: '100%', paddingLeft: '36px' }}
+              />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
           </div>
-          {users.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">📭</div>
-              <h3>Belum ada peserta terdaftar</h3>
+              <h3>Belum ada peserta terdaftar atau tidak ditemukan</h3>
             </div>
           ) : (
             <div className="table-wrapper">
@@ -85,7 +107,7 @@ export default function UsersDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {filteredUsers.map((u) => (
                     <tr key={u.id}>
                       <td>{u.fullName || u.name || '-'}</td>
                       <td>{u.email || '-'}</td>
