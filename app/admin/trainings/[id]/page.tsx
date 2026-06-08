@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import {
   getTrainingById, getModules, getQuiz, updateTraining, deleteTraining,
-  createModule, updateModule, deleteModule, saveQuiz,
+  createModule, updateModule, deleteModule, saveQuiz, getQuizById, updateModuleOrders,
   Training, Module, Quiz, QuizQuestion,
   generateToken,
 } from '@/lib/db';
@@ -13,6 +13,7 @@ import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import styles from './page.module.css';
 import * as XLSX from 'xlsx';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 type AdminTab = 'info' | 'modules' | 'pre-test' | 'post-test';
 
@@ -36,7 +37,9 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState({ title: '', embedUrl: '', description: '' });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'kuis', quizId: string}>({ title: '', embedUrl: '', description: '', type: 'materi', quizId: '' });
+  const [editingModuleQuiz, setEditingModuleQuiz] = useState<Module | null>(null);
+  const [moduleQuiz, setModuleQuiz] = useState<Quiz | null>(null);
 
   // Info form
   const [infoForm, setInfoForm] = useState({
@@ -122,29 +125,73 @@ export default function TrainingAdminPage() {
   };
 
   // ─── Module CRUD ─────────────────────────────────────────────────────────
-  const openModuleForm = (mod?: Module) => {
+  const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'kuis' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl, description: mod.description });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', quizId: mod.quizId || '' });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, quizId: '' });
     }
     setShowModuleForm(true);
   };
 
   const saveModule = async () => {
-    if (!moduleForm.title.trim() || !moduleForm.embedUrl.trim()) return;
+    if (!moduleForm.title.trim()) return;
+    if (moduleForm.type === 'materi' && !moduleForm.embedUrl.trim()) return;
     setSaving(true);
-    if (editingModule) {
-      await updateModule(id, editingModule.id, moduleForm);
+    
+    const dataToSave: Partial<Module> = {
+      title: moduleForm.title,
+      description: moduleForm.description,
+      type: moduleForm.type,
+    };
+    if (moduleForm.type === 'materi') {
+      dataToSave.embedUrl = moduleForm.embedUrl;
     } else {
-      await createModule(id, { ...moduleForm, order: modules.length });
+      dataToSave.embedUrl = '';
+    }
+    if (moduleForm.type === 'kuis') {
+      dataToSave.quizId = moduleForm.quizId;
+    }
+
+    if (editingModule) {
+      await updateModule(id, editingModule.id, dataToSave);
+    } else {
+      await createModule(id, { ...dataToSave, embedUrl: dataToSave.embedUrl || '', order: modules.length } as Omit<Module, 'id' | 'trainingId' | 'createdAt'>);
     }
     await loadAll();
     setShowModuleForm(false);
     setSaving(false);
     showToast(editingModule ? '✅ Modul diperbarui!' : '✅ Modul ditambahkan!');
+  };
+
+  const onDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+    const items = Array.from(modules);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setModules(items);
+
+    try {
+      await updateModuleOrders(id, items.map(i => i.id));
+      showToast('✅ Urutan modul diperbarui!');
+    } catch (e) {
+      showToast('❌ Gagal memperbarui urutan modul.');
+      loadAll();
+    }
+  };
+  
+  const openModuleQuizEditor = async (mod: Module) => {
+    setPageLoading(true);
+    if (mod.quizId) {
+      const q = await getQuizById(id, mod.quizId);
+      setModuleQuiz(q);
+    } else {
+      setModuleQuiz(null);
+    }
+    setEditingModuleQuiz(mod);
+    setPageLoading(false);
   };
 
   const handleDeleteModule = async (moduleId: string) => {
@@ -361,38 +408,74 @@ export default function TrainingAdminPage() {
         )}
 
         {/* ─── Modules Tab ─── */}
-        {activeTab === 'modules' && (
+        {activeTab === 'modules' && !editingModuleQuiz && (
           <div className={styles.tabContent}>
             <div className={styles.sectionBar}>
               <h3>Daftar Materi</h3>
-              <button className="btn btn-primary btn-sm" onClick={() => openModuleForm()}>
-                ＋ Tambah Modul
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn btn-primary btn-sm" onClick={() => openModuleForm(undefined, 'materi')}>
+                  ＋ Tambah Materi
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'tugas')}>
+                  📝 Tugas
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'kuis')}>
+                  ❓ Kuis
+                </button>
+              </div>
             </div>
 
             {modules.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon">📚</div>
                 <h3>Belum ada modul</h3>
-                <p>Tambahkan modul materi dengan link Google Slides.</p>
+                <p>Tambahkan modul materi, tugas, atau kuis.</p>
               </div>
             ) : (
-              <div className={styles.moduleList}>
-                {modules.map((mod, idx) => (
-                  <div key={mod.id} className={styles.moduleCard}>
-                    <div className={styles.moduleNum}>{idx + 1}</div>
-                    <div className={styles.moduleInfo}>
-                      <h4>{mod.title}</h4>
-                      <p>{mod.description}</p>
-                      <code className={styles.embedUrl}>{mod.embedUrl.substring(0, 60)}...</code>
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="modules">
+                  {(provided) => (
+                    <div className={styles.moduleList} {...provided.droppableProps} ref={provided.innerRef}>
+                      {modules.map((mod, idx) => (
+                        <Draggable key={mod.id} draggableId={mod.id} index={idx}>
+                          {(provided) => (
+                            <div 
+                              className={styles.moduleCard}
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                            >
+                              <div className={styles.moduleDragHandle} {...provided.dragHandleProps} style={{ cursor: 'grab', marginRight: '10px', color: 'var(--text-muted)' }}>
+                                ⋮⋮
+                              </div>
+                              <div className={styles.moduleNum}>{idx + 1}</div>
+                              <div className={styles.moduleInfo}>
+                                <h4>
+                                  {(!mod.type || mod.type === 'materi') && '📚 '}
+                                  {mod.type === 'tugas' && '📝 '}
+                                  {mod.type === 'kuis' && '❓ '}
+                                  {mod.title}
+                                </h4>
+                                <p>{mod.description}</p>
+                                {(!mod.type || mod.type === 'materi') && (
+                                  <code className={styles.embedUrl}>{mod.embedUrl.substring(0, 60)}...</code>
+                                )}
+                              </div>
+                              <div className={styles.moduleActions}>
+                                {mod.type === 'kuis' && (
+                                  <button className="btn btn-secondary btn-sm" onClick={() => openModuleQuizEditor(mod)}>✏️ Soal</button>
+                                )}
+                                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(mod)}>✏️</button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteModule(mod.id)}>🗑️</button>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
                     </div>
-                    <div className={styles.moduleActions}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(mod)}>✏️</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDeleteModule(mod.id)}>🗑️</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             )}
 
             {/* Module Form Modal */}
@@ -400,41 +483,68 @@ export default function TrainingAdminPage() {
               <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowModuleForm(false)}>
                 <div className="modal">
                   <div className="modal-header">
-                    <h3>{editingModule ? 'Edit Modul' : 'Tambah Modul Baru'}</h3>
+                    <h3>{editingModule ? 'Edit Modul' : `Tambah ${moduleForm.type === 'materi' ? 'Materi' : moduleForm.type === 'tugas' ? 'Tugas' : 'Kuis'}`}</h3>
                     <button className="btn btn-icon btn-secondary" onClick={() => setShowModuleForm(false)}>✕</button>
                   </div>
                   <div className="modal-body">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div className="form-group">
-                        <label className="form-label">Judul Modul *</label>
-                        <input className="form-input" placeholder="Contoh: Modul 1 - Pengantar Kepemimpinan"
+                        <label className="form-label">Judul {moduleForm.type === 'materi' ? 'Materi' : moduleForm.type === 'tugas' ? 'Tugas' : 'Kuis'} *</label>
+                        <input className="form-input" placeholder="Judul"
                           value={moduleForm.title} onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })} />
                       </div>
+                      {(!moduleForm.type || moduleForm.type === 'materi') && (
+                        <div className="form-group">
+                          <label className="form-label">Link Google Slides (Publish URL) *</label>
+                          <input className="form-input"
+                            placeholder="https://docs.google.com/presentation/d/.../pub?..."
+                            value={moduleForm.embedUrl} onChange={(e) => setModuleForm({ ...moduleForm, embedUrl: e.target.value })} />
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            File → Bagikan → Terbitkan ke web → Embed atau salin link
+                          </p>
+                        </div>
+                      )}
                       <div className="form-group">
-                        <label className="form-label">Link Google Slides (Publish URL) *</label>
-                        <input className="form-input"
-                          placeholder="https://docs.google.com/presentation/d/.../pub?..."
-                          value={moduleForm.embedUrl} onChange={(e) => setModuleForm({ ...moduleForm, embedUrl: e.target.value })} />
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                          File → Bagikan → Terbitkan ke web → Embed atau salin link
-                        </p>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Deskripsi Singkat</label>
-                        <textarea className="form-textarea" placeholder="Apa yang akan dipelajari di modul ini?"
-                          value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} rows={2} />
+                        <label className="form-label">{moduleForm.type === 'tugas' ? 'Deskripsi Penugasan' : 'Deskripsi Singkat'}</label>
+                        <textarea className="form-textarea" placeholder={moduleForm.type === 'tugas' ? 'Jelaskan apa yang harus dikerjakan peserta...' : 'Deskripsi...'}
+                          value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} rows={4} />
                       </div>
                     </div>
                   </div>
                   <div className="modal-footer">
                     <button className="btn btn-secondary" onClick={() => setShowModuleForm(false)}>Batal</button>
-                    <button className="btn btn-primary" onClick={saveModule} disabled={saving || !moduleForm.title || !moduleForm.embedUrl}>
+                    <button className="btn btn-primary" onClick={saveModule} disabled={saving || !moduleForm.title || (moduleForm.type === 'materi' && !moduleForm.embedUrl)}>
                       {saving ? 'Menyimpan...' : '💾 Simpan'}
                     </button>
                   </div>
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ─── Editing Module Quiz ─── */}
+        {activeTab === 'modules' && editingModuleQuiz && (
+          <div>
+             <div className={styles.sectionBar}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setEditingModuleQuiz(null)}>
+                  ← Kembali ke Daftar Modul
+                </button>
+             </div>
+             <QuizEditor
+               trainingId={id}
+               type="module"
+               quiz={moduleQuiz}
+               quizId={editingModuleQuiz.quizId}
+               onSaved={async (newQuizId?: string) => { 
+                 if (newQuizId && newQuizId !== editingModuleQuiz.quizId) {
+                   await updateModule(id, editingModuleQuiz.id, { quizId: newQuizId });
+                   await loadAll();
+                 }
+                 setEditingModuleQuiz(null);
+                 showToast('✅ Kuis modul berhasil disimpan!'); 
+               }}
+             />
           </div>
         )}
 
@@ -559,12 +669,14 @@ function QuizEditor({
   trainingId,
   type,
   quiz,
+  quizId,
   onSaved,
 }: {
   trainingId: string;
-  type: 'pre-test' | 'post-test';
+  type: 'pre-test' | 'post-test' | 'module';
   quiz: Quiz | null;
-  onSaved: () => void;
+  quizId?: string;
+  onSaved: (newQuizId?: string) => void;
 }) {
   const [title, setTitle] = useState(quiz?.title || (type === 'pre-test' ? 'Pre-Test' : 'Post-Test'));
   const [duration, setDuration] = useState<number>(quiz?.duration || 0);
@@ -737,9 +849,9 @@ function QuizEditor({
   const handleSave = async () => {
     if (questions.length === 0) { alert('Tambahkan minimal 1 pertanyaan.'); return; }
     setSaving(true);
-    await saveQuiz(trainingId, type, { type, title, questions, duration }, type === 'pre-test' ? syncToPostTest : false);
+    const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration }, type === 'pre-test' ? syncToPostTest : false, quizId);
     setSaving(false);
-    onSaved();
+    onSaved(finalQuizId);
   };
 
   const handleImport = () => {

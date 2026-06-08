@@ -38,10 +38,12 @@ export interface Module {
   id: string;
   trainingId: string;
   title: string;
-  embedUrl: string;
+  embedUrl: string; // Used for presentation/materi
   description: string;
   order: number;
   createdAt: Timestamp;
+  type?: 'materi' | 'tugas' | 'kuis';
+  quizId?: string; // If type is 'kuis'
 }
 
 export interface QuizQuestion {
@@ -56,7 +58,7 @@ export interface QuizQuestion {
 export interface Quiz {
   id: string;
   trainingId: string;
-  type: 'pre-test' | 'post-test';
+  type: 'pre-test' | 'post-test' | 'module';
   title: string;
   questions: QuizQuestion[];
   duration?: number; // durasi kuis dalam menit
@@ -76,6 +78,9 @@ export interface Enrollment {
   preTestCompletedAt: Timestamp | null;
   postTestCompletedAt: Timestamp | null;
   totalTimeSpent: number; // minutes
+  assignments?: Record<string, string>; // moduleId -> submitted link
+  moduleQuizScores?: Record<string, number>; // moduleId -> score
+  moduleQuizAnswers?: Record<string, number[]>; // moduleId -> answers
 }
 
 // ─── Token Generator ──────────────────────────────────────────────────────────
@@ -203,28 +208,41 @@ export async function getQuiz(trainingId: string, type: 'pre-test' | 'post-test'
   return { id: d.id, trainingId, ...d.data() } as Quiz;
 }
 
+export async function getQuizById(trainingId: string, quizId: string): Promise<Quiz | null> {
+  const snap = await getDoc(doc(db, 'trainings', trainingId, 'quizzes', quizId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, trainingId, ...snap.data() } as Quiz;
+}
+
 export async function saveQuiz(
   trainingId: string,
-  type: 'pre-test' | 'post-test',
+  type: 'pre-test' | 'post-test' | 'module',
   data: Omit<Quiz, 'id' | 'trainingId' | 'createdAt'>,
-  syncToPostTest = false
+  syncToPostTest = false,
+  quizId?: string
 ) {
   // Check if quiz already exists
-  const existing = await getQuiz(trainingId, type);
-  let quizId = '';
+  let existing = null;
+  if (type === 'module' && quizId) {
+    existing = await getQuizById(trainingId, quizId);
+  } else if (type !== 'module') {
+    existing = await getQuiz(trainingId, type);
+  }
+  
+  let finalQuizId = '';
   if (existing) {
     await updateDoc(doc(db, 'trainings', trainingId, 'quizzes', existing.id), {
       ...data,
       updatedAt: serverTimestamp(),
     });
-    quizId = existing.id;
+    finalQuizId = existing.id;
   } else {
     const ref = await addDoc(collection(db, 'trainings', trainingId, 'quizzes'), {
       ...data,
       trainingId,
       createdAt: serverTimestamp(),
     });
-    quizId = ref.id;
+    finalQuizId = ref.id;
   }
 
   // If syncToPostTest is true and this is a pre-test, also copy all questions and duration to post-test!
@@ -250,7 +268,7 @@ export async function saveQuiz(
     }
   }
 
-  return quizId;
+  return finalQuizId;
 }
 
 // ─── Enrollments ──────────────────────────────────────────────────────────────
@@ -304,17 +322,44 @@ export async function markModuleComplete(userId: string, trainingId: string, mod
 export async function submitQuizResult(
   userId: string,
   trainingId: string,
-  type: 'pre-test' | 'post-test',
+  type: 'pre-test' | 'post-test' | 'module',
   score: number,
-  answers: number[]
+  answers: number[],
+  moduleId?: string
 ) {
   const id = `${userId}_${trainingId}`;
-  const field = type === 'pre-test' ? 'preTest' : 'postTest';
+  if (type === 'module' && moduleId) {
+    await updateDoc(doc(db, 'enrollments', id), {
+      [`moduleQuizScores.${moduleId}`]: score,
+      [`moduleQuizAnswers.${moduleId}`]: answers,
+    });
+  } else {
+    const field = type === 'pre-test' ? 'preTest' : 'postTest';
+    await updateDoc(doc(db, 'enrollments', id), {
+      [`${field}Score`]: score,
+      [`${field}Answers`]: answers,
+      [`${field}CompletedAt`]: serverTimestamp(),
+    });
+  }
+}
+
+export async function submitAssignment(
+  userId: string,
+  trainingId: string,
+  moduleId: string,
+  link: string
+) {
+  const id = `${userId}_${trainingId}`;
   await updateDoc(doc(db, 'enrollments', id), {
-    [`${field}Score`]: score,
-    [`${field}Answers`]: answers,
-    [`${field}CompletedAt`]: serverTimestamp(),
+    [`assignments.${moduleId}`]: link,
   });
+}
+
+export async function updateModuleOrders(trainingId: string, moduleIds: string[]) {
+  const batch = moduleIds.map((id, index) => 
+    updateDoc(doc(db, 'trainings', trainingId, 'modules', id), { order: index })
+  );
+  await Promise.all(batch);
 }
 
 export async function getUserEnrollments(userId: string): Promise<Enrollment[]> {

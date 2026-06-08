@@ -11,6 +11,7 @@ import {
   enrollUser,
   markModuleComplete,
   submitQuizResult,
+  submitAssignment,
   Training,
   Module,
   Quiz,
@@ -18,6 +19,8 @@ import {
 } from '@/lib/db';
 import QuizPlayer from '@/components/QuizPlayer';
 import ModuleViewer from '@/components/ModuleViewer';
+import AssignmentViewer from '@/components/AssignmentViewer';
+import ModuleQuizViewer from '@/components/ModuleQuizViewer';
 import Leaderboard from '@/components/Leaderboard';
 import styles from './page.module.css';
 
@@ -122,13 +125,21 @@ export default function TrainingPage() {
     }
   };
 
-  const handleQuizSubmit = async (type: 'pre-test' | 'post-test', score: number, answers: number[]) => {
+  const handleQuizSubmit = async (type: 'pre-test' | 'post-test' | 'module', score: number, answers: number[], moduleId?: string) => {
     if (!user || !training) return;
-    await submitQuizResult(user.uid, training.id, type, score, answers);
+    await submitQuizResult(user.uid, training.id, type, score, answers, moduleId);
     const updated = await getEnrollment(user.uid, training.id);
     setEnrollment(updated);
-    setQuizStarted(false);
-    // Kita hapus pemanggilan determineStep di sini agar tidak langsung melompat ke halaman berikutnya
+    if (type !== 'module') {
+      setQuizStarted(false);
+    }
+  };
+
+  const handleAssignmentSubmit = async (moduleId: string, link: string) => {
+    if (!user || !training) return;
+    await submitAssignment(user.uid, training.id, moduleId, link);
+    const updated = await getEnrollment(user.uid, training.id);
+    setEnrollment(updated);
   };
 
   if (notFound) {
@@ -304,7 +315,12 @@ export default function TrainingPage() {
                 <span className={styles.moduleNum}>
                   {!isUnlocked ? '🔒' : isDone ? '✅' : isCurrent ? '▶' : `${idx + 1}`}
                 </span>
-                <span className={styles.moduleName}>{mod.title}</span>
+                <span className={styles.moduleName}>
+                  {(!mod.type || mod.type === 'materi') && '📚 '}
+                  {mod.type === 'tugas' && '📝 '}
+                  {mod.type === 'kuis' && '❓ '}
+                  {mod.title}
+                </span>
               </button>
             );
           })}
@@ -565,11 +581,30 @@ export default function TrainingPage() {
                 />
               )
             ) : activeStep === 'module' && activeModule ? (
-              <ModuleViewer
-                module={activeModule}
-                isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
-                onComplete={() => handleModuleComplete(activeModule.id)}
-              />
+              activeModule.type === 'tugas' ? (
+                <AssignmentViewer
+                  module={activeModule}
+                  isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
+                  onComplete={() => handleModuleComplete(activeModule.id)}
+                  onSubmitLink={(link) => handleAssignmentSubmit(activeModule.id, link)}
+                  existingLink={enrollment?.assignments?.[activeModule.id]}
+                />
+              ) : activeModule.type === 'kuis' ? (
+                <ModuleQuizViewer
+                  trainingId={training!.id}
+                  module={activeModule}
+                  isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
+                  onComplete={() => handleModuleComplete(activeModule.id)}
+                  onSubmitQuiz={(score, answers) => handleQuizSubmit('module', score, answers, activeModule.id)}
+                  existingScore={enrollment?.moduleQuizScores?.[activeModule.id]}
+                />
+              ) : (
+                <ModuleViewer
+                  module={activeModule}
+                  isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
+                  onComplete={() => handleModuleComplete(activeModule.id)}
+                />
+              )
             ) : activeStep === 'completed' ? (
           <div className={styles.completedPage}>
             <div className={styles.completedCard}>
