@@ -80,6 +80,7 @@ export interface Enrollment {
   postTestCompletedAt: Timestamp | null;
   totalTimeSpent: number; // minutes
   assignments?: Record<string, string>; // moduleId -> submitted link
+  assignmentScores?: Record<string, number>; // moduleId -> score
   evaluations?: Record<string, { ratings: Record<string, number>, testimonial: string }>; // moduleId -> evaluation data
 }
 
@@ -171,7 +172,14 @@ export async function getTrainingById(id: string): Promise<Training | null> {
   }
 }
 
-// ─── Modules ──────────────────────────────────────────────────────────────────
+export async function updateAssignmentScore(userId: string, trainingId: string, moduleId: string, score: number) {
+  const id = `${userId}_${trainingId}`;
+  await updateDoc(doc(db, 'enrollments', id), {
+    [`assignmentScores.${moduleId}`]: score,
+  });
+}
+
+// ─── Module Status ──────────────────────────────────────────────────────────────────
 
 export async function getModules(trainingId: string): Promise<Module[]> {
   const snap = await getDocs(

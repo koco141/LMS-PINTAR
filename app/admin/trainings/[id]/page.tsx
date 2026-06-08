@@ -243,6 +243,9 @@ export default function TrainingAdminPage() {
             <Link href={`/admin/trainings/${id}/participants`} className="btn btn-secondary">
               👥 Lihat Peserta
             </Link>
+            <Link href={`/admin/trainings/${id}/assignments`} className="btn btn-secondary">
+              📝 Nilai Tugas
+            </Link>
             <button className="btn btn-danger" onClick={handleDeleteTraining}>
               🗑️ Hapus
             </button>

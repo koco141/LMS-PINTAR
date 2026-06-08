@@ -14,7 +14,7 @@ interface ParticipantRow {
   photoURL: string | null;
   preTestScore: number | null;
   postTestScore: number | null;
-  improvement: number | null;
+  totalAssignmentScore: number;
   completedModules: number;
   totalModules: number;
   progress: number;
@@ -33,7 +33,6 @@ export default function ParticipantsPage() {
   const [exportLoading, setExportLoading] = useState<'excel' | 'pdf' | null>(null);
   const [search, setSearch] = useState('');
   const [modules, setModules] = useState<Module[]>([]);
-  const [selectedParticipantForTasks, setSelectedParticipantForTasks] = useState<ParticipantRow | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) { router.push('/login'); return; }
@@ -52,17 +51,18 @@ export default function ParticipantsPage() {
     const rows = await Promise.all(
       enrollments.map(async (e) => {
         const u: any = await getUserById(e.userId);
-        const improvement = e.preTestScore !== null && e.postTestScore !== null
-          ? e.postTestScore - e.preTestScore
-          : null;
+        
+        const assignmentScores = (e as any).assignmentScores || {};
+        const totalAssignmentScore = Object.values(assignmentScores).reduce((sum: number, score: any) => sum + (Number(score) || 0), 0);
+
         return {
           userId: e.userId,
-          name: u?.name || 'Anonim',
+          name: u?.fullName || u?.name || 'Anonim',
           email: u?.email || '',
           photoURL: u?.photoURL || null,
           preTestScore: e.preTestScore,
           postTestScore: e.postTestScore,
-          improvement,
+          totalAssignmentScore,
           completedModules: e.completedModules.length,
           totalModules: modules.length,
           progress: modules.length > 0 ? Math.round((e.completedModules.length / modules.length) * 100) : 0,
@@ -103,8 +103,7 @@ export default function ParticipantsPage() {
         'Email': p.email,
         'Pre-Test': p.preTestScore ?? 'Belum',
         'Post-Test': p.postTestScore ?? 'Belum',
-        'Peningkatan': p.improvement !== null ? p.improvement : '—',
-        'Modul Selesai': `${p.completedModules}/${p.totalModules}`,
+        'Nilai Tugas (Total)': p.totalAssignmentScore,
         'Progress (%)': p.progress,
       }));
       const ws = XLSX.utils.json_to_sheet(data);
@@ -132,14 +131,14 @@ export default function ParticipantsPage() {
 
       autoTable(doc, {
         startY: 30,
-        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Peningkatan', 'Progress']],
+        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Progress']],
         body: filteredParticipants.map((p, idx) => [
           idx + 1,
           p.name,
           p.email,
           p.preTestScore ?? 'Belum',
           p.postTestScore ?? 'Belum',
-          p.improvement !== null ? (p.improvement >= 0 ? '+' : '') + p.improvement : '—',
+          p.totalAssignmentScore,
           `${p.progress}%`,
         ]),
         styles: { fontSize: 9, cellPadding: 4 },
@@ -249,7 +248,7 @@ export default function ParticipantsPage() {
                   <th>Nama Peserta</th>
                   <th>Pre-Test</th>
                   <th>Post-Test</th>
-                  <th>Peningkatan</th>
+                  <th>Nilai Tugas (Total)</th>
                   <th>Progress Materi</th>
                   <th>Aksi</th>
                 </tr>
@@ -282,11 +281,9 @@ export default function ParticipantsPage() {
                       </span>
                     </td>
                     <td>
-                      {p.improvement !== null ? (
-                        <span style={{ color: p.improvement >= 0 ? 'var(--status-ongoing)' : '#ef4444', fontWeight: '700' }}>
-                          {p.improvement >= 0 ? '+' : ''}{p.improvement}
-                        </span>
-                      ) : '—'}
+                      <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                        {p.totalAssignmentScore}
+                      </span>
                     </td>
                     <td>
                       <div className={styles.progressCell}>
@@ -297,65 +294,19 @@ export default function ParticipantsPage() {
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button
-                          className="btn btn-icon btn-secondary btn-sm"
-                          onClick={() => setSelectedParticipantForTasks(p)}
-                          title="Lihat Tugas"
-                          style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          📝
-                        </button>
-                        <button
-                          className="btn btn-icon btn-danger btn-sm"
-                          onClick={() => handleDeleteParticipant(p.userId, p.name)}
-                          title="Hapus Peserta"
-                          style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
+                      <button
+                        className="btn btn-icon btn-danger btn-sm"
+                        onClick={() => handleDeleteParticipant(p.userId, p.name)}
+                        title="Hapus Peserta"
+                        style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-
-        {selectedParticipantForTasks && (
-          <div className="modal-overlay">
-            <div className="modal-content" style={{ maxWidth: '600px' }}>
-              <div className="modal-header">
-                <h2>📝 Tugas: {selectedParticipantForTasks.name}</h2>
-                <button className="btn-close" onClick={() => setSelectedParticipantForTasks(null)}>×</button>
-              </div>
-              <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                {modules.filter(m => m.type === 'tugas').length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)' }}>Pelatihan ini tidak memiliki modul penugasan.</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {modules.filter(m => m.type === 'tugas').map((m, i) => {
-                      const link = selectedParticipantForTasks.assignments?.[m.id];
-                      return (
-                        <div key={m.id} style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                          <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>
-                            {i + 1}. {m.title}
-                          </h4>
-                          {link ? (
-                            <a href={link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: '600', wordBreak: 'break-all' }}>
-                              🔗 Buka Link Tugas
-                            </a>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>⚠️ Belum mengumpulkan tugas</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         )}
       </div>
