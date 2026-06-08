@@ -328,13 +328,21 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                 </div>
                 <div style={{ width: '1px', background: 'var(--border)', margin: '0 16px' }}></div>
                 <div style={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{maleCount}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>👨 Laki-laki</div>
+                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6', lineHeight: '1.2' }}>{maleCount}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Laki-laki</div>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>{femaleCount}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>👩 Perempuan</div>
+                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899', lineHeight: '1.2' }}>{femaleCount}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Perempuan</div>
                   </div>
                 </div>
               </div>
