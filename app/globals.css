@@ -640,3 +640,16 @@ tr:hover td {
 .toggle input:checked + .toggle-slider:before {
   transform: translateX(20px);
 }
+
+@media print {
+  nav, header, .print-hidden {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

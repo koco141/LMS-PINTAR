@@ -223,6 +223,9 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <h1 className={styles.title}>Analisis Pelatihan 📊</h1>
             <p className={styles.subtitle}>{training?.title}</p>
           </div>
+          <button className="btn btn-secondary print-hidden" onClick={() => window.print()}>
+            🖨️ Cetak PDF
+          </button>
         </div>
 
         {/* Stats Grid */}
