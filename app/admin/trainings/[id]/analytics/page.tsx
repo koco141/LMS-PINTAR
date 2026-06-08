@@ -199,6 +199,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   };
 
   const preTestStats = getQuestionStats(preTest, 'preTestAnswers');
+  const postTestStats = getQuestionStats(postTest, 'postTestAnswers');
 
   return (
     <div className={styles.page}>
@@ -304,7 +305,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           </div>
         </div>
 
-        {/* Question Analysis Table */}
+        {/* Question Analysis Table Pre-Test */}
         <div className={styles.tableCard}>
           <h3>Analisis Per Soal (Pre-Test)</h3>
           {preTestStats.length === 0 ? (
@@ -321,6 +322,52 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                 </thead>
                 <tbody>
                   {preTestStats.map((stat, i) => (
+                    <tr key={i}>
+                      <td>{stat.question.length > 80 ? stat.question.substring(0, 80) + '...' : stat.question}</td>
+                      <td>
+                        <span className="badge badge-ongoing" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                          {stat.category}
+                        </span>
+                      </td>
+                      <td>
+                        <div className={styles.correctRate}>
+                          <span style={{ width: '40px', fontWeight: 600 }}>{stat.rate.toFixed(0)}%</span>
+                          <div className={styles.correctRateBar}>
+                            <div 
+                              className={styles.correctRateFill} 
+                              style={{ 
+                                width: `${stat.rate}%`, 
+                                background: stat.rate > 70 ? '#10b981' : stat.rate > 40 ? '#f59e0b' : '#ef4444' 
+                              }} 
+                            />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Question Analysis Table Post-Test */}
+        <div className={styles.tableCard} style={{ marginTop: '24px' }}>
+          <h3>Analisis Per Soal (Post-Test)</h3>
+          {postTestStats.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)' }}>Belum ada data evaluasi soal.</p>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ width: '50%' }}>Pertanyaan</th>
+                    <th style={{ width: '20%' }}>Kategori</th>
+                    <th style={{ width: '30%' }}>Tingkat Kebenaran</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {postTestStats.map((stat, i) => (
                     <tr key={i}>
                       <td>{stat.question.length > 80 ? stat.question.substring(0, 80) + '...' : stat.question}</td>
                       <td>

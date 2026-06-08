@@ -128,7 +128,7 @@ export default function TrainingPage() {
     const updated = await getEnrollment(user.uid, training.id);
     setEnrollment(updated);
     setQuizStarted(false);
-    determineStep(updated!, preTest, postTest, modules);
+    // Kita hapus pemanggilan determineStep di sini agar tidak langsung melompat ke halaman berikutnya
   };
 
   if (notFound) {
