@@ -38,7 +38,7 @@ export default function AssignmentViewer({
         <p className={styles.moduleDesc}>{module.description || 'Tidak ada deskripsi penugasan.'}</p>
       </div>
 
-      <div style={{ padding: '24px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', marginTop: '24px' }}>
+      <div style={{ maxWidth: '600px', margin: '24px auto 0 auto', padding: '32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
         <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Pengumpulan Tugas: {module.title}</h3>
         
         {existingLink && (
