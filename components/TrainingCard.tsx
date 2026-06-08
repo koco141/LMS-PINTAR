@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Training } from '@/lib/db';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -27,6 +29,11 @@ const STATUS_MAP = {
 };
 
 export default function TrainingCard({ training, index = 0 }: Props) {
+  const router = useRouter();
+  const [showTokenPrompt, setShowTokenPrompt] = useState(false);
+  const [inputToken, setInputToken] = useState('');
+  const [error, setError] = useState('');
+
   const status = STATUS_MAP[training.status];
   const coverGradient = training.coverColor || COVER_COLORS[index % COVER_COLORS.length];
 
@@ -75,9 +82,53 @@ export default function TrainingCard({ training, index = 0 }: Props) {
           </div>
         </div>
 
-        <Link href={`/training/${training.token}`} className={styles.joinBtn}>
-          {training.status === 'completed' ? '📊 Lihat Detail' : '▶ Masuk Pelatihan'}
-        </Link>
+        {!showTokenPrompt ? (
+          <button 
+            onClick={() => setShowTokenPrompt(true)} 
+            className={styles.joinBtn}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {training.status === 'completed' ? '📊 Lihat Detail' : '▶ Masuk Pelatihan'}
+          </button>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+              Masukkan Token Pelatihan:
+            </p>
+            <input 
+              type="text" 
+              placeholder="Contoh: ABC123" 
+              className="form-input"
+              value={inputToken}
+              onChange={(e) => { setInputToken(e.target.value.toUpperCase()); setError(''); }}
+              style={{ fontSize: '0.85rem', padding: '8px' }}
+              autoComplete="off"
+            />
+            {error && <span style={{ color: 'var(--status-upcoming)', fontSize: '0.75rem', fontWeight: 600 }}>{error}</span>}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-primary btn-sm" 
+                style={{ flex: 1, padding: '6px' }}
+                onClick={() => {
+                  if (inputToken === training.token) {
+                    router.push(`/training/${training.token}`);
+                  } else {
+                    setError('Token tidak sesuai.');
+                  }
+                }}
+              >
+                Validasi
+              </button>
+              <button 
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '6px 12px' }}
+                onClick={() => { setShowTokenPrompt(false); setInputToken(''); setError(''); }}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

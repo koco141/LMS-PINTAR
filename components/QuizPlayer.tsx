@@ -28,7 +28,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     if (!quiz || !quiz.questions || quiz.questions.length === 0) return;
 
     // 1. Shuffle questions using Fisher-Yates
-    const qList = [...quiz.questions];
+    const qList = quiz.questions.map((q, originalQIdx) => ({ ...q, originalQIdx }));
     for (let i = qList.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [qList[i], qList[j]] = [qList[j], qList[i]];
@@ -83,9 +83,11 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
   const submitAutomatically = () => {
     let totalScore = 0;
     let totalPoints = 0;
+    const mappedAnswers = new Array(quiz.questions.length).fill(null);
     shuffledQuestions.forEach((q, idx) => {
       totalPoints += q.points || 10;
       const ans = answersRef.current[idx];
+      mappedAnswers[q.originalQIdx] = ans;
       if (ans === q.correctAnswer) {
         totalScore += q.points || 10;
       }
@@ -93,7 +95,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
     setScore(percentage);
     setSubmitted(true);
-    onSubmit(percentage, answersRef.current as number[]);
+    onSubmit(percentage, mappedAnswers);
   };
 
   const handleAnswer = (qIdx: number, optOriginalIdx: number) => {
@@ -110,8 +112,10 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
   const handleSubmit = () => {
     let totalScore = 0;
     let totalPoints = 0;
+    const mappedAnswers = new Array(quiz.questions.length).fill(null);
     shuffledQuestions.forEach((q, idx) => {
       totalPoints += q.points || 10;
+      mappedAnswers[q.originalQIdx] = answers[idx];
       if (answers[idx] === q.correctAnswer) {
         totalScore += q.points || 10;
       }
@@ -119,7 +123,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
     setScore(percentage);
     setSubmitted(true);
-    onSubmit(percentage, answers as number[]);
+    onSubmit(percentage, mappedAnswers);
   };
 
   const formatTime = (seconds: number) => {

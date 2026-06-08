@@ -28,6 +28,7 @@ export interface Training {
   startDate: Timestamp | null;
   endDate: Timestamp | null;
   showLeaderboard: boolean;
+  assignmentLink?: string;
   participantCount: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -49,6 +50,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number; // index 0-3
   points: number;
+  category?: string;
 }
 
 export interface Quiz {
@@ -335,6 +337,16 @@ export async function getTrainingEnrollments(trainingId: string): Promise<Enroll
     console.error("Error in getTrainingEnrollments:", err);
     return [];
   }
+}
+
+export async function deleteEnrollment(userId: string, trainingId: string) {
+  const id = `${userId}_${trainingId}`;
+  await deleteDoc(doc(db, 'enrollments', id));
+  
+  // Decrement participant count
+  await updateDoc(doc(db, 'trainings', trainingId), {
+    participantCount: increment(-1),
+  });
 }
 
 export async function getUserById(userId: string) {

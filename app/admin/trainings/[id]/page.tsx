@@ -41,7 +41,7 @@ export default function TrainingAdminPage() {
   // Info form
   const [infoForm, setInfoForm] = useState({
     title: '', description: '', status: 'upcoming', coverColor: DEFAULT_COVER,
-    startDate: '', endDate: '', showLeaderboard: false,
+    startDate: '', endDate: '', showLeaderboard: false, assignmentLink: '',
   });
 
   useEffect(() => {
@@ -88,6 +88,7 @@ export default function TrainingAdminPage() {
         startDate: t.startDate ? formatToDateTimeLocal(t.startDate) : '',
         endDate: t.endDate ? formatToDateTimeLocal(t.endDate) : '',
         showLeaderboard: t.showLeaderboard,
+        assignmentLink: t.assignmentLink || '',
       });
     }
     setModules(mods);
@@ -113,6 +114,7 @@ export default function TrainingAdminPage() {
       startDate: infoForm.startDate ? Timestamp.fromDate(new Date(infoForm.startDate)) : null,
       endDate: infoForm.endDate ? Timestamp.fromDate(new Date(infoForm.endDate)) : null,
       showLeaderboard: infoForm.showLeaderboard,
+      assignmentLink: infoForm.assignmentLink,
     });
     await loadAll();
     setSaving(false);
@@ -230,6 +232,10 @@ export default function TrainingAdminPage() {
               <div className="form-group">
                 <label className="form-label">Deskripsi</label>
                 <textarea className="form-textarea" value={infoForm.description} onChange={(e) => setInfoForm({ ...infoForm, description: e.target.value })} rows={3} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Link Pengumpulan Tugas / Materi (Google Drive / Form)</label>
+                <input className="form-input" placeholder="Opsional (misal: https://drive.google.com/...)" value={infoForm.assignmentLink} onChange={(e) => setInfoForm({ ...infoForm, assignmentLink: e.target.value })} />
               </div>
               <div className={styles.formRow3}>
                 <div className="form-group">
@@ -579,7 +585,8 @@ function QuizEditor({
       'Pilihan C *',
       'Pilihan D *',
       'Kunci Jawaban (A/B/C/D) *',
-      'Poin'
+      'Poin',
+      'Kategori'
     ];
     const sampleData = [
       [
@@ -590,7 +597,8 @@ function QuizEditor({
         'Adobe Illustrator',
         'All In',
         'A',
-        10
+        10,
+        'Teori'
       ],
       [
         2,
@@ -600,7 +608,8 @@ function QuizEditor({
         'Kroasia',
         'Maroko',
         'B',
-        10
+        10,
+        'Teori'
       ]
     ];
 
@@ -615,7 +624,8 @@ function QuizEditor({
       { wch: 25 },
       { wch: 25 },
       { wch: 25 },
-      { wch: 8 }
+      { wch: 8 },
+      { wch: 20 }
     ];
     worksheet['!cols'] = wscols;
 
@@ -663,6 +673,7 @@ function QuizEditor({
           const rawKey = row[6] ? String(row[6]).trim().toUpperCase() : 'A';
           const correctAnswer = ['A', 'B', 'C', 'D'].indexOf(rawKey);
           const points = typeof row[7] === 'number' ? row[7] : (parseInt(row[7]) || 10);
+          const category = row[8] ? String(row[8]).trim() : 'Teori';
 
           imported.push({
             id: (Date.now() + i).toString(),
@@ -670,6 +681,7 @@ function QuizEditor({
             options,
             correctAnswer: correctAnswer !== -1 ? correctAnswer : 0,
             points,
+            category,
           });
         }
 
@@ -702,6 +714,7 @@ function QuizEditor({
       options: ['', '', '', ''],
       correctAnswer: 0,
       points: 10,
+      category: 'Teori',
     }]);
   };
 
@@ -746,6 +759,7 @@ function QuizEditor({
             options: Array.isArray(q.options) ? q.options : ['', '', '', ''],
             correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
             points: typeof q.points === 'number' ? q.points : 10,
+            category: q.category || 'Teori',
           }));
         }
       } else {
@@ -759,6 +773,7 @@ function QuizEditor({
           const options: string[] = ['', '', '', ''];
           let correctAnswer = 0;
           let points = 10;
+          let category = 'Teori';
 
           lines.forEach((line) => {
             const aMatch = line.match(/^A\.\s*(.*)/i);
@@ -767,6 +782,7 @@ function QuizEditor({
             const dMatch = line.match(/^D\.\s*(.*)/i);
             const keyMatch = line.match(/^Kunci:\s*([A-D])/i);
             const pointsMatch = line.match(/^Poin:\s*(\d+)/i);
+            const categoryMatch = line.match(/^Kategori:\s*(.*)/i);
 
             if (aMatch) options[0] = aMatch[1];
             else if (bMatch) options[1] = bMatch[1];
@@ -778,6 +794,8 @@ function QuizEditor({
               if (correctAnswer === -1) correctAnswer = 0;
             } else if (pointsMatch) {
               points = parseInt(pointsMatch[1]) || 10;
+            } else if (categoryMatch) {
+              category = categoryMatch[1].trim();
             }
           });
 
@@ -787,6 +805,7 @@ function QuizEditor({
             options,
             correctAnswer,
             points,
+            category,
           });
         });
       }
@@ -897,6 +916,20 @@ function QuizEditor({
                 <input className="form-input" type="number" min="1" max="100" value={q.points}
                   onChange={(e) => updateQuestion(qIdx, 'points', parseInt(e.target.value) || 10)}
                   style={{ width: '80px' }} />
+                
+                <label className="form-label" style={{ margin: 0, marginLeft: '12px' }}>Kategori:</label>
+                <select 
+                  className="form-input"
+                  value={q.category || 'Teori'}
+                  onChange={(e) => updateQuestion(qIdx, 'category', e.target.value)}
+                  style={{ width: '180px', padding: '6px' }}
+                >
+                  <option value="Teori">Teori</option>
+                  <option value="Teknis Dasar">Teknis Dasar</option>
+                  <option value="Teknis Penerapan">Teknis Penerapan</option>
+                  <option value="Analisis">Analisis</option>
+                  <option value="Strategi Kompleks">Strategi Kompleks</option>
+                </select>
               </div>
             </div>
           ))}

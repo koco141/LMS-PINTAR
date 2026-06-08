@@ -150,6 +150,7 @@
 
 .tokenInput {
   flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   outline: none;
@@ -398,8 +399,15 @@
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .hero { padding: 100px 16px 60px; min-height: 75vh; }
-  .heroStats { gap: 16px; padding: 16px 24px; flex-wrap: wrap; justify-content: center; }
+  .heroTitle { font-size: clamp(2rem, 8vw, 2.5rem); word-break: break-word; }
+  .heroSubtitle { font-size: 0.95rem; padding: 0 8px; }
+  .heroStats { gap: 16px; padding: 16px 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 100%; }
   .heroStatDivider { display: none; }
-  .tokenInputWrapper { padding: 6px 6px 6px 14px; }
+  .tokenForm { width: 100%; padding: 0; }
+  .tokenInputWrapper { padding: 6px 6px 6px 12px; gap: 4px; }
+  .tokenIcon { display: none; }
+  .tokenInput { font-size: 0.9rem; padding: 8px 0; }
+  .tokenInput::placeholder { font-size: 0.8rem; }
+  .tokenBtn { padding: 10px 16px; min-width: 70px; font-size: 0.85rem; }
   .trainingsGrid { grid-template-columns: 1fr; }
 }

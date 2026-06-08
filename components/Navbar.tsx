@@ -10,6 +10,7 @@ export default function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -27,17 +28,25 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <div className={styles.navLinks}>
-          <Link href="/" className={styles.navLink}>Beranda</Link>
+        <div className={`${styles.navLinks} ${mobileNavOpen ? styles.mobileOpen : ''}`}>
+          <Link href="/" className={styles.navLink} onClick={() => setMobileNavOpen(false)}>Beranda</Link>
           {user && !isAdmin && (
-            <Link href="/dashboard" className={styles.navLink}>Dashboard Saya</Link>
+            <Link href="/dashboard" className={styles.navLink} onClick={() => setMobileNavOpen(false)}>Dashboard Saya</Link>
           )}
           {isAdmin && (
-            <Link href="/admin" className={styles.navLink}>Panel Admin</Link>
+            <Link href="/admin" className={styles.navLink} onClick={() => setMobileNavOpen(false)}>Panel Admin</Link>
           )}
         </div>
 
         <div className={styles.navRight}>
+          <button 
+            className={styles.hamburgerBtn}
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileNavOpen ? '✕' : '☰'}
+          </button>
+
           {!user ? (
             <Link href="/login" className="btn btn-primary btn-sm">
               Masuk

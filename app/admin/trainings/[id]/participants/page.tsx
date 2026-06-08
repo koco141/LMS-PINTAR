@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -77,6 +77,16 @@ export default function ParticipantsPage() {
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleDeleteParticipant = async (userId: string, name: string) => {
+    if (!confirm(`Hapus peserta "${name}"? Data evaluasi dan progress mereka akan hilang.`)) return;
+    try {
+      await deleteEnrollment(userId, id);
+      setParticipants((prev) => prev.filter((p) => p.userId !== userId));
+    } catch (err: any) {
+      alert(`Gagal menghapus peserta: ${err.message || err}`);
+    }
+  };
 
   const handleExportExcel = async () => {
     setExportLoading('excel');
@@ -236,6 +246,7 @@ export default function ParticipantsPage() {
                   <th>Post-Test</th>
                   <th>Peningkatan</th>
                   <th>Progress Materi</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,6 +290,16 @@ export default function ParticipantsPage() {
                         </div>
                         <span>{p.progress}%</span>
                       </div>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-icon btn-danger btn-sm"
+                        onClick={() => handleDeleteParticipant(p.userId, p.name)}
+                        title="Hapus Peserta"
+                        style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 ))}

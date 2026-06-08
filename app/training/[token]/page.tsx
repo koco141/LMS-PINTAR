@@ -309,6 +309,38 @@ export default function TrainingPage() {
             );
           })}
 
+          {training?.assignmentLink && (
+            <>
+              <div style={{ height: '8px' }} />
+              <div className={styles.moduleListHeader}>
+                📁 Pengumpulan Tugas {(isUpcoming || !isModulesUnlocked) && '🔒'}
+              </div>
+              <a
+                href={(!isUpcoming && isModulesUnlocked) ? training.assignmentLink : '#'}
+                target={(!isUpcoming && isModulesUnlocked) ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                className={`${styles.moduleItem} ${(!isUpcoming && isModulesUnlocked) ? '' : styles.locked}`}
+                style={{
+                  opacity: (!isUpcoming && isModulesUnlocked) ? 1 : 0.5,
+                  cursor: (!isUpcoming && isModulesUnlocked) ? 'pointer' : 'not-allowed',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+                onClick={(e) => {
+                  if (isUpcoming || !isModulesUnlocked) {
+                    e.preventDefault();
+                  }
+                }}
+              >
+                <span className={styles.moduleNum}>
+                  {(!isUpcoming && isModulesUnlocked) ? '📁' : '🔒'}
+                </span>
+                <span className={styles.moduleName}>Submit Tugas / Materi</span>
+              </a>
+            </>
+          )}
+
           {postTest && (
             <>
               <div style={{ height: '8px' }} />

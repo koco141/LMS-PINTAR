@@ -120,27 +120,31 @@ export default function AdminDashboard() {
                       </td>
                       <td>{training.participantCount}</td>
                       <td>
-                        <div className={styles.actions}>
-                          <Link href={`/admin/trainings/${training.id}`} className="btn btn-secondary btn-sm" title="Kelola Pelatihan">
-                            ✏️ Kelola
+                        <div className={styles.actions} style={{ display: 'flex', gap: '6px' }}>
+                          <Link href={`/admin/trainings/${training.id}`} className="btn btn-icon btn-secondary btn-sm" title="Kelola Pelatihan" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ✏️
                           </Link>
-                          <Link href={`/admin/trainings/${training.id}/participants`} className="btn btn-secondary btn-sm" title="Lihat Peserta">
-                            👥 Peserta
+                          <Link href={`/admin/trainings/${training.id}/participants`} className="btn btn-icon btn-secondary btn-sm" title="Lihat Peserta" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            👥
                           </Link>
                           <button
-                            className="btn btn-secondary btn-sm"
-                            style={{ background: 'var(--primary-light)', color: 'white', border: 'none' }}
+                            className="btn btn-icon btn-secondary btn-sm"
+                            style={{ background: 'var(--primary-light)', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             onClick={() => setActiveShareTraining(training)}
                             title="Bagikan Pelatihan"
                           >
-                            📢 Bagikan
+                            📢
                           </button>
+                          <Link href={`/admin/trainings/${training.id}/analytics`} className="btn btn-icon btn-secondary btn-sm" title="Analisis Pelatihan" style={{ background: '#10b981', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            📊
+                          </Link>
                           <button
-                            className="btn btn-danger btn-sm"
+                            className="btn btn-icon btn-danger btn-sm"
+                            style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             onClick={() => handleDelete(training.id, training.title)}
                             title="Hapus Pelatihan"
                           >
-                            🗑️ Hapus
+                            🗑️
                           </button>
                         </div>
                       </td>
