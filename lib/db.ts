@@ -30,6 +30,7 @@ export interface Training {
   showLeaderboard: boolean;
   assignmentLink?: string;
   participantCount: number;
+  targetLevel?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -113,26 +113,38 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   });
 
   // Level Logic
-  let level = 1;
-  let levelLabel = 'Pemula/Paham';
-  let levelDesc = 'Memiliki pengetahuan dasar tentang teori suatu bidang, namun belum berpengalaman dalam praktik.';
-  
-  if (avgPostTestScore >= 90) {
-    level = 5;
-    levelLabel = 'Master/Pakar';
-    levelDesc = 'Berada di puncak penguasaan keahlian dan memiliki kapasitas untuk membimbing atau memimpin orang lain.';
-  } else if (avgPostTestScore >= 80) {
-    level = 4;
-    levelLabel = 'Ahli/Superior';
-    levelDesc = 'Berkemampuan tingkat lanjut, mencapai performa superior, dan sering menjadi rujukan bagi rekan kerja.';
-  } else if (avgPostTestScore >= 60) {
-    level = 3;
-    levelLabel = 'Kompeten/Mahir';
-    levelDesc = 'Mampu mengevaluasi situasi, merancang perbaikan, serta menyelesaikan masalah yang lebih kompleks.';
-  } else if (avgPostTestScore >= 40) {
-    level = 2;
-    levelLabel = 'Mampu/Dasar';
-    levelDesc = 'Mampu menerapkan pengetahuan dasar dan prinsip-prinsip untuk menyelesaikan pekerjaan rutin tanpa harus diawasi.';
+  const targetLevel = training?.targetLevel || 5;
+  const intervalSize = 100 / targetLevel;
+  let computedLevel = Math.ceil(avgPostTestScore / intervalSize);
+  if (computedLevel < 1) computedLevel = 1;
+  if (computedLevel > targetLevel) computedLevel = targetLevel;
+
+  let level = computedLevel;
+  let levelLabel = '';
+  let levelDesc = '';
+
+  switch (level) {
+    case 5:
+      levelLabel = 'Master/Pakar';
+      levelDesc = 'Berada di puncak penguasaan keahlian dan memiliki kapasitas untuk membimbing atau memimpin orang lain.';
+      break;
+    case 4:
+      levelLabel = 'Ahli/Superior';
+      levelDesc = 'Berkemampuan tingkat lanjut, mencapai performa superior, dan sering menjadi rujukan bagi rekan kerja.';
+      break;
+    case 3:
+      levelLabel = 'Kompeten/Mahir';
+      levelDesc = 'Mampu mengevaluasi situasi, merancang perbaikan, serta menyelesaikan masalah yang lebih kompleks.';
+      break;
+    case 2:
+      levelLabel = 'Mampu/Dasar';
+      levelDesc = 'Mampu menerapkan pengetahuan dasar dan prinsip-prinsip untuk menyelesaikan pekerjaan rutin tanpa harus diawasi.';
+      break;
+    case 1:
+    default:
+      levelLabel = 'Pemula/Paham';
+      levelDesc = 'Memiliki pengetahuan dasar tentang teori suatu bidang, namun belum berpengalaman dalam praktik.';
+      break;
   }
 
   // Radar Chart Data Logic

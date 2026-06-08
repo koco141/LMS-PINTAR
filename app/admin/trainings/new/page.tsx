@@ -22,6 +22,7 @@ export default function NewTrainingPage() {
     startDate: '',
     endDate: '',
     showLeaderboard: false,
+    targetLevel: 5,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -56,6 +57,7 @@ export default function NewTrainingPage() {
         startDate: form.startDate ? Timestamp.fromDate(new Date(form.startDate)) : null,
         endDate: form.endDate ? Timestamp.fromDate(new Date(form.endDate)) : null,
         showLeaderboard: form.showLeaderboard,
+        targetLevel: form.targetLevel,
       });
       router.push(`/admin/trainings/${id}`);
     } catch (err: any) {
@@ -106,6 +108,24 @@ export default function NewTrainingPage() {
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={4}
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Level Kompetensi Pelatihan</label>
+            <select
+              className="form-input"
+              value={form.targetLevel}
+              onChange={(e) => setForm({ ...form, targetLevel: Number(e.target.value) })}
+            >
+              <option value={1}>Level 1 (Pemula/Paham) - Pengetahuan dasar teori, belum berpengalaman praktik</option>
+              <option value={2}>Level 2 (Mampu/Dasar) - Menerapkan pengetahuan dasar untuk tugas rutin</option>
+              <option value={3}>Level 3 (Kompeten/Mahir) - Mengevaluasi situasi dan memecahkan masalah kompleks</option>
+              <option value={4}>Level 4 (Ahli/Superior) - Performa superior dan sering menjadi rujukan</option>
+              <option value={5}>Level 5 (Master/Pakar) - Puncak keahlian, mampu membimbing orang lain</option>
+            </select>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+              Pilih level maksimal (Target/Tujuan) kompetensi yang diharapkan dapat dicapai peserta setelah menyelesaikan pelatihan ini.
+            </p>
           </div>
 
           <div className={styles.row}>

@@ -42,7 +42,7 @@ export default function TrainingAdminPage() {
   // Info form
   const [infoForm, setInfoForm] = useState({
     title: '', description: '', status: 'upcoming', coverColor: DEFAULT_COVER,
-    startDate: '', endDate: '', showLeaderboard: false, assignmentLink: '',
+    startDate: '', endDate: '', showLeaderboard: false, assignmentLink: '', targetLevel: 5,
   });
 
   useEffect(() => {
@@ -89,6 +89,7 @@ export default function TrainingAdminPage() {
         startDate: t.startDate ? formatToDateTimeLocal(t.startDate) : '',
         endDate: t.endDate ? formatToDateTimeLocal(t.endDate) : '',
         showLeaderboard: t.showLeaderboard,
+        targetLevel: t.targetLevel || 5,
         assignmentLink: t.assignmentLink || '',
       });
     }
@@ -115,6 +116,7 @@ export default function TrainingAdminPage() {
       startDate: infoForm.startDate ? Timestamp.fromDate(new Date(infoForm.startDate)) : null,
       endDate: infoForm.endDate ? Timestamp.fromDate(new Date(infoForm.endDate)) : null,
       showLeaderboard: infoForm.showLeaderboard,
+      targetLevel: infoForm.targetLevel,
       assignmentLink: infoForm.assignmentLink,
     });
     await loadAll();
@@ -271,6 +273,23 @@ export default function TrainingAdminPage() {
               <div className="form-group">
                 <label className="form-label">Deskripsi</label>
                 <textarea className="form-textarea" value={infoForm.description} onChange={(e) => setInfoForm({ ...infoForm, description: e.target.value })} rows={3} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Level Kompetensi Pelatihan</label>
+                <select
+                  className="form-input"
+                  value={infoForm.targetLevel}
+                  onChange={(e) => setInfoForm({ ...infoForm, targetLevel: Number(e.target.value) })}
+                >
+                  <option value={1}>Level 1 (Pemula/Paham) - Pengetahuan dasar teori, belum berpengalaman praktik</option>
+                  <option value={2}>Level 2 (Mampu/Dasar) - Menerapkan pengetahuan dasar untuk tugas rutin</option>
+                  <option value={3}>Level 3 (Kompeten/Mahir) - Mengevaluasi situasi dan memecahkan masalah kompleks</option>
+                  <option value={4}>Level 4 (Ahli/Superior) - Performa superior dan sering menjadi rujukan</option>
+                  <option value={5}>Level 5 (Master/Pakar) - Puncak keahlian, mampu membimbing orang lain</option>
+                </select>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  Pilih level maksimal (Target/Tujuan) kompetensi yang diharapkan dapat dicapai peserta setelah menyelesaikan pelatihan ini.
+                </p>
               </div>
               <div className="form-group">
                 <label className="form-label">Link Pengumpulan Tugas / Materi (Google Drive / Form)</label>
