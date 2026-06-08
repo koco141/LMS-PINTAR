@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -19,6 +19,7 @@ interface ParticipantRow {
   totalModules: number;
   progress: number;
   enrolledAt: any;
+  assignments?: Record<string, string>;
 }
 
 export default function ParticipantsPage() {
@@ -31,6 +32,8 @@ export default function ParticipantsPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [exportLoading, setExportLoading] = useState<'excel' | 'pdf' | null>(null);
   const [search, setSearch] = useState('');
+  const [modules, setModules] = useState<Module[]>([]);
+  const [selectedParticipantForTasks, setSelectedParticipantForTasks] = useState<ParticipantRow | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) { router.push('/login'); return; }
@@ -44,6 +47,7 @@ export default function ParticipantsPage() {
       getModules(id),
     ]);
     setTraining(t);
+    setModules(modules);
 
     const rows = await Promise.all(
       enrollments.map(async (e) => {
@@ -63,6 +67,7 @@ export default function ParticipantsPage() {
           totalModules: modules.length,
           progress: modules.length > 0 ? Math.round((e.completedModules.length / modules.length) * 100) : 0,
           enrolledAt: e.enrolledAt,
+          assignments: e.assignments,
         };
       })
     );
@@ -292,19 +297,65 @@ export default function ParticipantsPage() {
                       </div>
                     </td>
                     <td>
-                      <button
-                        className="btn btn-icon btn-danger btn-sm"
-                        onClick={() => handleDeleteParticipant(p.userId, p.name)}
-                        title="Hapus Peserta"
-                        style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >
-                        🗑️
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          className="btn btn-icon btn-secondary btn-sm"
+                          onClick={() => setSelectedParticipantForTasks(p)}
+                          title="Lihat Tugas"
+                          style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          📝
+                        </button>
+                        <button
+                          className="btn btn-icon btn-danger btn-sm"
+                          onClick={() => handleDeleteParticipant(p.userId, p.name)}
+                          title="Hapus Peserta"
+                          style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {selectedParticipantForTasks && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '600px' }}>
+              <div className="modal-header">
+                <h2>📝 Tugas: {selectedParticipantForTasks.name}</h2>
+                <button className="btn-close" onClick={() => setSelectedParticipantForTasks(null)}>×</button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                {modules.filter(m => m.type === 'tugas').length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)' }}>Pelatihan ini tidak memiliki modul penugasan.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {modules.filter(m => m.type === 'tugas').map((m, i) => {
+                      const link = selectedParticipantForTasks.assignments?.[m.id];
+                      return (
+                        <div key={m.id} style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>
+                            {i + 1}. {m.title}
+                          </h4>
+                          {link ? (
+                            <a href={link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: '600', wordBreak: 'break-all' }}>
+                              🔗 Buka Link Tugas
+                            </a>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>⚠️ Belum mengumpulkan tugas</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
