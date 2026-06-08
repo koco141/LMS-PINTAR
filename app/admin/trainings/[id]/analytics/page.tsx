@@ -207,6 +207,40 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   const preTestStats = getQuestionStats(preTest, 'preTestAnswers');
   const postTestStats = getQuestionStats(postTest, 'postTestAnswers');
 
+  // Evaluation Ratings Logic
+  const calculateEvaluationStats = () => {
+    let categorySums: Record<string, number> = {};
+    let categoryCounts: Record<string, number> = {};
+    let totalScore = 0;
+    let totalCount = 0;
+
+    enrollments.forEach(enr => {
+      if (enr.evaluations) {
+        Object.values(enr.evaluations).forEach(evalData => {
+          if (evalData.ratings) {
+            Object.entries(evalData.ratings).forEach(([cat, score]) => {
+              categorySums[cat] = (categorySums[cat] || 0) + score;
+              categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+              totalScore += score;
+              totalCount += 1;
+            });
+          }
+        });
+      }
+    });
+
+    const categoryAverages = Object.keys(categorySums).map(cat => ({
+      category: cat,
+      avg: categorySums[cat] / categoryCounts[cat]
+    }));
+
+    const totalAverage = totalCount > 0 ? totalScore / totalCount : 0;
+
+    return { categoryAverages, totalAverage, totalCount };
+  };
+
+  const evalStats = calculateEvaluationStats();
+
   return (
     <div className={styles.page}>
       <div className="container">
@@ -312,6 +346,42 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Evaluation Summary */}
+        <div className={styles.tableCard} style={{ marginTop: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3>⭐ Hasil Evaluasi Pelatihan</h3>
+              <p style={{ color: 'var(--text-muted)' }}>Berdasarkan feedback dari peserta</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                {evalStats.totalAverage.toFixed(1)} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 5.0</span>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Rata-rata Keseluruhan ({evalStats.totalCount} penilaian)
+              </div>
+            </div>
+          </div>
+          
+          {evalStats.categoryAverages.length > 0 && (
+            <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+              {evalStats.categoryAverages.map((cat, i) => (
+                <div key={i} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>{cat.category}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{cat.avg.toFixed(1)}</span>
+                    <div style={{ display: 'flex', gap: '2px', color: '#f59e0b' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <span key={star} style={{ opacity: star <= Math.round(cat.avg) ? 1 : 0.3 }}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Question Analysis Table Pre-Test */}

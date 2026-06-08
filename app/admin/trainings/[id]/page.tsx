@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import {
   getTrainingById, getModules, getQuiz, updateTraining, deleteTraining,
-  createModule, updateModule, deleteModule, saveQuiz, getQuizById, updateModuleOrders,
+  createModule, updateModule, deleteModule, saveQuiz, updateModuleOrders,
   Training, Module, Quiz, QuizQuestion,
   generateToken,
 } from '@/lib/db';
@@ -37,9 +37,7 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'kuis', quizId: string}>({ title: '', embedUrl: '', description: '', type: 'materi', quizId: '' });
-  const [editingModuleQuiz, setEditingModuleQuiz] = useState<Module | null>(null);
-  const [moduleQuiz, setModuleQuiz] = useState<Quiz | null>(null);
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[]}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Info form
   const [infoForm, setInfoForm] = useState({
@@ -125,13 +123,13 @@ export default function TrainingAdminPage() {
   };
 
   // ─── Module CRUD ─────────────────────────────────────────────────────────
-  const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'kuis' = 'materi') => {
+  const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', quizId: mod.quizId || '' });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [] });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, quizId: '' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [] });
     }
     setShowModuleForm(true);
   };
@@ -151,8 +149,8 @@ export default function TrainingAdminPage() {
     } else {
       dataToSave.embedUrl = '';
     }
-    if (moduleForm.type === 'kuis') {
-      dataToSave.quizId = moduleForm.quizId;
+    if (moduleForm.type === 'evaluasi') {
+      dataToSave.ratingCategories = moduleForm.ratingCategories;
     }
 
     if (editingModule) {
@@ -182,18 +180,6 @@ export default function TrainingAdminPage() {
     }
   };
   
-  const openModuleQuizEditor = async (mod: Module) => {
-    setPageLoading(true);
-    if (mod.quizId) {
-      const q = await getQuizById(id, mod.quizId);
-      setModuleQuiz(q);
-    } else {
-      setModuleQuiz(null);
-    }
-    setEditingModuleQuiz(mod);
-    setPageLoading(false);
-  };
-
   const handleDeleteModule = async (moduleId: string) => {
     if (!confirm('Hapus modul ini?')) return;
     await deleteModule(id, moduleId);
@@ -246,6 +232,12 @@ export default function TrainingAdminPage() {
             </div>
           </div>
           <div className={styles.headerActions}>
+            <Link href={`/admin/trainings/${id}/analytics`} className="btn btn-secondary">
+              📊 Analisis
+            </Link>
+            <Link href={`/admin/trainings/${id}/testimonials`} className="btn btn-secondary">
+              💬 Testimoni
+            </Link>
             <Link href={`/admin/trainings/${id}/participants`} className="btn btn-secondary">
               👥 Lihat Peserta
             </Link>
@@ -408,7 +400,7 @@ export default function TrainingAdminPage() {
         )}
 
         {/* ─── Modules Tab ─── */}
-        {activeTab === 'modules' && !editingModuleQuiz && (
+        {activeTab === 'modules' && (
           <div className={styles.tabContent}>
             <div className={styles.sectionBar}>
               <h3>Daftar Materi</h3>
@@ -419,8 +411,8 @@ export default function TrainingAdminPage() {
                 <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'tugas')}>
                   📝 Tugas
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'kuis')}>
-                  ❓ Kuis
+                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'evaluasi')}>
+                  ⭐ Evaluasi
                 </button>
               </div>
             </div>
@@ -429,7 +421,7 @@ export default function TrainingAdminPage() {
               <div className="empty-state">
                 <div className="empty-state-icon">📚</div>
                 <h3>Belum ada modul</h3>
-                <p>Tambahkan modul materi, tugas, atau kuis.</p>
+                <p>Tambahkan modul materi, tugas, atau evaluasi.</p>
               </div>
             ) : (
               <DragDropContext onDragEnd={onDragEnd}>
@@ -452,7 +444,7 @@ export default function TrainingAdminPage() {
                                 <h4>
                                   {(!mod.type || mod.type === 'materi') && '📚 '}
                                   {mod.type === 'tugas' && '📝 '}
-                                  {mod.type === 'kuis' && '❓ '}
+                                  {mod.type === 'evaluasi' && '⭐ '}
                                   {mod.title}
                                 </h4>
                                 <p>{mod.description}</p>
@@ -461,9 +453,7 @@ export default function TrainingAdminPage() {
                                 )}
                               </div>
                               <div className={styles.moduleActions}>
-                                {mod.type === 'kuis' && (
-                                  <button className="btn btn-secondary btn-sm" onClick={() => openModuleQuizEditor(mod)}>✏️ Soal</button>
-                                )}
+
                                 <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(mod)}>✏️</button>
                                 <button className="btn btn-danger btn-sm" onClick={() => handleDeleteModule(mod.id)}>🗑️</button>
                               </div>
@@ -483,16 +473,57 @@ export default function TrainingAdminPage() {
               <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowModuleForm(false)}>
                 <div className="modal">
                   <div className="modal-header">
-                    <h3>{editingModule ? 'Edit Modul' : `Tambah ${moduleForm.type === 'materi' ? 'Materi' : moduleForm.type === 'tugas' ? 'Tugas' : 'Kuis'}`}</h3>
+                    <h3>{editingModule ? 'Edit Modul' : `Tambah ${moduleForm.type === 'materi' ? 'Materi' : moduleForm.type === 'tugas' ? 'Tugas' : 'Evaluasi'}`}</h3>
                     <button className="btn btn-icon btn-secondary" onClick={() => setShowModuleForm(false)}>✕</button>
                   </div>
                   <div className="modal-body">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div className="form-group">
-                        <label className="form-label">Judul {moduleForm.type === 'materi' ? 'Materi' : moduleForm.type === 'tugas' ? 'Tugas' : 'Kuis'} *</label>
+                        <label className="form-label">Judul {moduleForm.type === 'materi' ? 'Materi' : moduleForm.type === 'tugas' ? 'Tugas' : 'Evaluasi'} *</label>
                         <input className="form-input" placeholder="Judul"
                           value={moduleForm.title} onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })} />
                       </div>
+                      
+                      {moduleForm.type === 'evaluasi' && (
+                        <div className="form-group">
+                          <label className="form-label">Kategori Rating</label>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                            Tambahkan kategori apa saja yang ingin dirating oleh peserta (contoh: Instruktur, Materi, Penyelenggara).
+                          </p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                            {moduleForm.ratingCategories?.map((cat, i) => (
+                              <div key={i} style={{ display: 'flex', gap: '8px' }}>
+                                <input 
+                                  className="form-input" 
+                                  value={cat} 
+                                  onChange={(e) => {
+                                    const newCats = [...(moduleForm.ratingCategories || [])];
+                                    newCats[i] = e.target.value;
+                                    setModuleForm({ ...moduleForm, ratingCategories: newCats });
+                                  }}
+                                />
+                                <button 
+                                  className="btn btn-secondary" 
+                                  onClick={() => {
+                                    const newCats = [...(moduleForm.ratingCategories || [])];
+                                    newCats.splice(i, 1);
+                                    setModuleForm({ ...moduleForm, ratingCategories: newCats });
+                                  }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <button 
+                            className="btn btn-secondary btn-sm" 
+                            onClick={() => setModuleForm({ ...moduleForm, ratingCategories: [...(moduleForm.ratingCategories || []), 'Kategori Baru'] })}
+                          >
+                            + Tambah Kategori Rating
+                          </button>
+                        </div>
+                      )}
+
                       {(!moduleForm.type || moduleForm.type === 'materi') && (
                         <div className="form-group">
                           <label className="form-label">Link Google Slides (Publish URL) *</label>
@@ -523,30 +554,7 @@ export default function TrainingAdminPage() {
           </div>
         )}
 
-        {/* ─── Editing Module Quiz ─── */}
-        {activeTab === 'modules' && editingModuleQuiz && (
-          <div>
-             <div className={styles.sectionBar}>
-                <button className="btn btn-secondary btn-sm" onClick={() => setEditingModuleQuiz(null)}>
-                  ← Kembali ke Daftar Modul
-                </button>
-             </div>
-             <QuizEditor
-               trainingId={id}
-               type="module"
-               quiz={moduleQuiz}
-               quizId={editingModuleQuiz.quizId}
-               onSaved={async (newQuizId?: string) => { 
-                 if (newQuizId && newQuizId !== editingModuleQuiz.quizId) {
-                   await updateModule(id, editingModuleQuiz.id, { quizId: newQuizId });
-                   await loadAll();
-                 }
-                 setEditingModuleQuiz(null);
-                 showToast('✅ Kuis modul berhasil disimpan!'); 
-               }}
-             />
-          </div>
-        )}
+
 
         {/* ─── Quiz Tabs ─── */}
         {(activeTab === 'pre-test' || activeTab === 'post-test') && (
@@ -669,13 +677,11 @@ function QuizEditor({
   trainingId,
   type,
   quiz,
-  quizId,
   onSaved,
 }: {
   trainingId: string;
-  type: 'pre-test' | 'post-test' | 'module';
+  type: 'pre-test' | 'post-test';
   quiz: Quiz | null;
-  quizId?: string;
   onSaved: (newQuizId?: string) => void;
 }) {
   const [title, setTitle] = useState(quiz?.title || (type === 'pre-test' ? 'Pre-Test' : 'Post-Test'));
@@ -849,7 +855,7 @@ function QuizEditor({
   const handleSave = async () => {
     if (questions.length === 0) { alert('Tambahkan minimal 1 pertanyaan.'); return; }
     setSaving(true);
-    const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration }, type === 'pre-test' ? syncToPostTest : false, quizId);
+    const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration }, type === 'pre-test' ? syncToPostTest : false);
     setSaving(false);
     onSaved(finalQuizId);
   };

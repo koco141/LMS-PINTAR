@@ -42,8 +42,8 @@ export interface Module {
   description: string;
   order: number;
   createdAt: Timestamp;
-  type?: 'materi' | 'tugas' | 'kuis';
-  quizId?: string; // If type is 'kuis'
+  type?: 'materi' | 'tugas' | 'evaluasi';
+  ratingCategories?: string[]; // If type is 'evaluasi', list of categories to rate
 }
 
 export interface QuizQuestion {
@@ -58,7 +58,7 @@ export interface QuizQuestion {
 export interface Quiz {
   id: string;
   trainingId: string;
-  type: 'pre-test' | 'post-test' | 'module';
+  type: 'pre-test' | 'post-test';
   title: string;
   questions: QuizQuestion[];
   duration?: number; // durasi kuis dalam menit
@@ -79,8 +79,7 @@ export interface Enrollment {
   postTestCompletedAt: Timestamp | null;
   totalTimeSpent: number; // minutes
   assignments?: Record<string, string>; // moduleId -> submitted link
-  moduleQuizScores?: Record<string, number>; // moduleId -> score
-  moduleQuizAnswers?: Record<string, number[]>; // moduleId -> answers
+  evaluations?: Record<string, { ratings: Record<string, number>, testimonial: string }>; // moduleId -> evaluation data
 }
 
 // ─── Token Generator ──────────────────────────────────────────────────────────
@@ -208,26 +207,15 @@ export async function getQuiz(trainingId: string, type: 'pre-test' | 'post-test'
   return { id: d.id, trainingId, ...d.data() } as Quiz;
 }
 
-export async function getQuizById(trainingId: string, quizId: string): Promise<Quiz | null> {
-  const snap = await getDoc(doc(db, 'trainings', trainingId, 'quizzes', quizId));
-  if (!snap.exists()) return null;
-  return { id: snap.id, trainingId, ...snap.data() } as Quiz;
-}
 
 export async function saveQuiz(
   trainingId: string,
-  type: 'pre-test' | 'post-test' | 'module',
+  type: 'pre-test' | 'post-test',
   data: Omit<Quiz, 'id' | 'trainingId' | 'createdAt'>,
-  syncToPostTest = false,
-  quizId?: string
+  syncToPostTest = false
 ) {
   // Check if quiz already exists
-  let existing = null;
-  if (type === 'module' && quizId) {
-    existing = await getQuizById(trainingId, quizId);
-  } else if (type !== 'module') {
-    existing = await getQuiz(trainingId, type);
-  }
+  const existing = await getQuiz(trainingId, type);
   
   let finalQuizId = '';
   if (existing) {
@@ -322,25 +310,30 @@ export async function markModuleComplete(userId: string, trainingId: string, mod
 export async function submitQuizResult(
   userId: string,
   trainingId: string,
-  type: 'pre-test' | 'post-test' | 'module',
+  type: 'pre-test' | 'post-test',
   score: number,
-  answers: number[],
-  moduleId?: string
+  answers: number[]
 ) {
   const id = `${userId}_${trainingId}`;
-  if (type === 'module' && moduleId) {
-    await updateDoc(doc(db, 'enrollments', id), {
-      [`moduleQuizScores.${moduleId}`]: score,
-      [`moduleQuizAnswers.${moduleId}`]: answers,
-    });
-  } else {
-    const field = type === 'pre-test' ? 'preTest' : 'postTest';
-    await updateDoc(doc(db, 'enrollments', id), {
-      [`${field}Score`]: score,
-      [`${field}Answers`]: answers,
-      [`${field}CompletedAt`]: serverTimestamp(),
-    });
-  }
+  const field = type === 'pre-test' ? 'preTest' : 'postTest';
+  await updateDoc(doc(db, 'enrollments', id), {
+    [`${field}Score`]: score,
+    [`${field}Answers`]: answers,
+    [`${field}CompletedAt`]: serverTimestamp(),
+  });
+}
+
+export async function submitEvaluation(
+  userId: string,
+  trainingId: string,
+  moduleId: string,
+  ratings: Record<string, number>,
+  testimonial: string
+) {
+  const id = `${userId}_${trainingId}`;
+  await updateDoc(doc(db, 'enrollments', id), {
+    [`evaluations.${moduleId}`]: { ratings, testimonial },
+  });
 }
 
 export async function submitAssignment(

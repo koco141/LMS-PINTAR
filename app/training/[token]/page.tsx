@@ -10,6 +10,7 @@ import {
   getEnrollment,
   enrollUser,
   markModuleComplete,
+  submitEvaluation,
   submitQuizResult,
   submitAssignment,
   Training,
@@ -20,7 +21,7 @@ import {
 import QuizPlayer from '@/components/QuizPlayer';
 import ModuleViewer from '@/components/ModuleViewer';
 import AssignmentViewer from '@/components/AssignmentViewer';
-import ModuleQuizViewer from '@/components/ModuleQuizViewer';
+import EvaluationViewer from '@/components/EvaluationViewer';
 import Leaderboard from '@/components/Leaderboard';
 import styles from './page.module.css';
 
@@ -125,14 +126,12 @@ export default function TrainingPage() {
     }
   };
 
-  const handleQuizSubmit = async (type: 'pre-test' | 'post-test' | 'module', score: number, answers: number[], moduleId?: string) => {
+  const handleQuizSubmit = async (type: 'pre-test' | 'post-test', score: number, answers: number[]) => {
     if (!user || !training) return;
-    await submitQuizResult(user.uid, training.id, type, score, answers, moduleId);
+    await submitQuizResult(user.uid, training.id, type, score, answers);
     const updated = await getEnrollment(user.uid, training.id);
     setEnrollment(updated);
-    if (type !== 'module') {
-      setQuizStarted(false);
-    }
+    setQuizStarted(false);
   };
 
   const handleAssignmentSubmit = async (moduleId: string, link: string) => {
@@ -318,7 +317,7 @@ export default function TrainingPage() {
                 <span className={styles.moduleName}>
                   {(!mod.type || mod.type === 'materi') && '📚 '}
                   {mod.type === 'tugas' && '📝 '}
-                  {mod.type === 'kuis' && '❓ '}
+                  {mod.type === 'evaluasi' && '⭐ '}
                   {mod.title}
                 </span>
               </button>
@@ -586,17 +585,28 @@ export default function TrainingPage() {
                   module={activeModule}
                   isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
                   onComplete={() => handleModuleComplete(activeModule.id)}
-                  onSubmitLink={(link) => handleAssignmentSubmit(activeModule.id, link)}
+                  onSubmitLink={async (link) => {
+                    if (!enrollment || !user || !training) return;
+                    await submitAssignment(user.uid, training.id, activeModule.id, link);
+                    await markModuleComplete(user.uid, training.id, activeModule.id);
+                    const updated = await getEnrollment(user.uid, training.id);
+                    setEnrollment(updated);
+                  }}
                   existingLink={enrollment?.assignments?.[activeModule.id]}
                 />
-              ) : activeModule.type === 'kuis' ? (
-                <ModuleQuizViewer
-                  trainingId={training!.id}
+              ) : activeModule.type === 'evaluasi' ? (
+                <EvaluationViewer
                   module={activeModule}
                   isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
                   onComplete={() => handleModuleComplete(activeModule.id)}
-                  onSubmitQuiz={(score, answers) => handleQuizSubmit('module', score, answers, activeModule.id)}
-                  existingScore={enrollment?.moduleQuizScores?.[activeModule.id]}
+                  onSubmitEvaluation={async (ratings, testimonial) => {
+                    if (!enrollment || !user || !training) return;
+                    await submitEvaluation(user.uid, training.id, activeModule.id, ratings, testimonial);
+                    await markModuleComplete(user.uid, training.id, activeModule.id);
+                    const updated = await getEnrollment(user.uid, training.id);
+                    setEnrollment(updated);
+                  }}
+                  existingEvaluation={enrollment?.evaluations?.[activeModule.id]}
                 />
               ) : (
                 <ModuleViewer
