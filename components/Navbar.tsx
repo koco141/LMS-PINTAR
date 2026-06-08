@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, userProfile, isAdmin, signOut } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -17,6 +17,8 @@ export default function Navbar() {
     router.push('/');
     setMenuOpen(false);
   };
+
+  const displayName = userProfile?.fullName || userProfile?.name || user?.displayName || user?.email?.split('@')[0] || 'User';
 
   return (
     <nav className={styles.navbar}>
@@ -59,14 +61,14 @@ export default function Navbar() {
                 aria-label="User menu"
               >
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || ''} className={styles.avatar} />
+                  <img src={user.photoURL} alt={displayName} className={styles.avatar} />
                 ) : (
                   <div className={styles.avatarFallback}>
-                    {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                    {displayName[0].toUpperCase()}
                   </div>
                 )}
                 <span className={styles.userName}>
-                  {user.displayName?.split(' ')[0] || 'User'}
+                  {displayName.split(' ')[0]}
                 </span>
                 <span className={styles.chevron}>{menuOpen ? '▲' : '▼'}</span>
               </button>
@@ -74,7 +76,7 @@ export default function Navbar() {
               {menuOpen && (
                 <div className={styles.dropdown}>
                   <div className={styles.dropdownHeader}>
-                    <p className={styles.dropdownName}>{user.displayName || 'Pengguna'}</p>
+                    <p className={styles.dropdownName}>{displayName}</p>
                     <p className={styles.dropdownEmail}>{user.email}</p>
                     {isAdmin && <span className="badge badge-ongoing" style={{ marginTop: '6px' }}>Admin</span>}
                   </div>

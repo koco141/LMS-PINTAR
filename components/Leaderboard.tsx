@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTrainingEnrollments, getUserById } from '@/lib/db';
+import { getTrainingEnrollments, getUserById, AppUser } from '@/lib/db';
 import styles from './Leaderboard.module.css';
 
 interface LeaderboardEntry {
@@ -23,12 +23,12 @@ export default function Leaderboard({ trainingId }: { trainingId: string }) {
       const enrollments = await getTrainingEnrollments(trainingId);
       const withUsers = await Promise.all(
         enrollments.map(async (e) => {
-          const user: any = await getUserById(e.userId);
+          const user = await getUserById(e.userId);
           return {
             postTestScore: e.postTestScore,
             preTestScore: e.preTestScore,
             completedModules: e.completedModules,
-            name: user?.name || 'Anonim',
+            name: user?.fullName || user?.name || 'Anonim',
             email: user?.email || '',
             photoURL: user?.photoURL || null,
           };

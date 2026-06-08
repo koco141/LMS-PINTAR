@@ -349,13 +349,28 @@ export async function deleteEnrollment(userId: string, trainingId: string) {
   });
 }
 
-export async function getUserById(userId: string) {
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string | null;
+  photoURL: string | null;
+  role: 'admin' | 'participant';
+  fullName?: string;
+  gender?: 'Laki-laki' | 'Perempuan';
+  joinedAt: Timestamp;
+}
+
+export async function getUserById(userId: string): Promise<AppUser | null> {
   try {
     const snap = await getDoc(doc(db, 'users', userId));
     if (!snap.exists()) return null;
-    return { id: snap.id, ...snap.data() };
+    return { id: snap.id, ...snap.data() } as AppUser;
   } catch (err) {
     console.error("Error in getUserById:", err);
     return null;
   }
+}
+
+export async function updateUserProfile(userId: string, data: Partial<AppUser>) {
+  await updateDoc(doc(db, 'users', userId), data);
 }
