@@ -49,9 +49,14 @@ export default function AdminDashboard() {
             <h1>Panel Admin 🛠️</h1>
             <p>Selamat datang, {user?.displayName || 'Admin'}! Kelola semua pelatihan di sini.</p>
           </div>
-          <Link href="/admin/trainings/new" className="btn btn-primary">
-            ＋ Buat Pelatihan Baru
-          </Link>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Link href="/admin/users" className="btn btn-secondary">
+              👥 Keseluruhan Peserta
+            </Link>
+            <Link href="/admin/trainings/new" className="btn btn-primary">
+              ＋ Buat Pelatihan Baru
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}

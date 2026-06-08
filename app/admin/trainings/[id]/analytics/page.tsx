@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getQuiz, Training, Enrollment, Quiz } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getQuiz, getUserById, Training, Enrollment, Quiz, AppUser } from '@/lib/db';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -37,6 +37,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [preTest, setPreTest] = useState<Quiz | null>(null);
   const [postTest, setPostTest] = useState<Quiz | null>(null);
+  const [usersDict, setUsersDict] = useState<Record<string, AppUser>>({});
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -58,6 +59,15 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         setEnrollments(enrs);
         setPreTest(pre);
         setPostTest(post);
+
+        const userPromises = enrs.map(e => getUserById(e.userId));
+        const usersRes = await Promise.all(userPromises);
+        const uDict: Record<string, AppUser> = {};
+        usersRes.forEach(u => {
+          if (u) uDict[u.id] = u;
+        });
+        setUsersDict(uDict);
+
         setDataLoading(false);
       } catch (err) {
         console.error(err);
@@ -93,6 +103,14 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   }
 
   const delta = avgPostTestScore - avgPreTestScore;
+
+  let maleCount = 0;
+  let femaleCount = 0;
+  enrollments.forEach(e => {
+    const u = usersDict[e.userId];
+    if (u?.gender === 'Perempuan') femaleCount++;
+    else if (u?.gender === 'Laki-laki') maleCount++;
+  });
 
   // Level Logic
   let level = 1;
@@ -300,49 +318,72 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           </div>
 
           {/* Additional Info / Level Summary */}
-          <div className={styles.chartCard} style={{ alignItems: 'flex-start' }}>
-            <h3>Kesimpulan Peningkatan</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
-              Berdasarkan hasil perbandingan agregat antara Pre-Test dan Post-Test, pemahaman peserta pelatihan ini berada di:
-            </p>
-            
-            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '8px', fontSize: '1.2rem' }}>
-                Level {level} - {levelLabel}
-              </h4>
-              <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                {levelDesc}
-              </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
+              <h3 style={{ marginBottom: '16px' }}>Demografi Peserta</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{enrollments.length}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Peserta Terdaftar</div>
+                </div>
+                <div style={{ width: '1px', background: 'var(--border)', margin: '0 16px' }}></div>
+                <div style={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{maleCount}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>👨 Laki-laki</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>{femaleCount}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>👩 Perempuan</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Peningkatan Tertinggi</span>
-                <span style={{ fontWeight: 600 }}>
-                  {(() => {
-                    let maxDiff = -999;
-                    let bestCat = '-';
-                    CATEGORIES.forEach((cat, i) => {
-                      const diff = postTestCatScores[i] - preTestCatScores[i];
-                      if (diff > maxDiff) { maxDiff = diff; bestCat = cat; }
-                    });
-                    return maxDiff > 0 ? `${bestCat} (+${maxDiff.toFixed(1)})` : '-';
-                  })()}
-                </span>
+            <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
+              <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px', fontSize: '0.9rem' }}>
+                Berdasarkan hasil perbandingan agregat antara Pre-Test dan Post-Test, pemahaman peserta berada di:
+              </p>
+              
+              <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
+                <h4 style={{ color: 'var(--primary)', marginBottom: '6px', fontSize: '1.1rem' }}>
+                  Level {level} - {levelLabel}
+                </h4>
+                <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  {levelDesc}
+                </p>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Evaluasi Dibutuhkan</span>
-                <span style={{ fontWeight: 600, color: 'var(--status-upcoming)' }}>
-                  {(() => {
-                    let minDiff = 999;
-                    let worstCat = '-';
-                    CATEGORIES.forEach((cat, i) => {
-                      const diff = postTestCatScores[i] - preTestCatScores[i];
-                      if (diff < minDiff) { minDiff = diff; worstCat = cat; }
-                    });
-                    return worstCat !== '-' ? `${worstCat}` : '-';
-                  })()}
-                </span>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Peningkatan Tertinggi</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                    {(() => {
+                      let maxDiff = -999;
+                      let bestCat = '-';
+                      CATEGORIES.forEach((cat, i) => {
+                        const diff = postTestCatScores[i] - preTestCatScores[i];
+                        if (diff > maxDiff) { maxDiff = diff; bestCat = cat; }
+                      });
+                      return maxDiff > 0 ? `${bestCat} (+${maxDiff.toFixed(1)})` : '-';
+                    })()}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Evaluasi Dibutuhkan</span>
+                  <span style={{ fontWeight: 600, color: 'var(--status-upcoming)', fontSize: '0.9rem' }}>
+                    {(() => {
+                      let minDiff = 999;
+                      let worstCat = '-';
+                      CATEGORIES.forEach((cat, i) => {
+                        const diff = postTestCatScores[i] - preTestCatScores[i];
+                        if (diff < minDiff) { minDiff = diff; worstCat = cat; }
+                      });
+                      return worstCat !== '-' ? `${worstCat}` : '-';
+                    })()}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

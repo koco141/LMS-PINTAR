@@ -412,3 +412,13 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
 export async function updateUserProfile(userId: string, data: Partial<AppUser>) {
   await updateDoc(doc(db, 'users', userId), data);
 }
+
+export async function getAllUsers(): Promise<AppUser[]> {
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('joinedAt', 'desc')));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as AppUser));
+  } catch (err) {
+    console.error("Error in getAllUsers:", err);
+    return [];
+  }
+}
