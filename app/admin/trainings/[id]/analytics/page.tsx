@@ -114,17 +114,25 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
   // Level Logic
   let level = 1;
-  let levelLabel = 'Pemahaman Dasar';
-  let levelDesc = 'Rata-rata kompetensi peserta masih di tahap dasar.';
+  let levelLabel = 'Pemula/Paham';
+  let levelDesc = 'Memiliki pengetahuan dasar tentang teori suatu bidang, namun belum berpengalaman dalam praktik.';
   
-  if (avgPostTestScore >= 80) {
-    level = 3;
-    levelLabel = 'Strategi Kompleks';
-    levelDesc = 'Peserta telah menguasai materi secara komprehensif hingga ke level strategis.';
+  if (avgPostTestScore >= 90) {
+    level = 5;
+    levelLabel = 'Master/Pakar';
+    levelDesc = 'Berada di puncak penguasaan keahlian dan memiliki kapasitas untuk membimbing atau memimpin orang lain.';
+  } else if (avgPostTestScore >= 80) {
+    level = 4;
+    levelLabel = 'Ahli/Superior';
+    levelDesc = 'Berkemampuan tingkat lanjut, mencapai performa superior, dan sering menjadi rujukan bagi rekan kerja.';
   } else if (avgPostTestScore >= 60) {
+    level = 3;
+    levelLabel = 'Kompeten/Mahir';
+    levelDesc = 'Mampu mengevaluasi situasi, merancang perbaikan, serta menyelesaikan masalah yang lebih kompleks.';
+  } else if (avgPostTestScore >= 40) {
     level = 2;
-    levelLabel = 'Penerapan & Analisis';
-    levelDesc = 'Peserta mampu menerapkan dan menganalisis materi dengan baik.';
+    levelLabel = 'Mampu/Dasar';
+    levelDesc = 'Mampu menerapkan pengetahuan dasar dan prinsip-prinsip untuk menyelesaikan pekerjaan rutin tanpa harus diawasi.';
   }
 
   // Radar Chart Data Logic
