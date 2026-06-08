@@ -29,18 +29,20 @@ export default function AssignmentViewer({
   };
 
   return (
-    <div className={styles.moduleContainer}>
-      <div className={styles.moduleHeader}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <h2>📝 {module.title}</h2>
-          {isCompleted && <span className={styles.badgeCompleted}>Selesai</span>}
+    <div className={styles.moduleContainer} style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
+      <div style={{ width: '100%', maxWidth: '600px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0, textAlign: 'center' }}>📝 {module.title}</h2>
+          {isCompleted && <span className={styles.badgeCompleted} style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '12px', background: 'var(--success-light)', color: 'var(--success)', fontWeight: 600 }}>Selesai</span>}
         </div>
-        <p className={styles.moduleDesc}>{module.description || 'Tidak ada deskripsi penugasan.'}</p>
-      </div>
-
-      <div style={{ maxWidth: '600px', margin: '24px auto 0 auto', padding: '32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
-        <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Pengumpulan Tugas: {module.title}</h3>
         
+        <div className={styles.moduleDesc} style={{ marginBottom: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <p>{module.description || 'Tidak ada deskripsi penugasan.'}</p>
+        </div>
+
+        <div style={{ padding: '32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
+          <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Link Pengumpulan Tugas</h3>
+          
         {existingLink && (
           <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-input)', borderRadius: '8px', textAlign: 'center' }}>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Tugas Anda telah dikumpulkan:</p>
@@ -80,6 +82,7 @@ export default function AssignmentViewer({
             {submitting ? 'Mengumpulkan...' : (existingLink ? 'Perbarui Link Tugas' : 'Kumpulkan Tugas & Lanjut')}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
