@@ -102,7 +102,7 @@ export default function EvaluationViewer({
   };
 
   return (
-    <div className={styles.moduleContent} style={{ display: 'flex', justifyContent: 'center' }}>
+    <div className={styles.moduleContent} style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{ width: '100%', maxWidth: '600px' }}>
         <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>⭐ Evaluasi</h2>
         
