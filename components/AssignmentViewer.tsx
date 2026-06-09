@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
 
@@ -19,6 +19,10 @@ export default function AssignmentViewer({
 }) {
   const [link, setLink] = useState(existingLink || '');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setLink(existingLink || '');
+  }, [module.id, existingLink]);
 
   const handleSubmit = async () => {
     if (!link.trim()) return;
