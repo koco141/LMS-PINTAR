@@ -81,7 +81,7 @@ export default function ParticipantsPage() {
           photoURL: u?.photoURL || null,
           preTestScore: e.preTestScore,
           postTestScore: e.postTestScore,
-          totalAssignmentScore: sumTask,
+          totalAssignmentScore: Math.round(avgTaskScore),
           finalScore,
           passed,
           completedModules: e.completedModules.length,
