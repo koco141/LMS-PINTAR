@@ -15,6 +15,7 @@ interface ParticipantRow {
   preTestScore: number | null;
   postTestScore: number | null;
   totalAssignmentScore: number;
+  finalScore: number;
   completedModules: number;
   totalModules: number;
   progress: number;
@@ -63,6 +64,7 @@ export default function ParticipantsPage() {
           preTestScore: e.preTestScore,
           postTestScore: e.postTestScore,
           totalAssignmentScore,
+          finalScore: Math.round(((e.postTestScore || 0) * 0.7) + (totalAssignmentScore * 0.3)),
           completedModules: e.completedModules.length,
           totalModules: modules.length,
           progress: modules.length > 0 ? Math.round((e.completedModules.length / modules.length) * 100) : 0,
@@ -103,7 +105,8 @@ export default function ParticipantsPage() {
         'Email': p.email,
         'Pre-Test': p.preTestScore ?? 'Belum',
         'Post-Test': p.postTestScore ?? 'Belum',
-        'Nilai Tugas (Total)': p.totalAssignmentScore,
+        'Nilai Tugas': p.totalAssignmentScore,
+        'Nilai Akhir': p.finalScore,
         'Progress (%)': p.progress,
       }));
       const ws = XLSX.utils.json_to_sheet(data);
@@ -131,7 +134,7 @@ export default function ParticipantsPage() {
 
       autoTable(doc, {
         startY: 30,
-        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Progress']],
+        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Progress']],
         body: filteredParticipants.map((p, idx) => [
           idx + 1,
           p.name,
@@ -139,6 +142,7 @@ export default function ParticipantsPage() {
           p.preTestScore ?? 'Belum',
           p.postTestScore ?? 'Belum',
           p.totalAssignmentScore,
+          p.finalScore,
           `${p.progress}%`,
         ]),
         styles: { fontSize: 9, cellPadding: 4 },
@@ -248,7 +252,8 @@ export default function ParticipantsPage() {
                   <th>Nama Peserta</th>
                   <th>Pre-Test</th>
                   <th>Post-Test</th>
-                  <th>Nilai Tugas (Total)</th>
+                  <th>Nilai Tugas</th>
+                  <th>Nilai Akhir</th>
                   <th>Progress Materi</th>
                   <th>Aksi</th>
                 </tr>
@@ -283,6 +288,11 @@ export default function ParticipantsPage() {
                     <td>
                       <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
                         {p.totalAssignmentScore}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                        {p.finalScore}
                       </span>
                     </td>
                     <td>

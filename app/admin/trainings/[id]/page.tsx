@@ -224,27 +224,14 @@ export default function TrainingAdminPage() {
               >
                 📋 Salin
               </button>
-              <button
-                className="btn btn-primary btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--primary-light)', borderColor: 'var(--primary)' }}
-                onClick={() => setShowShareModal(true)}
-              >
-                📢 Bagikan
-              </button>
             </div>
           </div>
           <div className={styles.headerActions}>
             <Link href={`/admin/trainings/${id}/analytics`} className="btn btn-secondary">
               📊 Analisis
             </Link>
-            <Link href={`/admin/trainings/${id}/testimonials`} className="btn btn-secondary">
-              💬 Testimoni
-            </Link>
             <Link href={`/admin/trainings/${id}/participants`} className="btn btn-secondary">
               👥 Lihat Peserta
-            </Link>
-            <Link href={`/admin/trainings/${id}/assignments`} className="btn btn-secondary">
-              📝 Nilai Tugas
             </Link>
             <button className="btn btn-danger" onClick={handleDeleteTraining}>
               🗑️ Hapus

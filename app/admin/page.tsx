@@ -116,7 +116,19 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td>
-                        <code className={styles.tokenCode}>{training.token}</code>
+                        <code 
+                          className={styles.tokenCode}
+                          onClick={() => {
+                            if (training.token) {
+                              navigator.clipboard.writeText(training.token);
+                              alert('📋 Token disalin ke clipboard!');
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                          title="Klik untuk menyalin"
+                        >
+                          {training.token}
+                        </code>
                       </td>
                       <td>
                         <span className={`badge badge-${training.status}`}>
@@ -142,6 +154,12 @@ export default function AdminDashboard() {
                           </button>
                           <Link href={`/admin/trainings/${training.id}/analytics`} className="btn btn-icon btn-secondary btn-sm" title="Analisis Pelatihan" style={{ background: '#10b981', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             📊
+                          </Link>
+                          <Link href={`/admin/trainings/${training.id}/testimonials`} className="btn btn-icon btn-secondary btn-sm" title="Testimoni" style={{ background: '#8b5cf6', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            💬
+                          </Link>
+                          <Link href={`/admin/trainings/${training.id}/assignments`} className="btn btn-icon btn-secondary btn-sm" title="Nilai Tugas" style={{ background: '#f59e0b', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            📝
                           </Link>
                           <button
                             className="btn btn-icon btn-danger btn-sm"
