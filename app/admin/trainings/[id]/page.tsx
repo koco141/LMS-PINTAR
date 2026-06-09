@@ -36,8 +36,7 @@ export default function TrainingAdminPage() {
 
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
-  const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[]}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Info form
   const [infoForm, setInfoForm] = useState({
@@ -128,10 +127,10 @@ export default function TrainingAdminPage() {
   const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [] });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '' });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [] });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '' });
     }
     setShowModuleForm(true);
   };
@@ -153,6 +152,9 @@ export default function TrainingAdminPage() {
     }
     if (moduleForm.type === 'evaluasi') {
       dataToSave.ratingCategories = moduleForm.ratingCategories;
+    }
+    if (moduleForm.type === 'tugas' && moduleForm.competencyCategory) {
+      dataToSave.competencyCategory = moduleForm.competencyCategory;
     }
 
     if (editingModule) {
@@ -408,6 +410,26 @@ export default function TrainingAdminPage() {
         {/* ─── Modules Tab ─── */}
         {activeTab === 'modules' && (
           <div className={styles.tabContent}>
+            {training?.targetLevel && training.targetLevel >= 3 && modules.filter(m => m.type === 'tugas').length === 0 && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px'
+              }}>
+                <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#b91c1c' }}>Peringatan Kewajiban Asesmen Praktik</h4>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#991b1b', lineHeight: '1.5' }}>
+                    Pelatihan ini menargetkan kompetensi <strong>Level {training.targetLevel}</strong>. Sesuai standar, Anda diwajibkan menambahkan minimal 1 modul penugasan (asesmen praktik). Akses peserta ke materi saat ini <strong>diblokir</strong> hingga Anda menambahkan tugas.
+                  </p>
+                </div>
+              </div>
+            )}
             <div className={styles.sectionBar}>
               <h3>Daftar Materi</h3>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -541,6 +563,28 @@ export default function TrainingAdminPage() {
                           </p>
                         </div>
                       )}
+                      
+                      {moduleForm.type === 'tugas' && (
+                        <div className="form-group">
+                          <label className="form-label">Tipe Asesmen Praktik (Level {infoForm.targetLevel}) *</label>
+                          <select 
+                            className="form-input" 
+                            value={moduleForm.competencyCategory || ''} 
+                            onChange={(e) => setModuleForm({ ...moduleForm, competencyCategory: e.target.value })}
+                          >
+                            <option value="">-- Pilih Tipe Tugas --</option>
+                            <option value="Proyek Implementasi Teknis">Proyek Implementasi Teknis</option>
+                            <option value="Penyelesaian Studi Kasus">Penyelesaian Studi Kasus</option>
+                            <option value="Analisis Data & Laporan">Analisis Data & Laporan</option>
+                            {infoForm.targetLevel >= 4 && (
+                              <option value="Troubleshooting & Modifikasi">Troubleshooting & Modifikasi</option>
+                            )}
+                            {infoForm.targetLevel >= 5 && (
+                              <option value="Mentoring / Presentasi Ahli">Mentoring / Presentasi Ahli</option>
+                            )}
+                          </select>
+                        </div>
+                      )}
                       <div className="form-group">
                         <label className="form-label">{moduleForm.type === 'tugas' ? 'Deskripsi Penugasan' : 'Deskripsi Singkat'}</label>
                         <textarea className="form-textarea" placeholder={moduleForm.type === 'tugas' ? 'Jelaskan apa yang harus dikerjakan peserta...' : 'Deskripsi...'}
@@ -550,7 +594,7 @@ export default function TrainingAdminPage() {
                   </div>
                   <div className="modal-footer">
                     <button className="btn btn-secondary" onClick={() => setShowModuleForm(false)}>Batal</button>
-                    <button className="btn btn-primary" onClick={saveModule} disabled={saving || !moduleForm.title || (moduleForm.type === 'materi' && !moduleForm.embedUrl)}>
+                    <button className="btn btn-primary" onClick={saveModule} disabled={saving || !moduleForm.title || (moduleForm.type === 'materi' && !moduleForm.embedUrl) || (moduleForm.type === 'tugas' && !moduleForm.competencyCategory)}>
                       {saving ? 'Menyimpan...' : '💾 Simpan'}
                     </button>
                   </div>

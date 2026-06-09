@@ -45,6 +45,7 @@ export interface Module {
   createdAt: Timestamp;
   type?: 'materi' | 'tugas' | 'evaluasi';
   ratingCategories?: string[]; // If type is 'evaluasi', list of categories to rate
+  competencyCategory?: string; // If type is 'tugas', the competency category
 }
 
 export interface QuizQuestion {
@@ -81,6 +82,7 @@ export interface Enrollment {
   totalTimeSpent: number; // minutes
   assignments?: Record<string, string>; // moduleId -> submitted link
   assignmentScores?: Record<string, number>; // moduleId -> score
+  assignmentRubrics?: Record<string, Record<string, number>>; // moduleId -> { dimensionName: score }
   evaluations?: Record<string, { ratings: Record<string, number>, testimonial: string }>; // moduleId -> evaluation data
 }
 
@@ -172,11 +174,15 @@ export async function getTrainingById(id: string): Promise<Training | null> {
   }
 }
 
-export async function updateAssignmentScore(userId: string, trainingId: string, moduleId: string, score: number) {
+export async function updateAssignmentScore(userId: string, trainingId: string, moduleId: string, score: number, rubrics?: Record<string, number>) {
   const id = `${userId}_${trainingId}`;
-  await updateDoc(doc(db, 'enrollments', id), {
+  const updates: any = {
     [`assignmentScores.${moduleId}`]: score,
-  });
+  };
+  if (rubrics) {
+    updates[`assignmentRubrics.${moduleId}`] = rubrics;
+  }
+  await updateDoc(doc(db, 'enrollments', id), updates);
 }
 
 // ─── Module Status ──────────────────────────────────────────────────────────────────

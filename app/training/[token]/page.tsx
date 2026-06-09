@@ -203,11 +203,12 @@ export default function TrainingPage() {
   }
 
   // Study Phase (Unified Layout)
+  const isEnforcementBlocked = (training?.targetLevel || 5) >= 3 && modules.filter(m => m.type === 'tugas').length === 0;
   const isPreTestDone = preTest === null || (enrollment && enrollment.preTestScore !== null);
-  const isModulesUnlocked = isPreTestDone;
+  const isModulesUnlocked = isPreTestDone && !isEnforcementBlocked;
   const completedModsCount = enrollment ? enrollment.completedModules.length : 0;
   const allModulesCompleted = modules.length > 0 && completedModsCount === modules.length;
-  const isPostTestUnlocked = isPreTestDone && (modules.length === 0 || allModulesCompleted);
+  const isPostTestUnlocked = isPreTestDone && (modules.length === 0 || allModulesCompleted) && !isEnforcementBlocked;
 
   const progress = enrollment
     ? Math.round((completedModsCount / (modules.length || 1)) * 100)
@@ -416,7 +417,21 @@ export default function TrainingPage() {
 
       {/* Main Content */}
       <main className={styles.mainContent}>
-        {isUpcoming ? (
+        {isEnforcementBlocked ? (
+          <div className={styles.completedPage}>
+            <div className={styles.completedCard}>
+              <div className={styles.completedBadge} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626' }}>🔒</div>
+              <h2 style={{ color: '#b91c1c' }}>Pelatihan Terkunci</h2>
+              <p className={styles.trainingTitle}>{training?.title}</p>
+              <p style={{ margin: '16px 0', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                Pelatihan belum dapat diakses. Instruktur sedang melengkapi instrumen asesmen standar kompetensi untuk pelatihan ini.
+              </p>
+              <div style={{ marginTop: '24px' }}>
+                <a href="/dashboard" className="btn btn-secondary">📊 Kembali ke Dashboard</a>
+              </div>
+            </div>
+          </div>
+        ) : isUpcoming ? (
           <div className={styles.completedPage}>
             <div className={styles.completedCard}>
               <div className={styles.completedBadge} style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--status-upcoming)' }}>📅</div>

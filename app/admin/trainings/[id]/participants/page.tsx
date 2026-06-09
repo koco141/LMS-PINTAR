@@ -16,6 +16,7 @@ interface ParticipantRow {
   postTestScore: number | null;
   totalAssignmentScore: number;
   finalScore: number;
+  passed: boolean;
   completedModules: number;
   totalModules: number;
   progress: number;
@@ -54,7 +55,24 @@ export default function ParticipantsPage() {
         const u: any = await getUserById(e.userId);
         
         const assignmentScores = (e as any).assignmentScores || {};
-        const totalAssignmentScore = Object.values(assignmentScores).reduce((sum: number, score: any) => sum + (Number(score) || 0), 0);
+        const tModules = modules.filter(m => m.type === 'tugas');
+        
+        let sumTask = 0;
+        tModules.forEach(m => { sumTask += (Number(assignmentScores[m.id]) || 0); });
+        const avgTaskScore = tModules.length > 0 ? sumTask / tModules.length : 0;
+        
+        const level = t?.targetLevel || 5;
+        let finalScore = e.postTestScore || 0;
+        
+        if (tModules.length > 0) {
+          if (level >= 3) {
+            finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
+          } else {
+            finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
+          }
+        }
+        
+        const passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
 
         return {
           userId: e.userId,
@@ -63,8 +81,9 @@ export default function ParticipantsPage() {
           photoURL: u?.photoURL || null,
           preTestScore: e.preTestScore,
           postTestScore: e.postTestScore,
-          totalAssignmentScore,
-          finalScore: Math.round(((e.postTestScore || 0) * 0.7) + (totalAssignmentScore * 0.3)),
+          totalAssignmentScore: sumTask,
+          finalScore,
+          passed,
           completedModules: e.completedModules.length,
           totalModules: modules.length,
           progress: modules.length > 0 ? Math.round((e.completedModules.length / modules.length) * 100) : 0,
@@ -107,6 +126,7 @@ export default function ParticipantsPage() {
         'Post-Test': p.postTestScore ?? 'Belum',
         'Nilai Tugas': p.totalAssignmentScore,
         'Nilai Akhir': p.finalScore,
+        'Status Lulus': p.passed ? 'LULUS' : 'GAGAL',
         'Progress (%)': p.progress,
       }));
       const ws = XLSX.utils.json_to_sheet(data);
@@ -134,7 +154,7 @@ export default function ParticipantsPage() {
 
       autoTable(doc, {
         startY: 30,
-        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Progress']],
+        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Lulus?']],
         body: filteredParticipants.map((p, idx) => [
           idx + 1,
           p.name,
@@ -143,7 +163,7 @@ export default function ParticipantsPage() {
           p.postTestScore ?? 'Belum',
           p.totalAssignmentScore,
           p.finalScore,
-          `${p.progress}%`,
+          p.passed ? 'LULUS' : 'GAGAL',
         ]),
         styles: { fontSize: 9, cellPadding: 4 },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 },
@@ -254,6 +274,7 @@ export default function ParticipantsPage() {
                   <th>Post-Test</th>
                   <th>Nilai Tugas</th>
                   <th>Nilai Akhir</th>
+                  <th>Status Kelulusan</th>
                   <th>Progress Materi</th>
                   <th>Aksi</th>
                 </tr>
@@ -294,6 +315,13 @@ export default function ParticipantsPage() {
                       <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
                         {p.finalScore}
                       </span>
+                    </td>
+                    <td>
+                      {p.passed ? (
+                        <span style={{ color: '#16a34a', fontWeight: '700', padding: '4px 8px', background: '#dcfce7', borderRadius: '4px', fontSize: '0.8rem' }}>LULUS</span>
+                      ) : (
+                        <span style={{ color: '#dc2626', fontWeight: '700', padding: '4px 8px', background: '#fee2e2', borderRadius: '4px', fontSize: '0.8rem' }}>BELUM LULUS</span>
+                      )}
                     </td>
                     <td>
                       <div className={styles.progressCell}>
