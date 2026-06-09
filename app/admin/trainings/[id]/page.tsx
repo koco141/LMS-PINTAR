@@ -36,6 +36,7 @@ export default function TrainingAdminPage() {
 
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Info form
