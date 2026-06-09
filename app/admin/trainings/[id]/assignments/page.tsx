@@ -16,13 +16,6 @@ interface AssignmentRow {
   totalScore: number;
 }
 
-const getRubricDimensions = (level: number) => {
-  if (level < 3) return []; // Single score
-  if (level === 3) return [{ key: 'kualitas', label: 'Kualitas (60%)', weight: 0.6 }, { key: 'efisiensi', label: 'Efisiensi (40%)', weight: 0.4 }];
-  if (level === 4) return [{ key: 'kualitas', label: 'Kualitas (40%)', weight: 0.4 }, { key: 'efisiensi', label: 'Efisiensi (30%)', weight: 0.3 }, { key: 'analisis', label: 'Analisis & Solusi (30%)', weight: 0.3 }];
-  return [{ key: 'kualitas', label: 'Kualitas (40%)', weight: 0.4 }, { key: 'analisis', label: 'Analisis (30%)', weight: 0.3 }, { key: 'efisiensi', label: 'Efisiensi (20%)', weight: 0.2 }, { key: 'sikap', label: 'Transfer Knowledge (10%)', weight: 0.1 }];
-};
-
 export default function AssignmentsPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, loading } = useAuth();
@@ -36,7 +29,6 @@ export default function AssignmentsPage() {
   
   // State for tracking inline edits: { [userId_moduleId]: value }
   const [editingScores, setEditingScores] = useState<Record<string, string>>({});
-  const [editingRubrics, setEditingRubrics] = useState<Record<string, Record<string, string>>>({});
   const [savingStatus, setSavingStatus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -97,75 +89,37 @@ export default function AssignmentsPage() {
     }));
   };
 
-  const handleRubricChange = (userId: string, moduleId: string, dimKey: string, val: string) => {
-    const key = `${userId}_${moduleId}`;
-    setEditingRubrics(prev => {
-      const current = prev[key] || participants.find(p => p.userId === userId)?.assignmentRubrics[moduleId] || {};
-      return {
-        ...prev,
-        [key]: {
-          ...current,
-          [dimKey]: val
-        }
-      };
-    });
-  };
-
   const handleSaveScore = async (userId: string, moduleId: string) => {
     const key = `${userId}_${moduleId}`;
-    const level = training?.targetLevel || 5;
-    const dims = getRubricDimensions(level);
     
     let finalScore = 0;
-    let rubricsToSave: Record<string, number> | undefined = undefined;
 
-    if (dims.length === 0) {
-      const valStr = editingScores[key];
-      if (valStr === undefined) return; // No change
-      finalScore = parseInt(valStr, 10);
-      if (isNaN(finalScore) || finalScore < 0) finalScore = 0;
-      if (finalScore > 100) finalScore = 100;
-    } else {
-      const rubricsStr = editingRubrics[key];
-      if (!rubricsStr) return; // No change
-      
-      rubricsToSave = {};
-      let total = 0;
-      dims.forEach(d => {
-        let val = parseInt(rubricsStr[d.key] || '0', 10);
-        if (isNaN(val) || val < 0) val = 0;
-        if (val > 100) val = 100;
-        rubricsToSave![d.key] = val;
-        total += val * d.weight;
-      });
-      finalScore = Math.round(total);
-    }
+    const valStr = editingScores[key];
+    if (valStr === undefined) return; // No change
+    finalScore = parseInt(valStr, 10);
+    if (isNaN(finalScore) || finalScore < 0) finalScore = 0;
+    if (finalScore > 100) finalScore = 100;
 
     setSavingStatus(prev => ({ ...prev, [key]: true }));
     try {
-      await updateAssignmentScore(userId, id, moduleId, finalScore, rubricsToSave);
+      await updateAssignmentScore(userId, id, moduleId, finalScore, undefined);
       
       // Update local state
       setParticipants(prev => prev.map(p => {
         if (p.userId === userId) {
           const newScores = { ...p.assignmentScores, [moduleId]: finalScore };
-          const newRubrics = { ...p.assignmentRubrics };
-          if (rubricsToSave) {
-            newRubrics[moduleId] = rubricsToSave;
-          }
           let sum = 0;
           taskModules.forEach(m => {
             sum += Number(newScores[m.id]) || 0;
           });
           const newTotal = taskModules.length > 0 ? Math.round(sum / taskModules.length) : 0;
-          return { ...p, assignmentScores: newScores, assignmentRubrics: newRubrics, totalScore: newTotal };
+          return { ...p, assignmentScores: newScores, totalScore: newTotal };
         }
         return p;
       }));
       
       // Clear editing state for this cell
       setEditingScores(prev => { const next = { ...prev }; delete next[key]; return next; });
-      setEditingRubrics(prev => { const next = { ...prev }; delete next[key]; return next; });
     } catch (err: any) {
       alert(`Gagal menyimpan nilai: ${err.message || err}`);
     } finally {
@@ -257,11 +211,8 @@ export default function AssignmentsPage() {
                           const score = p.assignmentScores[m.id] ?? '';
                           const key = `${p.userId}_${m.id}`;
                           
-                          const level = training?.targetLevel || 5;
-                          const dims = getRubricDimensions(level);
-                          
-                          const isEditing = dims.length === 0 ? editingScores[key] !== undefined : editingRubrics[key] !== undefined;
-                          const currentVal = isEditing && dims.length === 0 ? editingScores[key] : score;
+                          const isEditing = editingScores[key] !== undefined;
+                          const currentVal = isEditing ? editingScores[key] : score;
                           const isSaving = savingStatus[key];
 
                           return (
@@ -276,56 +227,40 @@ export default function AssignmentsPage() {
                                 )}
                                 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                                  {dims.length === 0 ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        placeholder="Nilai..."
-                                        value={currentVal}
-                                        onChange={(e) => handleScoreChange(p.userId, m.id, e.target.value)}
-                                        disabled={isSaving}
-                                        style={{ width: '80px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>Rubrik Penilaian</div>
-                                      {dims.map(d => {
-                                        const rScore = p.assignmentRubrics[m.id]?.[d.key] ?? '';
-                                        const rVal = isEditing ? (editingRubrics[key]?.[d.key] ?? rScore) : rScore;
-                                        return (
-                                          <div key={d.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{d.label}</span>
-                                            <input
-                                              type="number" min="0" max="100" placeholder="0-100"
-                                              value={rVal}
-                                              onChange={(e) => handleRubricChange(p.userId, m.id, d.key, e.target.value)}
-                                              disabled={isSaving}
-                                              style={{ width: '60px', padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
-                                            />
-                                          </div>
-                                        );
-                                      })}
-                                      {score !== undefined && score !== null && !isEditing && (
-                                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                          <span>Total Terbobot:</span>
-                                          <span style={{ color: 'var(--primary)' }}>{score}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      placeholder="Nilai..."
+                                      value={currentVal}
+                                      onChange={(e) => handleScoreChange(p.userId, m.id, e.target.value)}
+                                      disabled={isSaving}
+                                      style={{ width: '80px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                                    />
+                                  </div>
                                   
                                   {isEditing && (
-                                    <button
-                                      className="btn btn-primary btn-sm"
-                                      onClick={() => handleSaveScore(p.userId, m.id)}
-                                      disabled={isSaving}
-                                      style={{ padding: '6px 12px', fontSize: '0.8rem', alignSelf: 'flex-start' }}
-                                    >
-                                      {isSaving ? '...' : 'Simpan Nilai'}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '6px' }}>
+                                      <button 
+                                        onClick={() => handleSaveScore(p.userId, m.id)}
+                                        disabled={isSaving}
+                                        className="btn btn-primary" 
+                                        style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 1 }}
+                                      >
+                                        {isSaving ? '⏳' : 'Simpan'}
+                                      </button>
+                                      <button 
+                                        onClick={() => {
+                                          setEditingScores(prev => { const next = { ...prev }; delete next[key]; return next; });
+                                        }}
+                                        disabled={isSaving}
+                                        className="btn btn-secondary" 
+                                        style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 1 }}
+                                      >
+                                        Batal
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                               </div>
