@@ -306,8 +306,8 @@ export default function AssignmentsPage() {
                                           </div>
                                         );
                                       })}
-                                      {score !== '' && !isEditing && (
-                                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.85rem' }}>
+                                      {score !== undefined && score !== null && !isEditing && (
+                                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 'bold' }}>
                                           <span>Total Terbobot:</span>
                                           <span style={{ color: 'var(--primary)' }}>{score}</span>
                                         </div>
