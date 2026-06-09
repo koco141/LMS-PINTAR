@@ -7,6 +7,7 @@ import { createTraining, updateTraining, deleteTraining } from '@/lib/db';
 import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { Circle, Trash2 } from 'lucide-react';
 
 const DEFAULT_COVER = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
 
@@ -144,7 +145,8 @@ export default function NewTrainingPage() {
                 height: '42px',
                 fontSize: '0.9rem'
               }}>
-                {form.status === 'ongoing' ? '🟢 Berlangsung' : form.status === 'upcoming' ? '🟡 Akan Datang' : '⚫ Selesai'}
+                <Circle size={8} fill="currentColor" style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                {form.status === 'ongoing' ? 'Berlangsung' : form.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
               </div>
             </div>
 
@@ -199,7 +201,8 @@ export default function NewTrainingPage() {
                     style={{ position: 'absolute', top: '10px', right: '10px', padding: '6px 10px', minWidth: 'auto', zIndex: 10 }}
                     onClick={() => setForm({ ...form, coverColor: DEFAULT_COVER })}
                   >
-                    🗑️ Hapus Gambar
+                    <Trash2 size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                    Hapus Gambar
                   </button>
                 </div>
               ) : (
@@ -272,7 +275,7 @@ export default function NewTrainingPage() {
           <div className={styles.formActions}>
             <Link href="/admin" className="btn btn-secondary">Batal</Link>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> Menyimpan...</> : '✅ Simpan & Lanjut ke Pengaturan'}
+              {saving ? <><div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} /> Menyimpan...</> : 'Simpan & Lanjut ke Pengaturan'}
             </button>
           </div>
         </form>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getTrainingEnrollments, getUserById, AppUser } from '@/lib/db';
 import styles from './Leaderboard.module.css';
+import { Trophy, Medal } from 'lucide-react';
 
 interface LeaderboardEntry {
   rank: number;
@@ -13,6 +14,10 @@ interface LeaderboardEntry {
   preTestScore: number | null;
   progress: number;
 }
+
+// Medal colors for top 3
+const MEDAL_COLORS = ['#f59e0b', '#94a3b8', '#cd7c41'];
+const MEDAL_LABELS = ['1st', '2nd', '3rd'];
 
 export default function Leaderboard({ trainingId }: { trainingId: string }) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -61,18 +66,21 @@ export default function Leaderboard({ trainingId }: { trainingId: string }) {
     );
   }
 
-  const MEDALS = ['🥇', '🥈', '🥉'];
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>🏆 Leaderboard</h2>
+        <h2>
+          <Trophy size={20} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#f59e0b' }} />
+          Leaderboard
+        </h2>
         <p>Peringkat peserta berdasarkan nilai post-test</p>
       </div>
 
       {entries.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">🏆</div>
+          <div className="empty-state-icon">
+            <Trophy size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          </div>
           <h3>Belum ada data</h3>
           <p>Leaderboard akan muncul setelah peserta menyelesaikan post-test.</p>
         </div>
@@ -84,7 +92,15 @@ export default function Leaderboard({ trainingId }: { trainingId: string }) {
               className={`${styles.row} ${entry.rank <= 3 ? styles.topThree : ''}`}
             >
               <span className={styles.rank}>
-                {entry.rank <= 3 ? MEDALS[entry.rank - 1] : entry.rank}
+                {entry.rank <= 3 ? (
+                  <Medal
+                    size={22}
+                    style={{ color: MEDAL_COLORS[entry.rank - 1] }}
+                    strokeWidth={1.8}
+                  />
+                ) : (
+                  entry.rank
+                )}
               </span>
               <div className={styles.avatar}>
                 {entry.photoURL ? (

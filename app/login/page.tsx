@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import styles from './page.module.css';
+import { GraduationCap, Hand, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
   const { user, isAdmin, signInWithGoogle, signInWithEmail, loading } = useAuth();
@@ -69,13 +70,13 @@ export default function LoginPage() {
         <div className={styles.card}>
           {/* Logo */}
           <div className={styles.logo}>
-            <span>🎓</span>
+            <GraduationCap size={26} strokeWidth={2} style={{ color: 'var(--primary-light)' }} />
             <span className={styles.logoText}>
               PIN<span className={styles.logoAccent}>TAR</span>
             </span>
           </div>
 
-          <h1 className={styles.title}>Selamat Datang Kembali 👋</h1>
+          <h1 className={styles.title}>Selamat Datang Kembali <Hand size={22} style={{ verticalAlign: 'middle', color: 'var(--primary-light)' }} /></h1>
           <p className={styles.subtitle}>Masuk untuk melanjutkan pembelajaran Anda</p>
 
           {/* Google Sign In Button */}
@@ -136,7 +137,8 @@ export default function LoginPage() {
 
             {error && (
               <div className={styles.errorAlert}>
-                ⚠️ {error}
+                <AlertTriangle size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                {error}
               </div>
             )}
 

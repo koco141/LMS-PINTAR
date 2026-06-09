@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { getAllUsers, updateUserProfile, deleteUserProfile, AppUser } from '@/lib/db';
 import Link from 'next/link';
 import styles from '../page.module.css';
+import { Users, Pencil, Trash2, InboxIcon } from 'lucide-react';
 
 export default function UsersDashboard() {
   const { user, isAdmin, loading } = useAuth();
@@ -77,7 +78,9 @@ export default function UsersDashboard() {
         
         <div className={styles.header}>
           <div>
-            <h1>Keseluruhan Peserta 👥</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              Keseluruhan Peserta <Users size={20} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />
+            </h1>
             <p>Kelola dan reset data nama atau jenis kelamin peserta jika terjadi kesalahan input.</p>
           </div>
         </div>
@@ -102,7 +105,7 @@ export default function UsersDashboard() {
           </div>
           {filteredUsers.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
+              <div className="empty-state-icon"><InboxIcon size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
               <h3>Belum ada peserta terdaftar atau tidak ditemukan</h3>
             </div>
           ) : (
@@ -128,13 +131,15 @@ export default function UsersDashboard() {
                             className="btn btn-secondary btn-sm"
                             onClick={() => handleEdit(u)}
                           >
-                            ✏️ Edit
+                            <Pencil size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                            Edit
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDelete(u)}
                           >
-                            🗑️ Hapus
+                            <Trash2 size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                            Hapus
                           </button>
                         </div>
                       </td>

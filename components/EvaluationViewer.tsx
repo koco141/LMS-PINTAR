@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
+import { Star, CheckCircle2 } from 'lucide-react';
 
 function StarRating({ value, onChange, disabled }: { value: number, onChange: (v: number) => void, disabled?: boolean }) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
@@ -104,7 +105,10 @@ export default function EvaluationViewer({
   return (
     <div className={styles.moduleContent} style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{ width: '100%', maxWidth: '600px' }}>
-        <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>⭐ Evaluasi</h2>
+        <h2 style={{ marginBottom: '16px', textAlign: 'center' }}>
+          <Star size={18} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#f59e0b' }} />
+          Evaluasi
+        </h2>
         
         {module.description && (
           <div className={styles.moduleDescription} style={{ marginBottom: '24px', textAlign: 'center' }}>
@@ -113,8 +117,9 @@ export default function EvaluationViewer({
         )}
 
         {existingEvaluation && (
-          <div className="alert alert-success" style={{ marginBottom: '24px', backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--success)' }}>
-            <p>✅ Anda sudah mengisi evaluasi ini. Terima kasih atas masukannya!</p>
+          <div className="alert alert-success" style={{ marginBottom: '24px', backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--success)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <CheckCircle2 size={18} style={{ color: 'var(--success)', flexShrink: 0 }} />
+            <p style={{ margin: 0 }}>Anda sudah mengisi evaluasi ini. Terima kasih atas masukannya!</p>
           </div>
         )}
 

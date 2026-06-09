@@ -14,6 +14,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import * as XLSX from 'xlsx';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { Key, Clipboard, BarChart2, Users, Trash2, Megaphone, BookOpen, FileText, Star, Pencil, AlertTriangle, Image as ImageIcon, GripVertical, Circle, CheckCircle2, ClipboardList } from 'lucide-react';
 
 type AdminTab = 'info' | 'modules' | 'pre-test' | 'post-test';
 
@@ -225,25 +226,32 @@ export default function TrainingAdminPage() {
           <div>
             <h1 className={styles.pageTitle}>{training?.title}</h1>
             <div className={styles.tokenBadge}>
-              <span>🔑 Token:</span>
+              <span>
+                <Key size={13} style={{ marginRight: '5px', verticalAlign: 'middle', opacity: 0.7 }} />
+                Token:
+              </span>
               <code className={styles.token}>{training?.token}</code>
               <button
                 className="btn btn-secondary btn-sm"
-                onClick={() => { navigator.clipboard.writeText(training?.token || ''); showToast('📋 Token disalin!'); }}
+                onClick={() => { navigator.clipboard.writeText(training?.token || ''); showToast('Token disalin!'); }}
               >
-                📋 Salin
+                <Clipboard size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Salin
               </button>
             </div>
           </div>
           <div className={styles.headerActions}>
             <Link href={`/admin/trainings/${id}/analytics`} className="btn btn-secondary">
-              📊 Analisis
+              <BarChart2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Analisis
             </Link>
             <Link href={`/admin/trainings/${id}/participants`} className="btn btn-secondary">
-              👥 Lihat Peserta
+              <Users size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Lihat Peserta
             </Link>
             <button className="btn btn-danger" onClick={handleDeleteTraining}>
-              🗑️ Hapus
+              <Trash2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Hapus
             </button>
           </div>
         </div>
@@ -321,7 +329,8 @@ export default function TrainingAdminPage() {
                     height: '42px',
                     fontSize: '0.9rem'
                   }}>
-                    {infoForm.status === 'ongoing' ? '🟢 Berlangsung' : infoForm.status === 'upcoming' ? '🟡 Akan Datang' : '⚫ Selesai'}
+                    <Circle size={8} fill="currentColor" style={{ marginRight: '6px' }} />
+                    {infoForm.status === 'ongoing' ? 'Berlangsung' : infoForm.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
                   </div>
                 </div>
                 <div className="form-group">
@@ -363,7 +372,8 @@ export default function TrainingAdminPage() {
                         style={{ position: 'absolute', top: '10px', right: '10px', padding: '6px 10px', minWidth: 'auto', zIndex: 10 }}
                         onClick={() => setInfoForm({ ...infoForm, coverColor: DEFAULT_COVER })}
                       >
-                        🗑️ Hapus Gambar
+                        <Trash2 size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                        Hapus Gambar
                       </button>
                     </div>
                   ) : (
@@ -444,7 +454,7 @@ export default function TrainingAdminPage() {
                 alignItems: 'flex-start',
                 gap: '12px'
               }}>
-                <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                <AlertTriangle size={20} style={{ color: '#b91c1c', flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <h4 style={{ margin: '0 0 4px 0', color: '#b91c1c' }}>Peringatan Kewajiban Asesmen Praktik</h4>
                   <p style={{ margin: 0, fontSize: '0.9rem', color: '#991b1b', lineHeight: '1.5' }}>
@@ -460,17 +470,17 @@ export default function TrainingAdminPage() {
                   ＋ Tambah Materi
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'tugas')}>
-                  📝 Tugas
+                  <FileText size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Tugas
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'evaluasi')}>
-                  ⭐ Evaluasi
+                  <Star size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Evaluasi
                 </button>
               </div>
             </div>
 
             {modules.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-state-icon">📚</div>
+                <div className="empty-state-icon"><BookOpen size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
                 <h3>Belum ada modul</h3>
                 <p>Tambahkan modul materi, tugas, atau evaluasi.</p>
               </div>
@@ -488,14 +498,15 @@ export default function TrainingAdminPage() {
                               {...provided.draggableProps}
                             >
                               <div className={styles.moduleDragHandle} {...provided.dragHandleProps} style={{ cursor: 'grab', marginRight: '10px', color: 'var(--text-muted)' }}>
-                                ⋮⋮
+                                <GripVertical size={16} />
                               </div>
                               <div className={styles.moduleNum}>{idx + 1}</div>
                               <div className={styles.moduleInfo}>
                                 <h4>
-                                  {(!mod.type || mod.type === 'materi') && '📚 '}
-                                  {mod.type === 'tugas' && '📝 '}
-                                  {mod.type === 'evaluasi' && '⭐ '}
+                                  {(() => {
+                                    const ModIcon = (!mod.type || mod.type === 'materi') ? BookOpen : mod.type === 'tugas' ? FileText : Star;
+                                    return <ModIcon size={13} style={{ marginRight: '5px', verticalAlign: 'middle', opacity: 0.7 }} />;
+                                  })()}
                                   {mod.title}
                                 </h4>
                                 <p>{mod.description}</p>
@@ -505,8 +516,8 @@ export default function TrainingAdminPage() {
                               </div>
                               <div className={styles.moduleActions}>
 
-                                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(mod)}>✏️</button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteModule(mod.id)}>🗑️</button>
+                                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(mod)}><Pencil size={13} /></button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteModule(mod.id)}><Trash2 size={13} /></button>
                               </div>
                             </div>
                           )}
@@ -662,7 +673,10 @@ export default function TrainingAdminPage() {
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowShareModal(false); router.push('/admin'); } }}>
           <div className="modal" style={{ maxWidth: '450px', textAlign: 'center' }}>
             <div className="modal-header">
-              <h3 style={{ width: '100%' }}>📢 Bagikan Pelatihan</h3>
+              <h3 style={{ width: '100%' }}>
+                <Megaphone size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                Bagikan Pelatihan
+              </h3>
               <button className="btn btn-icon btn-secondary" onClick={() => { setShowShareModal(false); router.push('/admin'); }}>✕</button>
             </div>
             <div className="modal-body" style={{ padding: '24px 16px' }}>
@@ -731,7 +745,10 @@ export default function TrainingAdminPage() {
                 justifyContent: 'center',
                 gap: '8px'
               }}>
-                <span>🔑 Token Pelatihan:</span>
+                <span>
+                  <Key size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                  Token Pelatihan:
+                </span>
                 <code style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--primary-light)', letterSpacing: '0.05em' }}>
                   {training?.token}
                 </code>
@@ -749,7 +766,8 @@ export default function TrainingAdminPage() {
                 className="btn btn-primary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                🖼️ Buka QR Code HD
+                <ImageIcon size={15} />
+                Buka QR Code HD
               </a>
               <button className="btn btn-secondary" onClick={() => { setShowShareModal(false); router.push('/admin'); }}>Tutup & Kembali ke Panel Admin</button>
             </div>
@@ -1038,7 +1056,12 @@ function QuizEditor({
     <div className={styles.tabContent}>
       <div className={styles.sectionBar}>
         <div>
-          <h3>{type === 'pre-test' ? '📝 Pre-Test' : '📋 Post-Test'}</h3>
+          <h3>
+            {type === 'pre-test'
+              ? <><FileText size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Pre-Test</>
+              : <><ClipboardList size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Post-Test</>
+            }
+          </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
             {type === 'pre-test' ? 'Dikerjakan sebelum materi.' : 'Dikerjakan setelah semua materi selesai.'}
           </p>
@@ -1088,7 +1111,7 @@ function QuizEditor({
 
       {questions.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">📝</div>
+          <div className="empty-state-icon"><FileText size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
           <h3>Belum ada soal</h3>
           <p>Klik "Tambah Soal" atau "Import Soal" untuk mulai membuat pertanyaan.</p>
         </div>
@@ -1114,7 +1137,10 @@ function QuizEditor({
                       onClick={() => updateQuestion(qIdx, 'correctAnswer', oIdx)}
                       title="Tandai sebagai jawaban benar"
                     >
-                      {q.correctAnswer === oIdx ? '✅' : ['A', 'B', 'C', 'D'][oIdx]}
+                      {q.correctAnswer === oIdx
+                        ? <CheckCircle2 size={16} style={{ color: 'var(--status-ongoing)' }} />
+                        : ['A', 'B', 'C', 'D'][oIdx]
+                      }
                     </button>
                     <input
                       className="form-input"
@@ -1155,7 +1181,10 @@ function QuizEditor({
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowImport(false)}>
           <div className="modal" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
-              <h3>📥 Import Soal Kuis</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <BarChart2 size={16} />
+                Import Soal Kuis
+              </h3>
               <button className="btn btn-icon btn-secondary" onClick={() => setShowImport(false)}>✕</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1172,7 +1201,7 @@ function QuizEditor({
                 alignItems: 'center',
                 gap: '16px'
               }}>
-                <span style={{ fontSize: '2.5rem' }}>📊</span>
+                <BarChart2 size={40} strokeWidth={1.2} style={{ color: 'var(--primary-light)' }} />
                 <div>
                   <h4 style={{ fontWeight: '700', color: 'var(--text-primary)' }}>Import via Excel (Rekomendasi)</h4>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>

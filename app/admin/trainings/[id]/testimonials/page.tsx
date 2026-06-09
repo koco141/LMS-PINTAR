@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getUserById, Training, Enrollment, AppUser, getModules, Module } from '@/lib/db';
 import styles from '../analytics/page.module.css';
+import { MessageSquare, FileText, Printer } from 'lucide-react';
 
 interface TestimonialData {
   id: string; // enrollmentId_moduleId
@@ -114,17 +115,21 @@ export default function TestimonialsPage({ params }: { params: Promise<{ id: str
 
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Testimoni Peserta 💬</h1>
+            <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <MessageSquare size={20} style={{ color: 'var(--primary-light)' }} />
+              Testimoni Peserta
+            </h1>
             <p className={styles.subtitle}>{training?.title}</p>
           </div>
           <button className="btn btn-secondary print-hidden" onClick={() => window.print()}>
-            🖨️ Cetak PDF
+            <Printer size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+            Cetak PDF
           </button>
         </div>
 
         {testimonials.length === 0 ? (
           <div className={styles.chartCard} style={{ textAlign: 'center', padding: '64px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📝</div>
+            <FileText size={48} strokeWidth={1.2} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
             <h3>Belum ada testimoni</h3>
             <p style={{ color: 'var(--text-muted)' }}>Belum ada peserta yang mengisi modul evaluasi.</p>
           </div>

@@ -331,11 +331,13 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Analisis Pelatihan 📊</h1>
+            <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              Analisis Pelatihan
+            </h1>
             <p className={styles.subtitle}>{training?.title}</p>
           </div>
           <button className="btn btn-secondary print-hidden" onClick={() => window.print()}>
-            🖨️ Cetak PDF
+            Cetak PDF
           </button>
         </div>
 
@@ -434,7 +436,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                   background: level >= targetLevel ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                   color: level >= targetLevel ? 'var(--primary)' : '#ef4444'
                 }}>
-                  {level >= targetLevel ? `✅ Telah memenuhi target pelatihan (Target: Level ${targetLevel})` : `⚠️ Belum memenuhi target pelatihan (Target: Level ${targetLevel})`}
+                  {level >= targetLevel ? `Telah memenuhi target pelatihan (Target: Level ${targetLevel})` : `Belum memenuhi target pelatihan (Target: Level ${targetLevel})`}
                 </div>
               </div>
 
@@ -476,7 +478,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         <div className={styles.tableCard} style={{ marginTop: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h3>⭐ Hasil Evaluasi Pelatihan</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Hasil Evaluasi Pelatihan</h3>
               <p style={{ color: 'var(--text-muted)' }}>Berdasarkan feedback dari peserta</p>
             </div>
             <div style={{ textAlign: 'right' }}>

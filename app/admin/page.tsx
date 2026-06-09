@@ -6,6 +6,10 @@ import { useAuth } from '@/lib/auth-context';
 import { getAllTrainings, deleteTraining, Training } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
+import {
+  Wrench, Users, Pencil, Trash2, Megaphone, BarChart2, MessageSquare, ClipboardEdit,
+  Image as ImageIcon, Key, InboxIcon, Circle
+} from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading } = useAuth();
@@ -46,12 +50,13 @@ export default function AdminDashboard() {
       <div className="container">
         <div className={styles.header}>
           <div>
-            <h1>Panel Admin 🛠️</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>Panel Admin <Wrench size={20} strokeWidth={2} style={{ color: 'var(--text-muted)' }} /></h1>
             <p>Selamat datang, {user?.displayName || 'Admin'}! Kelola semua pelatihan di sini.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <Link href="/admin/users" className="btn btn-secondary">
-              👥 Keseluruhan Peserta
+              <Users size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+              Keseluruhan Peserta
             </Link>
             <Link href="/admin/trainings/new" className="btn btn-primary">
               ＋ Buat Pelatihan Baru
@@ -90,7 +95,7 @@ export default function AdminDashboard() {
           </div>
           {trainings.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
+            <div className="empty-state-icon"><InboxIcon size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
               <h3>Belum ada pelatihan</h3>
               <p>Klik "Buat Pelatihan Baru" untuk memulai.</p>
             </div>
@@ -132,17 +137,18 @@ export default function AdminDashboard() {
                       </td>
                       <td>
                         <span className={`badge badge-${training.status}`}>
-                          {training.status === 'ongoing' ? '🟢 Berlangsung' : training.status === 'upcoming' ? '🟡 Akan Datang' : '⚫ Selesai'}
+                          <Circle size={7} fill="currentColor" style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                          {training.status === 'ongoing' ? 'Berlangsung' : training.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
                         </span>
                       </td>
                       <td>{training.participantCount}</td>
                       <td>
                         <div className={styles.actions} style={{ display: 'flex', gap: '6px' }}>
                           <Link href={`/admin/trainings/${training.id}`} className="btn btn-icon btn-secondary btn-sm" title="Kelola Pelatihan" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            ✏️
+                            <Pencil size={15} />
                           </Link>
                           <Link href={`/admin/trainings/${training.id}/participants`} className="btn btn-icon btn-secondary btn-sm" title="Lihat Peserta" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            👥
+                            <Users size={15} />
                           </Link>
                           <button
                             className="btn btn-icon btn-secondary btn-sm"
@@ -150,16 +156,16 @@ export default function AdminDashboard() {
                             onClick={() => setActiveShareTraining(training)}
                             title="Bagikan Pelatihan"
                           >
-                            📢
+                            <Megaphone size={15} />
                           </button>
                           <Link href={`/admin/trainings/${training.id}/analytics`} className="btn btn-icon btn-secondary btn-sm" title="Analisis Pelatihan" style={{ background: '#10b981', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            📊
+                            <BarChart2 size={15} />
                           </Link>
                           <Link href={`/admin/trainings/${training.id}/testimonials`} className="btn btn-icon btn-secondary btn-sm" title="Testimoni" style={{ background: '#8b5cf6', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            💬
+                            <MessageSquare size={15} />
                           </Link>
                           <Link href={`/admin/trainings/${training.id}/assignments`} className="btn btn-icon btn-secondary btn-sm" title="Nilai Tugas" style={{ background: '#f59e0b', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            📝
+                            <ClipboardEdit size={15} />
                           </Link>
                           <button
                             className="btn btn-icon btn-danger btn-sm"
@@ -167,7 +173,7 @@ export default function AdminDashboard() {
                             onClick={() => handleDelete(training.id, training.title)}
                             title="Hapus Pelatihan"
                           >
-                            🗑️
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -185,7 +191,10 @@ export default function AdminDashboard() {
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setActiveShareTraining(null)}>
           <div className="modal" style={{ maxWidth: '450px', textAlign: 'center' }}>
             <div className="modal-header">
-              <h3 style={{ width: '100%' }}>📢 Bagikan Pelatihan</h3>
+              <h3 style={{ width: '100%' }}>
+                <Megaphone size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                Bagikan Pelatihan
+              </h3>
               <button className="btn btn-icon btn-secondary" onClick={() => setActiveShareTraining(null)}>✕</button>
             </div>
             <div className="modal-body" style={{ padding: '24px 16px' }}>
@@ -254,7 +263,10 @@ export default function AdminDashboard() {
                 justifyContent: 'center',
                 gap: '8px'
               }}>
-                <span>🔑 Token Pelatihan:</span>
+                <span>
+                  <Key size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                  Token Pelatihan:
+                </span>
                 <code style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--primary-light)', letterSpacing: '0.05em' }}>
                   {activeShareTraining.token}
                 </code>
@@ -272,7 +284,8 @@ export default function AdminDashboard() {
                 className="btn btn-primary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                🖼️ Buka QR Code HD
+                <ImageIcon size={15} />
+                Buka QR Code HD
               </a>
               <button className="btn btn-secondary" onClick={() => setActiveShareTraining(null)}>
                 Tutup

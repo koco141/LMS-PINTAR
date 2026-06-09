@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getModules, getUserById, updateAssignmentScore, Training, Module } from '@/lib/db';
 import Link from 'next/link';
+import { ClipboardEdit, BookOpen, ExternalLink } from 'lucide-react';
 
 interface AssignmentRow {
   userId: string;
@@ -145,7 +146,8 @@ export default function AssignmentsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
           <div>
             <h1 style={{ fontSize: '2rem', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              📝 Penilaian Tugas
+              <ClipboardEdit size={22} style={{ color: 'var(--text-muted)' }} />
+              Penilaian Tugas
             </h1>
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{training?.title}</p>
           </div>
@@ -156,7 +158,7 @@ export default function AssignmentsPage() {
 
         {taskModules.length === 0 ? (
           <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
-            <span style={{ fontSize: '3rem', display: 'block', marginBottom: '16px' }}>📚</span>
+            <BookOpen size={48} strokeWidth={1.2} style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '16px' }} />
             <h3>Tidak Ada Tugas</h3>
             <p style={{ color: 'var(--text-muted)' }}>Pelatihan ini tidak memiliki materi bertipe Penugasan.</p>
           </div>
@@ -165,7 +167,7 @@ export default function AssignmentsPage() {
             <div style={{ marginBottom: '24px' }}>
               <input
                 type="text"
-                placeholder="🔍 Cari nama atau email peserta..."
+                placeholder="Cari nama atau email peserta..."
                 className="form-input"
                 style={{ maxWidth: '400px' }}
                 value={search}
@@ -220,7 +222,8 @@ export default function AssignmentsPage() {
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {link ? (
                                   <a href={link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                    🔗 Lihat Tugas {i + 1}
+                                    <ExternalLink size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                                    Lihat Tugas {i + 1}
                                   </a>
                                 ) : (
                                   <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Belum kumpul</span>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Quiz, QuizQuestion } from '@/lib/db';
 import styles from './QuizPlayer.module.css';
+import { ClipboardList, FileText, CheckCircle2, Timer, TrendingUp, BookOpen, ThumbsUp } from 'lucide-react';
 
 interface Props {
   quiz: Quiz;
@@ -142,6 +143,10 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
   const allAnswered = answeredCount === totalQuestions;
   const isPreTest = quiz.type === 'pre-test';
 
+  // Result icon based on score
+  const ResultIcon = score >= 80 ? TrendingUp : score >= 60 ? ThumbsUp : BookOpen;
+  const resultIconColor = score >= 80 ? 'var(--status-ongoing)' : score >= 60 ? 'var(--status-upcoming)' : 'var(--primary-light)';
+
   return (
     <div className={styles.container} style={{ minHeight: 'auto', padding: '24px 0' }}>
       {!submitted ? (
@@ -150,7 +155,10 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
           <div className={styles.header}>
             <div className={styles.headerInfo}>
               <div className={styles.quizType}>
-                {isPreTest ? '📝 Pre-Test' : '📋 Post-Test'}
+                {isPreTest
+                  ? <><FileText size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Pre-Test</>
+                  : <><ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Post-Test</>
+                }
               </div>
               <h1 className={styles.title}>{quiz.title || (isPreTest ? 'Pre-Test' : 'Post-Test')}</h1>
               <p className={styles.subtitle}>
@@ -174,7 +182,8 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
                   fontFamily: 'Sora, monospace',
                   fontSize: '0.9rem',
                 }}>
-                  ⏱️ {formatTime(timeLeft)}
+                  <Timer size={15} style={{ opacity: 0.8 }} />
+                  {formatTime(timeLeft)}
                 </div>
               )}
               <div className={styles.progress}>
@@ -249,7 +258,8 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
                   disabled={!allAnswered}
                   title={!allAnswered ? 'Jawab semua pertanyaan dulu' : ''}
                 >
-                  ✅ Kumpulkan ({answeredCount}/{totalQuestions})
+                  <CheckCircle2 size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                  Kumpulkan ({answeredCount}/{totalQuestions})
                 </button>
               )}
             </div>
@@ -260,7 +270,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
         <div className={styles.resultArea}>
           <div className={styles.resultCard}>
             <div className={styles.resultEmoji}>
-              {score >= 80 ? '🎉' : score >= 60 ? '👍' : '📚'}
+              <ResultIcon size={48} style={{ color: resultIconColor }} strokeWidth={1.5} />
             </div>
             <h2 className={styles.resultTitle}>
               {isPreTest ? 'Pre-Test Selesai!' : 'Post-Test Selesai!'}

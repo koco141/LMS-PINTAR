@@ -7,6 +7,7 @@ import { Training } from '@/lib/db';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import styles from './TrainingCard.module.css';
+import { CalendarDays, Users, BarChart2, PlayCircle, Circle } from 'lucide-react';
 
 const COVER_COLORS = [
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -23,9 +24,9 @@ interface Props {
 }
 
 const STATUS_MAP = {
-  ongoing: { label: 'Berlangsung', className: 'badge-ongoing', dot: '🟢' },
-  upcoming: { label: 'Akan Datang', className: 'badge-upcoming', dot: '🟡' },
-  completed: { label: 'Selesai', className: 'badge-completed', dot: '⚫' },
+  ongoing: { label: 'Berlangsung', className: 'badge-ongoing' },
+  upcoming: { label: 'Akan Datang', className: 'badge-upcoming' },
+  completed: { label: 'Selesai', className: 'badge-completed' },
 };
 
 export default function TrainingCard({ training, index = 0 }: Props) {
@@ -62,7 +63,8 @@ export default function TrainingCard({ training, index = 0 }: Props) {
         {/* Status Badge below title */}
         <div style={{ marginBottom: '4px', display: 'flex' }}>
           <span className={`badge ${status.className}`} style={{ padding: '4px 10px', fontSize: '0.72rem', fontWeight: '600' }}>
-            {status.dot} {status.label}
+            <Circle size={7} fill="currentColor" style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+            {status.label}
           </span>
         </div>
 
@@ -70,14 +72,14 @@ export default function TrainingCard({ training, index = 0 }: Props) {
 
         <div className={styles.meta}>
           <div className={styles.metaItem}>
-            <span className={styles.metaIcon}>📅</span>
+            <span className={styles.metaIcon}><CalendarDays size={14} /></span>
             <span>
               {formatDate(training.startDate)}
               {training.endDate && ` — ${formatDate(training.endDate)}`}
             </span>
           </div>
           <div className={styles.metaItem}>
-            <span className={styles.metaIcon}>👥</span>
+            <span className={styles.metaIcon}><Users size={14} /></span>
             <span>{training.participantCount} peserta</span>
           </div>
         </div>
@@ -88,7 +90,10 @@ export default function TrainingCard({ training, index = 0 }: Props) {
             className={styles.joinBtn}
             style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            {training.status === 'completed' ? '📊 Lihat Detail' : '▶ Masuk Pelatihan'}
+            {training.status === 'completed'
+              ? <><BarChart2 size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Lihat Detail</>
+              : <><PlayCircle size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />Masuk Pelatihan</>
+            }
           </button>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { Users, BarChart2, FileText, Trash2, Loader2 } from 'lucide-react';
 
 interface ParticipantRow {
   userId: string;
@@ -198,7 +199,10 @@ export default function ParticipantsPage() {
 
         <div className={styles.pageHeader}>
           <div>
-            <h1>👥 Peserta</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Users size={20} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />
+              Peserta
+            </h1>
             <p className={styles.pageSubtitle}>{training?.title}</p>
           </div>
           <div className={styles.exportBtns}>
@@ -207,14 +211,20 @@ export default function ParticipantsPage() {
               onClick={handleExportExcel}
               disabled={exportLoading !== null}
             >
-              {exportLoading === 'excel' ? '⏳ Exporting...' : '📊 Export Excel'}
+              {exportLoading === 'excel'
+                ? <><Loader2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} className="spin" />Exporting...</>
+                : <><BarChart2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Export Excel</>
+              }
             </button>
             <button
               className="btn btn-secondary"
               onClick={handleExportPDF}
               disabled={exportLoading !== null}
             >
-              {exportLoading === 'pdf' ? '⏳ Exporting...' : '📄 Export PDF'}
+              {exportLoading === 'pdf'
+                ? <><Loader2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} className="spin" />Exporting...</>
+                : <><FileText size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Export PDF</>
+              }
             </button>
           </div>
         </div>
@@ -250,7 +260,7 @@ export default function ParticipantsPage() {
           <input
             className="form-input"
             type="text"
-            placeholder="🔍 Cari nama atau email peserta..."
+            placeholder="Cari nama atau email peserta..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -259,7 +269,7 @@ export default function ParticipantsPage() {
         {/* Table */}
         {filteredParticipants.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">👥</div>
+            <div className="empty-state-icon"><Users size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
             <h3>Belum ada peserta</h3>
             <p>Peserta akan muncul setelah mendaftar menggunakan token pelatihan.</p>
           </div>
@@ -338,7 +348,7 @@ export default function ParticipantsPage() {
                         title="Hapus Peserta"
                         style={{ width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        🗑️
+                        <Trash2 size={14} />
                       </button>
                     </td>
                   </tr>

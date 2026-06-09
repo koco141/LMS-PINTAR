@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import styles from './Navbar.module.css';
+import { GraduationCap, LayoutDashboard, Settings, LogOut, ChevronDown, ChevronUp, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { user, userProfile, isAdmin, signOut } = useAuth();
@@ -24,7 +25,7 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>🎓</span>
+          <span className={styles.logoIcon}><GraduationCap size={22} strokeWidth={2.2} /></span>
           <span className={styles.logoText}>
             PIN<span className={styles.logoAccent}>TAR</span>
           </span>
@@ -46,7 +47,7 @@ export default function Navbar() {
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
             aria-label="Toggle navigation menu"
           >
-            {mobileNavOpen ? '✕' : '☰'}
+            {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
           {!user ? (
@@ -70,7 +71,9 @@ export default function Navbar() {
                 <span className={styles.userName}>
                   {displayName.split(' ')[0]}
                 </span>
-                <span className={styles.chevron}>{menuOpen ? '▲' : '▼'}</span>
+                <span className={styles.chevron}>
+                  {menuOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </span>
               </button>
 
               {menuOpen && (
@@ -83,17 +86,20 @@ export default function Navbar() {
                   <div className={styles.dropdownDivider} />
                   {user && !isAdmin && (
                     <Link href="/dashboard" className={styles.dropdownItem} onClick={() => setMenuOpen(false)}>
-                      📊 Dashboard Saya
+                      <LayoutDashboard size={15} style={{ marginRight: '8px', opacity: 0.7 }} />
+                      Dashboard Saya
                     </Link>
                   )}
                   {isAdmin && (
                     <Link href="/admin" className={styles.dropdownItem} onClick={() => setMenuOpen(false)}>
-                      ⚙️ Panel Admin
+                      <Settings size={15} style={{ marginRight: '8px', opacity: 0.7 }} />
+                      Panel Admin
                     </Link>
                   )}
                   <div className={styles.dropdownDivider} />
                   <button onClick={handleSignOut} className={styles.dropdownItem + ' ' + styles.signOut}>
-                    🚪 Keluar
+                    <LogOut size={15} style={{ marginRight: '8px', opacity: 0.7 }} />
+                    Keluar
                   </button>
                 </div>
               )}

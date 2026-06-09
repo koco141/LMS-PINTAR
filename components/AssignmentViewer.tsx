@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
+import { FileEdit } from 'lucide-react';
 
 export default function AssignmentViewer({
   module,
@@ -36,7 +37,10 @@ export default function AssignmentViewer({
     <div className={styles.moduleContainer} style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{ width: '100%', maxWidth: '600px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
-          <h2 style={{ margin: 0, textAlign: 'center' }}>📝 {module.title}</h2>
+          <h2 style={{ margin: 0, textAlign: 'center' }}>
+            <FileEdit size={18} style={{ marginRight: '8px', verticalAlign: 'middle', color: 'var(--primary-light)' }} />
+            {module.title}
+          </h2>
           {isCompleted && <span className={styles.badgeCompleted} style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '12px', background: 'var(--success-light)', color: 'var(--success)', fontWeight: 600 }}>Selesai</span>}
         </div>
         

@@ -19,6 +19,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import styles from './page.module.css';
+import { BarChart2, BookOpen, Home, Circle, Play } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
@@ -175,7 +176,10 @@ export default function DashboardPage() {
         {/* Chart */}
         {data.length > 0 && (
           <div className={styles.chartCard}>
-            <h3>📊 Perbandingan Pre-Test vs Post-Test</h3>
+            <h3>
+              <BarChart2 size={17} style={{ marginRight: '8px', verticalAlign: 'middle', color: 'var(--primary-light)' }} />
+              Perbandingan Pre-Test vs Post-Test
+            </h3>
             <div className={styles.chartWrapper}>
               <Bar data={chartData} options={chartOptions} />
             </div>
@@ -186,11 +190,12 @@ export default function DashboardPage() {
         <h2 className={styles.sectionTitle}>Pelatihan Saya</h2>
         {data.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📚</div>
+            <div className="empty-state-icon"><BookOpen size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
             <h3>Belum ikut pelatihan</h3>
             <p>Masukkan token pelatihan di beranda untuk mulai belajar.</p>
             <a href="/" className="btn btn-primary" style={{ marginTop: '12px' }}>
-              🏠 Ke Beranda
+              <Home size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+              Ke Beranda
             </a>
           </div>
         ) : (
@@ -203,12 +208,16 @@ export default function DashboardPage() {
                   <div className={styles.enrollmentHeader}>
                     <div>
                       <h4 className={styles.enrollmentTitle}>{training.title}</h4>
-                      <span className={`badge badge-${training.status}`} style={{ marginTop: '6px', display: 'inline-flex' }}>
-                        {training.status === 'ongoing' ? '🟢 Berlangsung' : training.status === 'upcoming' ? '🟡 Akan Datang' : '⚫ Selesai'}
+                      <span className={`badge badge-${training.status}`} style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <Circle size={7} fill="currentColor" />
+                        {training.status === 'ongoing' ? 'Berlangsung' : training.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
                       </span>
                     </div>
-                    <a href={`/training/${training.token}`} className="btn btn-secondary btn-sm">
-                      {isFinished ? '📊 Lihat' : '▶ Lanjutkan'}
+                    <a href={`/training/${training.token}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      {isFinished
+                        ? <><BarChart2 size={13} />Lihat</>
+                        : <><Play size={13} />Lanjutkan</>
+                      }
                     </a>
                   </div>
 

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllTrainings, getTrainingByToken, Training } from '@/lib/db';
 import TrainingCard from '@/components/TrainingCard';
 import styles from './page.module.css';
+import { Rocket, Key, CheckCircle2, AlertTriangle, BookOpen, Circle, GraduationCap, InboxIcon } from 'lucide-react';
 
 type FilterType = 'all' | 'ongoing' | 'upcoming' | 'completed';
 
@@ -71,7 +72,7 @@ export default function HomePage() {
 
         <div className={styles.heroContent}>
           <div className={styles.heroBadge}>
-            <span>🚀</span> Platform Pembelajaran Profesional
+            <Rocket size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Platform Pembelajaran Profesional
           </div>
           <h1 className={styles.heroTitle}>
             Tingkatkan Kompetensi
@@ -86,7 +87,7 @@ export default function HomePage() {
           {/* Token Search — HIGHLIGHT */}
           <form className={styles.tokenForm} onSubmit={handleTokenSearch}>
             <div className={`${styles.tokenInputWrapper} ${tokenError ? styles.error : ''} ${tokenSuccess ? styles.success : ''}`}>
-              <span className={styles.tokenIcon}>🔑</span>
+              <span className={styles.tokenIcon}><Key size={16} /></span>
               <input
                 id="token-search"
                 type="text"
@@ -120,7 +121,7 @@ export default function HomePage() {
                 {tokenLoading ? (
                   <span className={styles.miniSpinner} />
                 ) : tokenSuccess ? (
-                  '✓'
+                  <CheckCircle2 size={16} />
                 ) : (
                   'Cari'
                 )}
@@ -128,12 +129,14 @@ export default function HomePage() {
             </div>
             {tokenError && (
               <p className={styles.tokenError}>
-                ⚠️ {tokenError}
+                <AlertTriangle size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                {tokenError}
               </p>
             )}
             {tokenSuccess && (
               <p className={styles.tokenSuccess}>
-                ✅ Pelatihan ditemukan! Mengalihkan...
+                <CheckCircle2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Pelatihan ditemukan! Mengalihkan...
               </p>
             )}
             <p className={styles.tokenHint}>
@@ -173,18 +176,18 @@ export default function HomePage() {
           <div className={styles.filterTabs}>
             {(
               [
-                { key: 'all', label: 'Semua', emoji: '📚' },
-                { key: 'ongoing', label: 'Berlangsung', emoji: '🟢' },
-                { key: 'upcoming', label: 'Akan Datang', emoji: '🟡' },
-                { key: 'completed', label: 'Selesai', emoji: '⚫' },
-              ] as { key: FilterType; label: string; emoji: string }[]
+                { key: 'all', label: 'Semua', icon: <BookOpen size={14} /> },
+                { key: 'ongoing', label: 'Berlangsung', icon: <Circle size={9} fill="currentColor" style={{ color: 'var(--status-ongoing)' }} /> },
+                { key: 'upcoming', label: 'Akan Datang', icon: <Circle size={9} fill="currentColor" style={{ color: 'var(--status-upcoming)' }} /> },
+                { key: 'completed', label: 'Selesai', icon: <Circle size={9} fill="currentColor" style={{ color: 'var(--text-muted)' }} /> },
+              ] as { key: FilterType; label: string; icon: React.ReactNode }[]
             ).map((f) => (
               <button
                 key={f.key}
                 className={`${styles.filterTab} ${filter === f.key ? styles.active : ''}`}
                 onClick={() => setFilter(f.key)}
               >
-                <span>{f.emoji}</span>
+                <span>{f.icon}</span>
                 {f.label}
                 <span className={styles.filterCount}>{counts[f.key]}</span>
               </button>
@@ -199,7 +202,7 @@ export default function HomePage() {
             </div>
           ) : filteredTrainings.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
+              <div className="empty-state-icon"><InboxIcon size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
               <h3>Belum ada pelatihan</h3>
               <p>
                 {filter === 'all'
@@ -222,7 +225,7 @@ export default function HomePage() {
         <div className="container">
           <div className={styles.footerContent}>
             <div className={styles.footerLogo}>
-              <span>🎓</span>
+              <GraduationCap size={22} strokeWidth={2} />
               <span>
                 PIN<span style={{ color: 'var(--primary-light)' }}>TAR</span>
               </span>

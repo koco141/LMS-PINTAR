@@ -24,6 +24,12 @@ import AssignmentViewer from '@/components/AssignmentViewer';
 import EvaluationViewer from '@/components/EvaluationViewer';
 import Leaderboard from '@/components/Leaderboard';
 import styles from './page.module.css';
+import {
+  Search, Lock, LogIn, GraduationCap, Package, FileText, ClipboardList,
+  CheckCircle2, Trophy, BookOpen, Star, Folder, CalendarClock,
+  LayoutDashboard, CheckCheck, ChevronRight, HelpCircle, Timer,
+  Sparkles, Play
+} from 'lucide-react';
 
 type Step = 'loading' | 'enroll' | 'login' | 'study';
 type ActiveStep = 'pre-test' | 'module' | 'post-test' | 'completed';
@@ -145,7 +151,7 @@ export default function TrainingPage() {
     return (
       <div className="loading-screen">
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-          <span style={{ fontSize: '4rem' }}>🔍</span>
+          <Search size={64} strokeWidth={1.2} style={{ color: 'var(--text-muted)' }} />
           <h2>Token tidak ditemukan</h2>
           <p>Periksa kembali kode token yang Anda masukkan.</p>
           <a href="/" className="btn btn-primary">← Kembali ke Beranda</a>
@@ -167,12 +173,17 @@ export default function TrainingPage() {
     return (
       <div className={styles.enrollPage}>
         <div className={styles.enrollCard}>
-          <span className={styles.enrollEmoji}>🔒</span>
+          <span className={styles.enrollEmoji}>
+            <Lock size={40} strokeWidth={1.5} style={{ color: 'var(--primary-light)' }} />
+          </span>
           <h2>Login untuk Mengakses Pelatihan</h2>
           <p className={styles.trainingTitle}>{training?.title}</p>
           <p>Silakan login dengan akun Google Anda untuk mengakses pelatihan ini.</p>
           <button className={styles.googleBtn} onClick={handleGoogleSignIn} disabled={signInLoading}>
-            {signInLoading ? <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }} /> : '🔑 Masuk dengan Google'}
+            {signInLoading
+              ? <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }} />
+              : <><LogIn size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />Masuk dengan Google</>
+            }
           </button>
           <a href="/" className="btn btn-secondary btn-sm">← Kembali</a>
         </div>
@@ -184,17 +195,20 @@ export default function TrainingPage() {
     return (
       <div className={styles.enrollPage}>
         <div className={styles.enrollCard}>
-          <span className={styles.enrollEmoji}>🎓</span>
+          <span className={styles.enrollEmoji}>
+            <GraduationCap size={44} strokeWidth={1.3} style={{ color: 'var(--primary-light)' }} />
+          </span>
           <h2>Daftar Pelatihan</h2>
           <p className={styles.trainingTitle}>{training?.title}</p>
           <p>Klik tombol di bawah untuk mendaftar dan mulai pelatihan ini.</p>
           <div className={styles.enrollMeta}>
-            <span>📦 {modules.length} modul materi</span>
-            {preTest && <span>📝 Pre-test tersedia</span>}
-            {postTest && <span>📋 Post-test tersedia</span>}
+            <span><Package size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />{modules.length} modul materi</span>
+            {preTest && <span><FileText size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Pre-test tersedia</span>}
+            {postTest && <span><ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Post-test tersedia</span>}
           </div>
           <button className="btn btn-primary btn-lg" onClick={handleEnroll}>
-            ✅ Daftar & Mulai Pelatihan
+            <CheckCircle2 size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Daftar &amp; Mulai Pelatihan
           </button>
           <a href="/" className="btn btn-secondary btn-sm">← Kembali</a>
         </div>
@@ -246,6 +260,14 @@ export default function TrainingPage() {
     }
   };
 
+  // Helper to get sidebar item status icon
+  const getStatusIcon = (locked: boolean, done: boolean | null | undefined, active: boolean, fallback: React.ReactNode) => {
+    if (locked) return <Lock size={14} />;
+    if (done) return <CheckCircle2 size={14} style={{ color: 'var(--status-ongoing)' }} />;
+    if (active) return <ChevronRight size={14} />;
+    return fallback;
+  };
+
   return (
     <div className={styles.trainingLayout}>
       {/* Sidebar */}
@@ -270,7 +292,9 @@ export default function TrainingPage() {
           {preTest && (
             <>
               <div className={styles.moduleListHeader}>
-                📝 Pre-Test {isUpcoming && '🔒'}
+                <FileText size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Pre-Test
+                {isUpcoming && <Lock size={11} style={{ marginLeft: '5px', verticalAlign: 'middle', opacity: 0.6 }} />}
               </div>
               <button
                 className={`${styles.moduleItem} ${activeStep === 'pre-test' && !isUpcoming ? styles.current : ''} ${enrollment?.preTestScore !== null ? styles.done : ''}`}
@@ -284,7 +308,12 @@ export default function TrainingPage() {
                 }}
               >
                 <span className={styles.moduleNum}>
-                  {isUpcoming ? '🔒' : enrollment?.preTestScore !== null ? '✅' : '📝'}
+                  {isUpcoming
+                    ? <Lock size={13} />
+                    : enrollment?.preTestScore !== null
+                      ? <CheckCircle2 size={13} style={{ color: 'var(--status-ongoing)' }} />
+                      : <FileText size={13} />
+                  }
                 </span>
                 <span className={styles.moduleName}>Pre-Test</span>
               </button>
@@ -293,12 +322,15 @@ export default function TrainingPage() {
           )}
 
           <div className={styles.moduleListHeader}>
-            📚 Materi {(isUpcoming || !isModulesUnlocked) && '🔒'}
+            <BookOpen size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+            Materi
+            {(isUpcoming || !isModulesUnlocked) && <Lock size={11} style={{ marginLeft: '5px', verticalAlign: 'middle', opacity: 0.6 }} />}
           </div>
           {modules.map((mod, idx) => {
             const isDone = enrollment?.completedModules.includes(mod.id);
             const isCurrent = activeStep === 'module' && activeModule?.id === mod.id;
             const isUnlocked = isModulesUnlocked && !isUpcoming;
+            const ModIcon = mod.type === 'tugas' ? FileText : mod.type === 'evaluasi' ? Star : BookOpen;
             return (
               <button
                 key={mod.id}
@@ -313,12 +345,17 @@ export default function TrainingPage() {
                 }}
               >
                 <span className={styles.moduleNum}>
-                  {!isUnlocked ? '🔒' : isDone ? '✅' : isCurrent ? '▶' : `${idx + 1}`}
+                  {!isUnlocked
+                    ? <Lock size={13} />
+                    : isDone
+                      ? <CheckCircle2 size={13} style={{ color: 'var(--status-ongoing)' }} />
+                      : isCurrent
+                        ? <ChevronRight size={13} />
+                        : <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{idx + 1}</span>
+                  }
                 </span>
                 <span className={styles.moduleName}>
-                  {(!mod.type || mod.type === 'materi') && '📚 '}
-                  {mod.type === 'tugas' && '📝 '}
-                  {mod.type === 'evaluasi' && '⭐ '}
+                  <ModIcon size={12} style={{ marginRight: '4px', verticalAlign: 'middle', opacity: 0.7 }} />
                   {mod.title}
                 </span>
               </button>
@@ -329,7 +366,9 @@ export default function TrainingPage() {
             <>
               <div style={{ height: '8px' }} />
               <div className={styles.moduleListHeader}>
-                📁 Pengumpulan Tugas {(isUpcoming || !isModulesUnlocked) && '🔒'}
+                <Folder size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Pengumpulan Tugas
+                {(isUpcoming || !isModulesUnlocked) && <Lock size={11} style={{ marginLeft: '5px', verticalAlign: 'middle', opacity: 0.6 }} />}
               </div>
               <a
                 href={(!isUpcoming && isModulesUnlocked) ? training.assignmentLink : '#'}
@@ -350,7 +389,7 @@ export default function TrainingPage() {
                 }}
               >
                 <span className={styles.moduleNum}>
-                  {(!isUpcoming && isModulesUnlocked) ? '📁' : '🔒'}
+                  {(!isUpcoming && isModulesUnlocked) ? <Folder size={13} /> : <Lock size={13} />}
                 </span>
                 <span className={styles.moduleName}>Submit Tugas / Materi</span>
               </a>
@@ -361,7 +400,9 @@ export default function TrainingPage() {
             <>
               <div style={{ height: '8px' }} />
               <div className={styles.moduleListHeader}>
-                📋 Post-Test {(isUpcoming || !isPostTestUnlocked) && '🔒'}
+                <ClipboardList size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Post-Test
+                {(isUpcoming || !isPostTestUnlocked) && <Lock size={11} style={{ marginLeft: '5px', verticalAlign: 'middle', opacity: 0.6 }} />}
               </div>
               <button
                 className={`${styles.moduleItem} ${activeStep === 'post-test' && !isUpcoming ? styles.current : ''} ${enrollment?.postTestScore !== null ? styles.done : ''}`}
@@ -375,7 +416,12 @@ export default function TrainingPage() {
                 }}
               >
                 <span className={styles.moduleNum}>
-                  {isUpcoming || !isPostTestUnlocked ? '🔒' : enrollment?.postTestScore !== null ? '✅' : '📋'}
+                  {isUpcoming || !isPostTestUnlocked
+                    ? <Lock size={13} />
+                    : enrollment?.postTestScore !== null
+                      ? <CheckCircle2 size={13} style={{ color: 'var(--status-ongoing)' }} />
+                      : <ClipboardList size={13} />
+                  }
                 </span>
                 <span className={styles.moduleName}>Post-Test</span>
               </button>
@@ -389,7 +435,7 @@ export default function TrainingPage() {
               style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}
               onClick={() => { setActiveStep('completed'); setActiveTab('learn'); }}
             >
-              <span className={styles.moduleNum}>🏆</span>
+              <span className={styles.moduleNum}><Trophy size={14} style={{ color: '#f59e0b' }} /></span>
               <span className={styles.moduleName}>Hasil Pelatihan</span>
             </button>
           )}
@@ -420,21 +466,28 @@ export default function TrainingPage() {
         {isEnforcementBlocked ? (
           <div className={styles.completedPage}>
             <div className={styles.completedCard}>
-              <div className={styles.completedBadge} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626' }}>🔒</div>
+              <div className={styles.completedBadge} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626' }}>
+                <Lock size={28} strokeWidth={1.5} />
+              </div>
               <h2 style={{ color: '#b91c1c' }}>Pelatihan Terkunci</h2>
               <p className={styles.trainingTitle}>{training?.title}</p>
               <p style={{ margin: '16px 0', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                 Pelatihan belum dapat diakses. Instruktur sedang melengkapi instrumen asesmen standar kompetensi untuk pelatihan ini.
               </p>
               <div style={{ marginTop: '24px' }}>
-                <a href="/dashboard" className="btn btn-secondary">📊 Kembali ke Dashboard</a>
+                <a href="/dashboard" className="btn btn-secondary">
+                  <LayoutDashboard size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                  Kembali ke Dashboard
+                </a>
               </div>
             </div>
           </div>
         ) : isUpcoming ? (
           <div className={styles.completedPage}>
             <div className={styles.completedCard}>
-              <div className={styles.completedBadge} style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--status-upcoming)' }}>📅</div>
+              <div className={styles.completedBadge} style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--status-upcoming)' }}>
+                <CalendarClock size={28} strokeWidth={1.5} />
+              </div>
               <h2>Pelatihan Belum Dimulai</h2>
               <p className={styles.trainingTitle}>{training?.title}</p>
               <p style={{ margin: '16px 0', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
@@ -471,7 +524,10 @@ export default function TrainingPage() {
                 Silakan hubungi instruktur atau koordinator Anda untuk informasi lebih lanjut.
               </p>
               <div style={{ marginTop: '24px' }}>
-                <a href="/dashboard" className="btn btn-secondary">📊 Kembali ke Dashboard</a>
+                <a href="/dashboard" className="btn btn-secondary">
+                  <LayoutDashboard size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                  Kembali ke Dashboard
+                </a>
               </div>
             </div>
           </div>
@@ -482,7 +538,9 @@ export default function TrainingPage() {
                 /* Pre Test Completed Result */
                 <div className={styles.completedPage}>
                   <div className={styles.completedCard}>
-                    <div className={styles.completedBadge}>📝</div>
+                    <div className={styles.completedBadge}>
+                      <FileText size={28} strokeWidth={1.5} />
+                    </div>
                     <h2>Pre-Test Selesai!</h2>
                     <p>Anda telah menyelesaikan Pre-Test dengan nilai:</p>
                     <div className={styles.scoreGrid}>
@@ -500,7 +558,8 @@ export default function TrainingPage() {
                       className="btn btn-primary"
                       onClick={() => determineStep(enrollment!, preTest, postTest, modules)}
                     >
-                      ▶ Mulai Belajar Materi
+                      <Play size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                      Mulai Belajar Materi
                     </button>
                   </div>
                 </div>
@@ -508,21 +567,24 @@ export default function TrainingPage() {
                 /* Pre Test Confirmation Prompt */
                 <div className={styles.completedPage}>
                   <div className={styles.completedCard}>
-                    <div className={styles.completedBadge}>📝</div>
+                    <div className={styles.completedBadge}>
+                      <FileText size={28} strokeWidth={1.5} />
+                    </div>
                     <h2>Mulai Pre-Test</h2>
                     <p className={styles.trainingTitle}>{preTest.title || 'Pre-Test'}</p>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                       Kuis ini digunakan untuk mengukur pemahaman awal Anda sebelum mempelajari materi.
                     </p>
                     <div className={styles.enrollMeta} style={{ margin: '12px 0' }}>
-                      <span>❓ {preTest.questions.length} Pertanyaan</span>
-                      <span>⏱️ {preTest.duration ? `${preTest.duration} Menit` : 'Tanpa Batas Waktu'}</span>
+                      <span><HelpCircle size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />{preTest.questions.length} Pertanyaan</span>
+                      <span><Timer size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />{preTest.duration ? `${preTest.duration} Menit` : 'Tanpa Batas Waktu'}</span>
                     </div>
                     <h3 style={{ margin: '10px 0', fontSize: '1.05rem', color: 'var(--text-primary)' }}>
                       Apakah Anda sudah siap untuk memulai kuis?
                     </h3>
                     <button className="btn btn-primary btn-lg" onClick={() => setQuizStarted(true)}>
-                      ▶ Ya, Mulai Kuis
+                      <Play size={16} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                      Ya, Mulai Kuis
                     </button>
                   </div>
                 </div>
@@ -539,7 +601,9 @@ export default function TrainingPage() {
                 /* Post Test Completed Result */
                 <div className={styles.completedPage}>
                   <div className={styles.completedCard}>
-                    <div className={styles.completedBadge}>🏆</div>
+                    <div className={styles.completedBadge}>
+                      <Trophy size={28} strokeWidth={1.5} style={{ color: '#f59e0b' }} />
+                    </div>
                     <h2>Post-Test Selesai!</h2>
                     <p>Anda telah menyelesaikan Post-Test pelatihan dengan nilai:</p>
                     <div className={styles.scoreGrid}>
@@ -560,7 +624,8 @@ export default function TrainingPage() {
                       className="btn btn-primary"
                       onClick={() => setActiveStep('completed')}
                     >
-                      🏆 Lihat Hasil Pelatihan Lengkap
+                      <Trophy size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                      Lihat Hasil Pelatihan Lengkap
                     </button>
                   </div>
                 </div>
@@ -568,21 +633,24 @@ export default function TrainingPage() {
                 /* Post Test Confirmation Prompt */
                 <div className={styles.completedPage}>
                   <div className={styles.completedCard}>
-                    <div className={styles.completedBadge}>📋</div>
+                    <div className={styles.completedBadge}>
+                      <ClipboardList size={28} strokeWidth={1.5} />
+                    </div>
                     <h2>Mulai Post-Test</h2>
                     <p className={styles.trainingTitle}>{postTest.title || 'Post-Test'}</p>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                       Kuis ini digunakan sebagai penilaian akhir kompetensi Anda setelah mempelajari seluruh materi.
                     </p>
                     <div className={styles.enrollMeta} style={{ margin: '12px 0' }}>
-                      <span>❓ {postTest.questions.length} Pertanyaan</span>
-                      <span>⏱️ {postTest.duration ? `${postTest.duration} Menit` : 'Tanpa Batas Waktu'}</span>
+                      <span><HelpCircle size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />{postTest.questions.length} Pertanyaan</span>
+                      <span><Timer size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />{postTest.duration ? `${postTest.duration} Menit` : 'Tanpa Batas Waktu'}</span>
                     </div>
                     <h3 style={{ margin: '10px 0', fontSize: '1.05rem', color: 'var(--text-primary)' }}>
                       Apakah Anda sudah siap untuk memulai kuis?
                     </h3>
                     <button className="btn btn-primary btn-lg" onClick={() => setQuizStarted(true)}>
-                      ▶ Ya, Mulai Kuis
+                      <Play size={16} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                      Ya, Mulai Kuis
                     </button>
                   </div>
                 </div>
@@ -633,7 +701,9 @@ export default function TrainingPage() {
             ) : activeStep === 'completed' ? (
           <div className={styles.completedPage}>
             <div className={styles.completedCard}>
-              <div className={styles.completedBadge}>🏆</div>
+              <div className={styles.completedBadge}>
+                <Sparkles size={28} strokeWidth={1.5} style={{ color: '#f59e0b' }} />
+              </div>
               <h2>Pelatihan Selesai!</h2>
               <p className={styles.trainingTitle}>{training?.title}</p>
               <div className={styles.scoreGrid}>
@@ -663,14 +733,19 @@ export default function TrainingPage() {
                 )}
               </div>
               <div className={styles.completedActions} style={{ marginTop: '20px' }}>
-                <a href="/dashboard" className="btn btn-primary">📊 Lihat Dashboard</a>
+                <a href="/dashboard" className="btn btn-primary">
+                  <LayoutDashboard size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                  Lihat Dashboard
+                </a>
                 <a href="/" className="btn btn-secondary">← Beranda</a>
               </div>
             </div>
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-state-icon">📚</div>
+            <div className="empty-state-icon">
+              <BookOpen size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+            </div>
             <h3>Pilih modul untuk mulai belajar</h3>
           </div>
         )}

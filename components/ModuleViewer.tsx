@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
+import { BookOpen, CheckCircle2, PartyPopper } from 'lucide-react';
 
 interface Props {
   module: Module;
@@ -59,14 +60,20 @@ export default function ModuleViewer({ module, isCompleted, onComplete }: Props)
     <div className={styles.viewer}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <div className={styles.moduleTag}>📖 Materi</div>
+          <div className={styles.moduleTag}>
+            <BookOpen size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+            Materi
+          </div>
           <h1 className={styles.title}>{module.title}</h1>
           {module.description && (
             <p className={styles.description}>{module.description}</p>
           )}
         </div>
         {isCompleted && (
-          <div className={styles.completedBadge}>✅ Selesai</div>
+          <div className={styles.completedBadge}>
+            <CheckCircle2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+            Selesai
+          </div>
         )}
       </div>
 
@@ -96,12 +103,15 @@ export default function ModuleViewer({ module, isCompleted, onComplete }: Props)
                 Menyimpan...
               </>
             ) : (
-              '✅ Tandai Selesai & Lanjut'
+              <>
+                <CheckCircle2 size={16} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                Tandai Selesai &amp; Lanjut
+              </>
             )}
           </button>
         ) : (
           <div className={styles.doneMessage}>
-            <span>🎉</span>
+            <PartyPopper size={20} style={{ color: 'var(--primary-light)' }} />
             <span>Modul ini sudah selesai! Pilih modul berikutnya dari menu samping.</span>
           </div>
         )}
