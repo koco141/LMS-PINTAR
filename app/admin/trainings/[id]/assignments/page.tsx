@@ -60,10 +60,11 @@ export default function AssignmentsPage() {
         const u: any = await getUserById(e.userId);
         const scores = (e as any).assignmentScores || {};
         
-        let total = 0;
+        let sum = 0;
         tModules.forEach(m => {
-          total += Number(scores[m.id]) || 0;
+          sum += Number(scores[m.id]) || 0;
         });
+        const total = tModules.length > 0 ? Math.round(sum / tModules.length) : 0;
 
         return {
           userId: e.userId,
@@ -152,10 +153,11 @@ export default function AssignmentsPage() {
           if (rubricsToSave) {
             newRubrics[moduleId] = rubricsToSave;
           }
-          let newTotal = 0;
+          let sum = 0;
           taskModules.forEach(m => {
-            newTotal += Number(newScores[m.id]) || 0;
+            sum += Number(newScores[m.id]) || 0;
           });
+          const newTotal = taskModules.length > 0 ? Math.round(sum / taskModules.length) : 0;
           return { ...p, assignmentScores: newScores, assignmentRubrics: newRubrics, totalScore: newTotal };
         }
         return p;
