@@ -134,10 +134,10 @@ export default function AssignmentsPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', paddingBottom: '40px' }}>
       <div className="container" style={{ paddingTop: '40px' }}>
-        <div style={{ display: 'flex', gap: '8px', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
-          <Link href="/admin" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Admin</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
+          <Link href="/admin" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Panel Admin</Link>
           <span>›</span>
-          <Link href={`/admin/trainings/${id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{training?.title}</Link>
+          <span>{training?.title}</span>
           <span>›</span>
           <span>Penilaian Tugas</span>
         </div>
@@ -149,8 +149,8 @@ export default function AssignmentsPage() {
             </h1>
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{training?.title}</p>
           </div>
-          <Link href={`/admin/trainings/${id}`} className="btn btn-secondary">
-            ← Kembali ke Pelatihan
+          <Link href="/admin" className="btn btn-secondary">
+            ← Kembali ke Panel Admin
           </Link>
         </div>
 

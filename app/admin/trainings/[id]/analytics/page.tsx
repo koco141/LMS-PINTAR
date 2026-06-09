@@ -323,9 +323,9 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
       <div className="container">
         <div className={styles.breadcrumb}>
           <Link href="/admin">Panel Admin</Link>
-          <span>/</span>
-          <Link href={`/admin/trainings/${training?.id}`}>Kelola Pelatihan</Link>
-          <span>/</span>
+          <span>›</span>
+          <span>{training?.title}</span>
+          <span>›</span>
           <span>Analisis</span>
         </div>
 

@@ -189,9 +189,9 @@ export default function ParticipantsPage() {
     <div className={styles.page}>
       <div className="container">
         <div className={styles.breadcrumb}>
-          <Link href="/admin">Admin</Link>
+          <Link href="/admin">Panel Admin</Link>
           <span>›</span>
-          <Link href={`/admin/trainings/${id}`}>{training?.title}</Link>
+          <span>{training?.title}</span>
           <span>›</span>
           <span>Peserta</span>
         </div>
