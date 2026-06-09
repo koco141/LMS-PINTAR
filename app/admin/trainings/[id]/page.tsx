@@ -659,11 +659,11 @@ export default function TrainingAdminPage() {
 
       {/* ─── Share Training Modal (Link & QR Code) ─── */}
       {showShareModal && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowShareModal(false)}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowShareModal(false); router.push('/admin'); } }}>
           <div className="modal" style={{ maxWidth: '450px', textAlign: 'center' }}>
             <div className="modal-header">
               <h3 style={{ width: '100%' }}>📢 Bagikan Pelatihan</h3>
-              <button className="btn btn-icon btn-secondary" onClick={() => setShowShareModal(false)}>✕</button>
+              <button className="btn btn-icon btn-secondary" onClick={() => { setShowShareModal(false); router.push('/admin'); }}>✕</button>
             </div>
             <div className="modal-body" style={{ padding: '24px 16px' }}>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
@@ -751,9 +751,7 @@ export default function TrainingAdminPage() {
               >
                 🖼️ Buka QR Code HD
               </a>
-              <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>
-                Tutup
-              </button>
+              <button className="btn btn-secondary" onClick={() => { setShowShareModal(false); router.push('/admin'); }}>Tutup & Kembali ke Panel Admin</button>
             </div>
           </div>
         </div>
