@@ -121,8 +121,13 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
       sumTotalTask += eAvgTask;
       
       let eFinal = e.postTestScore || 0;
+      const tLvl = training?.targetLevel || 5;
       if (tModules.length > 0) {
-        eFinal = (eFinal * 0.7) + (eAvgTask * 0.3);
+        if (tLvl >= 3) {
+          eFinal = (eFinal * 0.4) + (eAvgTask * 0.6);
+        } else {
+          eFinal = (eFinal * 0.7) + (eAvgTask * 0.3);
+        }
       }
       sumTotalFinal += eFinal;
     });
@@ -143,11 +148,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
   // Level Logic
   const targetLevel = training?.targetLevel || 5;
-  const intervalSize = 100 / targetLevel;
-  let computedLevel = Math.ceil(avgFinalScore / intervalSize);
-  if (computedLevel < 1) computedLevel = 1;
-  if (computedLevel > targetLevel) computedLevel = targetLevel;
-
+  
+  let computedLevel = 2;
+  if (avgFinalScore >= 80) computedLevel = 5;
+  else if (avgFinalScore >= 75) computedLevel = 4;
+  else if (avgFinalScore >= 70) computedLevel = 3;
+  
   let level = computedLevel;
   let levelLabel = '';
   let levelDesc = '';
@@ -337,10 +343,6 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <span className={styles.statDesc}>Yang telah menyelesaikan Pre-Test</span>
           </div>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>Rata-Rata Pre-Test</span>
-            <span className={styles.statValue}>{avgPreTestScore.toFixed(1)}</span>
-          </div>
-          <div className={styles.statCard}>
             <span className={styles.statLabel}>Rata-Rata Post-Test</span>
             <span className={styles.statValue}>{avgPostTestScore.toFixed(1)}</span>
             <span className={styles.statDesc} style={{ color: delta > 0 ? 'var(--status-ongoing)' : 'inherit' }}>
@@ -354,7 +356,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           <div className={styles.statCard} style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
             <span className={styles.statLabel}>Rata-Rata Nilai Akhir</span>
             <span className={styles.statValue}>{avgFinalScore.toFixed(1)}</span>
-            <span className={styles.statDesc}>Bobot 70% Post-Test, 30% Tugas</span>
+            <span className={styles.statDesc}>Bobot {targetLevel >= 3 ? '40% Post-Test, 60% Tugas' : '70% Post-Test, 30% Tugas'}</span>
           </div>
           <div className={`${styles.statCard} ${styles.levelCard}`}>
             <span className={styles.statLabel}>Level Kompetensi</span>
@@ -504,7 +506,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
         {/* Question Analysis Table Pre-Test */}
         <div className={styles.tableCard}>
-          <h3>Analisis Per Soal (Pre-Test)</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0 }}>Analisis Per Soal (Pre-Test)</h3>
+            <span style={{ background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              Rata-rata: {avgPreTestScore.toFixed(1)}
+            </span>
+          </div>
           {preTestStats.length === 0 ? (
             <p style={{ color: 'var(--text-muted)' }}>Belum ada data evaluasi soal.</p>
           ) : (
