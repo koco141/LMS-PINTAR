@@ -154,6 +154,10 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   else if (avgFinalScore >= 75) computedLevel = 4;
   else if (avgFinalScore >= 70) computedLevel = 3;
   
+  if (computedLevel > targetLevel) {
+    computedLevel = targetLevel;
+  }
+  
   let level = computedLevel;
   let levelLabel = '';
   let levelDesc = '';
