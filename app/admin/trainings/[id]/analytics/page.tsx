@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getQuiz, getUserById, Training, Enrollment, Quiz, AppUser } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getQuiz, getUserById, getModules, Training, Enrollment, Quiz, AppUser, Module } from '@/lib/db';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -38,6 +38,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   const [preTest, setPreTest] = useState<Quiz | null>(null);
   const [postTest, setPostTest] = useState<Quiz | null>(null);
   const [usersDict, setUsersDict] = useState<Record<string, AppUser>>({});
+  const [modules, setModules] = useState<Module[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -50,15 +51,17 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         if (!t) { router.push('/admin'); return; }
         setTraining(t);
 
-        const [enrs, pre, post] = await Promise.all([
+        const [enrs, pre, post, mods] = await Promise.all([
           getTrainingEnrollments(resolvedParams.id),
           getQuiz(resolvedParams.id, 'pre-test'),
-          getQuiz(resolvedParams.id, 'post-test')
+          getQuiz(resolvedParams.id, 'post-test'),
+          getModules(resolvedParams.id)
         ]);
         
         setEnrollments(enrs);
         setPreTest(pre);
         setPostTest(post);
+        setModules(mods);
 
         const userPromises = enrs.map(e => getUserById(e.userId));
         const usersRes = await Promise.all(userPromises);
@@ -102,6 +105,32 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
     avgPostTestScore = postTestEnrollments.reduce((sum, e) => sum + (e.postTestScore || 0), 0) / postTestEnrollments.length;
   }
 
+  const tModules = modules.filter(m => m.type === 'tugas');
+  let avgTaskScore = 0;
+  let avgFinalScore = avgPostTestScore;
+
+  if (enrollments.length > 0) {
+    let sumTotalFinal = 0;
+    let sumTotalTask = 0;
+    
+    enrollments.forEach(e => {
+      let eSumTask = 0;
+      const assignmentScores = (e as any).assignmentScores || {};
+      tModules.forEach(m => { eSumTask += (Number(assignmentScores[m.id]) || 0); });
+      const eAvgTask = tModules.length > 0 ? eSumTask / tModules.length : 0;
+      sumTotalTask += eAvgTask;
+      
+      let eFinal = e.postTestScore || 0;
+      if (tModules.length > 0) {
+        eFinal = (eFinal * 0.7) + (eAvgTask * 0.3);
+      }
+      sumTotalFinal += eFinal;
+    });
+    
+    avgTaskScore = sumTotalTask / enrollments.length;
+    avgFinalScore = sumTotalFinal / enrollments.length;
+  }
+
   const delta = avgPostTestScore - avgPreTestScore;
 
   let maleCount = 0;
@@ -115,7 +144,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   // Level Logic
   const targetLevel = training?.targetLevel || 5;
   const intervalSize = 100 / targetLevel;
-  let computedLevel = Math.ceil(avgPostTestScore / intervalSize);
+  let computedLevel = Math.ceil(avgFinalScore / intervalSize);
   if (computedLevel < 1) computedLevel = 1;
   if (computedLevel > targetLevel) computedLevel = targetLevel;
 
@@ -317,6 +346,15 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <span className={styles.statDesc} style={{ color: delta > 0 ? 'var(--status-ongoing)' : 'inherit' }}>
               {delta > 0 ? `▲ +${delta.toFixed(1)}` : `▼ ${delta.toFixed(1)}`}
             </span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Rata-Rata Tugas</span>
+            <span className={styles.statValue}>{avgTaskScore.toFixed(1)}</span>
+          </div>
+          <div className={styles.statCard} style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+            <span className={styles.statLabel}>Rata-Rata Nilai Akhir</span>
+            <span className={styles.statValue}>{avgFinalScore.toFixed(1)}</span>
+            <span className={styles.statDesc}>Bobot 70% Post-Test, 30% Tugas</span>
           </div>
           <div className={`${styles.statCard} ${styles.levelCard}`}>
             <span className={styles.statLabel}>Level Kompetensi</span>

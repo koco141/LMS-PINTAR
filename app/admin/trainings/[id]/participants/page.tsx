@@ -65,11 +65,7 @@ export default function ParticipantsPage() {
         let finalScore = e.postTestScore || 0;
         
         if (tModules.length > 0) {
-          if (level >= 3) {
-            finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
-          } else {
-            finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
-          }
+          finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
         }
         
         const passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
