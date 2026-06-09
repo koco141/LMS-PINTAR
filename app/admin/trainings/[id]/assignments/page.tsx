@@ -185,11 +185,11 @@ export default function AssignmentsPage() {
                       <th style={{ padding: '16px', fontWeight: 600 }}>#</th>
                       <th style={{ padding: '16px', fontWeight: 600, minWidth: '200px' }}>Nama Peserta</th>
                       {taskModules.map((m, i) => (
-                        <th key={m.id} style={{ padding: '16px', fontWeight: 600, minWidth: '240px' }}>
-                          Tugas {i + 1}<br/>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{m.title}</span>
+                        <th key={m.id} style={{ padding: '16px', fontWeight: 600, minWidth: '250px' }}>
+                          <div style={{ marginBottom: '4px' }}>Tugas {i + 1}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '8px' }}>{m.title}</div>
                           {m.competencyCategory && (
-                            <div style={{ fontSize: '0.65rem', color: 'var(--primary)', marginTop: '2px', fontWeight: 700, padding: '2px 6px', background: 'rgba(79, 70, 229, 0.1)', borderRadius: '4px', display: 'inline-block' }}>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, padding: '4px 8px', background: 'rgba(79, 70, 229, 0.1)', borderRadius: '4px', display: 'inline-block' }}>
                               Kategori: {m.competencyCategory}
                             </div>
                           )}
