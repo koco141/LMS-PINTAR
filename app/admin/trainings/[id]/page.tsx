@@ -107,20 +107,26 @@ export default function TrainingAdminPage() {
   const saveInfo = async () => {
     setSaving(true);
     const computedStatus = calculateStatus(infoForm.startDate, infoForm.endDate);
-    await updateTraining(id, {
-      title: infoForm.title,
-      description: infoForm.description,
-      status: computedStatus,
-      coverColor: infoForm.coverColor,
-      startDate: infoForm.startDate ? Timestamp.fromDate(new Date(infoForm.startDate)) : null,
-      endDate: infoForm.endDate ? Timestamp.fromDate(new Date(infoForm.endDate)) : null,
-      showLeaderboard: infoForm.showLeaderboard,
-      targetLevel: infoForm.targetLevel,
-      assignmentLink: infoForm.assignmentLink,
-    });
-    await loadAll();
-    setSaving(false);
-    showToast('✅ Info pelatihan berhasil disimpan!');
+    try {
+      await updateTraining(id, {
+        title: infoForm.title,
+        description: infoForm.description,
+        status: computedStatus,
+        coverColor: infoForm.coverColor,
+        startDate: infoForm.startDate ? Timestamp.fromDate(new Date(infoForm.startDate)) : null,
+        endDate: infoForm.endDate ? Timestamp.fromDate(new Date(infoForm.endDate)) : null,
+        showLeaderboard: infoForm.showLeaderboard,
+        targetLevel: infoForm.targetLevel,
+        assignmentLink: infoForm.assignmentLink,
+      });
+      await loadAll();
+      showToast('✅ Info pelatihan berhasil disimpan!');
+      setActiveTab('modules');
+    } catch (e) {
+      showToast('❌ Gagal menyimpan info pelatihan.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // ─── Module CRUD ─────────────────────────────────────────────────────────
@@ -241,17 +247,31 @@ export default function TrainingAdminPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className={styles.tabs}>
-          {(['info', 'modules', 'pre-test', 'post-test'] as AdminTab[]).map((tab) => (
-            <button
-              key={tab}
-              className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab === 'info' ? '📋 Info' : tab === 'modules' ? `📚 Materi (${modules.length})` : tab === 'pre-test' ? '📝 Pre-Test' : '📋 Post-Test'}
-            </button>
-          ))}
+        {/* Stepper */}
+        <div className={styles.stepperContainer}>
+          <div className={styles.stepperLine} />
+          {(['info', 'modules', 'pre-test', 'post-test'] as AdminTab[]).map((tab, idx) => {
+            const stepNumber = idx + 1;
+            const isActive = activeTab === tab;
+            const isCompleted = 
+              (tab === 'info' && !!training) ||
+              (tab === 'modules' && modules.length > 0) ||
+              (tab === 'pre-test' && !!preTest) ||
+              (tab === 'post-test' && !!postTest);
+            
+            return (
+              <div
+                key={tab}
+                className={`${styles.stepItem} ${isActive ? styles.active : ''} ${!isActive && isCompleted ? styles.completed : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                <div className={styles.stepCircle}>{isCompleted && !isActive ? '✓' : stepNumber}</div>
+                <div className={styles.stepLabel}>
+                  {tab === 'info' ? 'Info Pelatihan' : tab === 'modules' ? 'Materi & Tugas' : tab === 'pre-test' ? 'Pre-Test' : 'Post-Test'}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* ─── Info Tab ─── */}
@@ -401,9 +421,11 @@ export default function TrainingAdminPage() {
                 </label>
               </div>
             </div>
-            <button className="btn btn-primary" onClick={saveInfo} disabled={saving}>
-              {saving ? 'Menyimpan...' : '💾 Simpan Perubahan'}
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button className="btn btn-primary" onClick={saveInfo} disabled={saving}>
+                {saving ? 'Menyimpan...' : '💾 Simpan & Lanjutkan'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -601,6 +623,15 @@ export default function TrainingAdminPage() {
                 </div>
               </div>
             )}
+            {/* Modules Footer Navigation */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={() => setActiveTab('info')}>
+                ← Kembali
+              </button>
+              <button className="btn btn-primary" onClick={() => setActiveTab('pre-test')}>
+                Lanjutkan ke Pre-Test →
+              </button>
+            </div>
           </div>
         )}
 
@@ -613,6 +644,14 @@ export default function TrainingAdminPage() {
             type={activeTab}
             quiz={activeTab === 'pre-test' ? preTest : postTest}
             onSaved={() => { loadAll(); showToast('✅ Kuis berhasil disimpan!'); }}
+            onNext={() => {
+              if (activeTab === 'pre-test') setActiveTab('post-test');
+              else setShowShareModal(true);
+            }}
+            onBack={() => {
+              if (activeTab === 'pre-test') setActiveTab('modules');
+              else setActiveTab('pre-test');
+            }}
           />
         )}
       </div>
@@ -728,11 +767,15 @@ function QuizEditor({
   type,
   quiz,
   onSaved,
+  onNext,
+  onBack,
 }: {
   trainingId: string;
   type: 'pre-test' | 'post-test';
   quiz: Quiz | null;
   onSaved: (newQuizId?: string) => void;
+  onNext: () => void;
+  onBack: () => void;
 }) {
   const [title, setTitle] = useState(quiz?.title || (type === 'pre-test' ? 'Pre-Test' : 'Post-Test'));
   const [duration, setDuration] = useState<number>(quiz?.duration || 0);
@@ -908,6 +951,7 @@ function QuizEditor({
     const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration }, type === 'pre-test' ? syncToPostTest : false);
     setSaving(false);
     onSaved(finalQuizId);
+    onNext();
   };
 
   const handleImport = () => {
@@ -1001,10 +1045,13 @@ function QuizEditor({
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={onBack}>
+            ← Kembali
+          </button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>📥 Import Soal</button>
           <button className="btn btn-secondary btn-sm" onClick={addQuestion}>＋ Tambah Soal</button>
           <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-            {saving ? 'Menyimpan...' : '💾 Simpan Kuis'}
+            {saving ? 'Menyimpan...' : type === 'pre-test' ? '💾 Simpan & Lanjutkan' : '💾 Simpan & Selesai'}
           </button>
         </div>
       </div>
