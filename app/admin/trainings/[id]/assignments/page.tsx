@@ -17,6 +17,17 @@ interface AssignmentRow {
   totalScore: number;
 }
 
+const getTaskWeight = (category?: string) => {
+  switch (category) {
+    case 'Proyek Implementasi Teknis': return 1;
+    case 'Analisis Data & Laporan': return 2;
+    case 'Penyelesaian Studi Kasus': return 3;
+    case 'Troubleshooting & Modifikasi': return 4;
+    case 'Mentoring / Presentasi Ahli': return 5;
+    default: return 1;
+  }
+};
+
 export default function AssignmentsPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, loading } = useAuth();
@@ -53,11 +64,15 @@ export default function AssignmentsPage() {
         const u: any = await getUserById(e.userId);
         const scores = (e as any).assignmentScores || {};
         
-        let sum = 0;
+        let sumProduct = 0;
+        let sumWeight = 0;
         tModules.forEach(m => {
-          sum += Number(scores[m.id]) || 0;
+          const score = Number(scores[m.id]) || 0;
+          const weight = getTaskWeight(m.competencyCategory);
+          sumProduct += score * weight;
+          sumWeight += weight;
         });
-        const total = tModules.length > 0 ? Math.round(sum / tModules.length) : 0;
+        const total = sumWeight > 0 ? Math.round(sumProduct / sumWeight) : 0;
 
         return {
           userId: e.userId,
@@ -109,11 +124,15 @@ export default function AssignmentsPage() {
       setParticipants(prev => prev.map(p => {
         if (p.userId === userId) {
           const newScores = { ...p.assignmentScores, [moduleId]: finalScore };
-          let sum = 0;
+          let sumProduct = 0;
+          let sumWeight = 0;
           taskModules.forEach(m => {
-            sum += Number(newScores[m.id]) || 0;
+            const score = Number(newScores[m.id]) || 0;
+            const weight = getTaskWeight(m.competencyCategory);
+            sumProduct += score * weight;
+            sumWeight += weight;
           });
-          const newTotal = taskModules.length > 0 ? Math.round(sum / taskModules.length) : 0;
+          const newTotal = sumWeight > 0 ? Math.round(sumProduct / sumWeight) : 0;
           return { ...p, assignmentScores: newScores, totalScore: newTotal };
         }
         return p;

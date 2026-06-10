@@ -420,7 +420,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                 Berdasarkan evaluasi pembelajaran dari akumulasi nilai akhir, tingkat kompetensi peserta saat ini berada di:
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '20px', fontStyle: 'italic' }}>
-                *Sumber: Kirkpatrick, D. L., & Kirkpatrick, J. D. (2016). Evaluating Training Programs: The Four Levels.
+                *Sumber: Dreyfus Model of Skill Acquisition (Dreyfus & Dreyfus, 1980) & Taksonomi Bloom Revisi (Anderson & Krathwohl, 2001).
               </p>
               
               <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
