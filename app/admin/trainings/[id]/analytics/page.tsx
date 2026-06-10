@@ -374,7 +374,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         <div className={styles.mainGrid}>
           {/* Radar Chart */}
           <div className={styles.chartCard}>
-            <h3>Pemetaan Kategori Kompetensi</h3>
+            <h3>Pemetaan Penguasaan Kognitif</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
               Perbandingan skor rata-rata berdasarkan kategori soal (Maksimal 100).
             </p>
@@ -417,7 +417,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
               <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem' }}>
-                Berdasarkan evaluasi pembelajaran (Level 2: Learning) dari akumulasi nilai akhir, tingkat kompetensi peserta saat ini berada di:
+                Berdasarkan evaluasi pembelajaran dari akumulasi nilai akhir, tingkat kompetensi peserta saat ini berada di:
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '20px', fontStyle: 'italic' }}>
                 *Sumber: Kirkpatrick, D. L., & Kirkpatrick, J. D. (2016). Evaluating Training Programs: The Four Levels.
