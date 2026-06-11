@@ -23,7 +23,6 @@ export default function UsersDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addName, setAddName] = useState('');
   const [addEmail, setAddEmail] = useState('');
-  const [addPassword, setAddPassword] = useState('');
   const [addGender, setAddGender] = useState<'Laki-laki' | 'Perempuan'>('Laki-laki');
   const [addRole, setAddRole] = useState<'admin' | 'instructor' | 'participant'>('participant');
   const [isAdding, setIsAdding] = useState(false);
@@ -61,17 +60,12 @@ export default function UsersDashboard() {
       alert("Nama dan Email wajib diisi!");
       return;
     }
-    if (addPassword && addPassword.length < 6) {
-      alert("Password minimal 6 karakter!");
-      return;
-    }
     
     setIsAdding(true);
     try {
       const newUser = await createUserByAdmin({
         name: addName,
         email: addEmail,
-        password: addPassword || undefined,
         role: addRole,
         gender: addGender
       });
@@ -79,7 +73,6 @@ export default function UsersDashboard() {
       setShowAddModal(false);
       setAddName('');
       setAddEmail('');
-      setAddPassword('');
     } catch (err: any) {
       alert(`Gagal menambahkan user: ${err.message || err}`);
     } finally {
@@ -286,18 +279,6 @@ export default function UsersDashboard() {
                   placeholder="Masukkan email"
                   disabled={isAdding}
                 />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Password (Opsional)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={addPassword}
-                  onChange={(e) => setAddPassword(e.target.value)}
-                  placeholder="Default: Pintar123!"
-                  disabled={isAdding}
-                />
-                <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Kosongkan untuk menggunakan password default "Pintar123!"</small>
               </div>
               <div className="form-group">
                 <label className="form-label">Role</label>
