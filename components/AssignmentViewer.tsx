@@ -25,6 +25,20 @@ export default function AssignmentViewer({
     setLink(existingLink || '');
   }, [module.id, existingLink]);
 
+  const now = new Date();
+  const startDate = module.startDate ? new Date(module.startDate) : null;
+  const endDate = module.endDate ? new Date(module.endDate) : null;
+
+  const isTooEarly = startDate && now < startDate;
+  const isTooLate = endDate && now > endDate;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('id-ID', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
+
   const handleSubmit = async () => {
     if (!link.trim()) return;
     setSubmitting(true);
@@ -50,6 +64,26 @@ export default function AssignmentViewer({
 
         <div style={{ padding: '32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
           <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Link Pengumpulan Tugas</h3>
+
+          {isTooEarly && (
+            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#b45309', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>Tugas Belum Dibuka</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>Tugas ini baru dapat diakses pada: <strong>{formatDate(module.startDate!)}</strong></p>
+            </div>
+          )}
+
+          {isTooLate && (
+            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#b91c1c', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>Waktu Habis</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>Batas waktu pengumpulan tugas ini telah berakhir pada: <strong>{formatDate(module.endDate!)}</strong></p>
+            </div>
+          )}
+
+          {!isTooEarly && !isTooLate && endDate && (
+            <div style={{ marginBottom: '24px', padding: '12px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#1d4ed8', borderRadius: '8px', textAlign: 'center', fontSize: '0.9rem' }}>
+              Batas akhir pengumpulan: <strong>{formatDate(module.endDate)}</strong>
+            </div>
+          )}
           
         {existingLink && (
           <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-input)', borderRadius: '8px', textAlign: 'center' }}>
@@ -70,21 +104,23 @@ export default function AssignmentViewer({
             placeholder="https://..." 
             value={link} 
             onChange={(e) => setLink(e.target.value)}
+            disabled={isTooEarly || isTooLate}
             style={{ 
               padding: '12px 16px', 
               borderRadius: '8px', 
               border: '1px solid var(--border)',
-              backgroundColor: 'var(--bg-input)',
+              backgroundColor: isTooEarly || isTooLate ? 'var(--bg-disabled, #e5e7eb)' : 'var(--bg-input)',
               color: 'var(--text-primary)',
               width: '100%',
-              fontSize: '1rem'
+              fontSize: '1rem',
+              opacity: isTooEarly || isTooLate ? 0.7 : 1
             }}
           />
           </div>
           <button 
             className="btn btn-primary" 
             onClick={handleSubmit} 
-            disabled={submitting || !link.trim() || link === existingLink}
+            disabled={submitting || !link.trim() || link === existingLink || isTooEarly || isTooLate}
             style={{ width: '100%', padding: '12px', marginTop: '8px' }}
           >
             {submitting ? 'Mengumpulkan...' : (existingLink ? 'Perbarui Link Tugas' : 'Kumpulkan Tugas & Lanjut')}

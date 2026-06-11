@@ -38,7 +38,7 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, startDate?: string, endDate?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Info form
   const [infoForm, setInfoForm] = useState({
@@ -135,10 +135,10 @@ export default function TrainingAdminPage() {
   const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '' });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', startDate: mod.startDate || '', endDate: mod.endDate || '' });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', startDate: '', endDate: '' });
     }
     setShowModuleForm(true);
   };
@@ -163,6 +163,8 @@ export default function TrainingAdminPage() {
     }
     if (moduleForm.type === 'tugas' && moduleForm.competencyCategory) {
       dataToSave.competencyCategory = moduleForm.competencyCategory;
+      dataToSave.startDate = moduleForm.startDate || '';
+      dataToSave.endDate = moduleForm.endDate || '';
     }
 
     if (editingModule) {
@@ -599,6 +601,7 @@ export default function TrainingAdminPage() {
                       )}
                       
                       {moduleForm.type === 'tugas' && (
+                        <>
                         <div className="form-group">
                           <label className="form-label">Tipe Asesmen Praktik (Level {infoForm.targetLevel}) *</label>
                           <select 
@@ -618,6 +621,17 @@ export default function TrainingAdminPage() {
                             )}
                           </select>
                         </div>
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                          <div className="form-group" style={{ flex: 1 }}>
+                            <label className="form-label">Dapat Diakses Dari</label>
+                            <input className="form-input" type="datetime-local" value={moduleForm.startDate || ''} onChange={(e) => setModuleForm({ ...moduleForm, startDate: e.target.value })} />
+                          </div>
+                          <div className="form-group" style={{ flex: 1 }}>
+                            <label className="form-label">Batas Akses (Opsional)</label>
+                            <input className="form-input" type="datetime-local" value={moduleForm.endDate || ''} onChange={(e) => setModuleForm({ ...moduleForm, endDate: e.target.value })} />
+                          </div>
+                        </div>
+                        </>
                       )}
                       <div className="form-group">
                         <label className="form-label">{moduleForm.type === 'tugas' ? 'Deskripsi Penugasan' : 'Deskripsi Singkat'}</label>

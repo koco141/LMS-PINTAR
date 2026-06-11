@@ -48,6 +48,8 @@ export interface Module {
   type?: 'materi' | 'tugas' | 'evaluasi';
   ratingCategories?: string[]; // If type is 'evaluasi', list of categories to rate
   competencyCategory?: string; // If type is 'tugas', the competency category
+  startDate?: string; // If type is 'tugas', start datetime
+  endDate?: string; // If type is 'tugas', end datetime
 }
 
 export interface QuizQuestion {
