@@ -81,7 +81,7 @@ export default function AssignmentViewer({
 
           {!isTooEarly && !isTooLate && endDate && (
             <div style={{ marginBottom: '24px', padding: '12px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#1d4ed8', borderRadius: '8px', textAlign: 'center', fontSize: '0.9rem' }}>
-              Batas akhir pengumpulan: <strong>{formatDate(module.endDate)}</strong>
+              Batas akhir pengumpulan: <strong>{formatDate(module.endDate!)}</strong>
             </div>
           )}
           
