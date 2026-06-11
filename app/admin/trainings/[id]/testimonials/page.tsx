@@ -19,7 +19,7 @@ interface TestimonialData {
 
 export default function TestimonialsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
 
   const [training, setTraining] = useState<Training | null>(null);
@@ -28,7 +28,7 @@ export default function TestimonialsPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     if (loading) return;
-    if (!user || !isAdmin) { router.push('/login'); return; }
+    if (!user || (!isAdmin && !isInstructor)) { router.push('/login'); return; }
 
     const fetchData = async () => {
       try {
@@ -91,7 +91,7 @@ export default function TestimonialsPage({ params }: { params: Promise<{ id: str
       }
     };
     fetchData();
-  }, [resolvedParams.id, user, isAdmin, loading, router]);
+  }, [resolvedParams.id, user, isAdmin, isInstructor, loading, router]);
 
   if (loading || dataLoading) {
     return (

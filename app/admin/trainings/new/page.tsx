@@ -12,7 +12,7 @@ import { Circle, Trash2 } from 'lucide-react';
 const DEFAULT_COVER = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
 
 export default function NewTrainingPage() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -40,8 +40,8 @@ export default function NewTrainingPage() {
   };
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) router.push('/login');
-  }, [user, isAdmin, loading]);
+    if (!loading && (!user || (!isAdmin && !isInstructor))) router.push('/login');
+  }, [user, isAdmin, isInstructor, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

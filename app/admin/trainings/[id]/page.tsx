@@ -22,7 +22,7 @@ const DEFAULT_COVER = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
 
 export default function TrainingAdminPage() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
 
   const [training, setTraining] = useState<Training | null>(null);
@@ -47,9 +47,9 @@ export default function TrainingAdminPage() {
   });
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) router.push('/login');
-    if (!loading && user && isAdmin) loadAll();
-  }, [user, isAdmin, loading, id]);
+    if (!loading && (!user || (!isAdmin && !isInstructor))) router.push('/login');
+    if (!loading && user && (isAdmin || isInstructor)) loadAll();
+  }, [user, isAdmin, isInstructor, loading, id]);
 
   const formatToDateTimeLocal = (timestamp: any) => {
     if (!timestamp) return '';

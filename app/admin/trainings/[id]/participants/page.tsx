@@ -27,7 +27,7 @@ interface ParticipantRow {
 
 export default function ParticipantsPage() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
 
   const [training, setTraining] = useState<Training | null>(null);
@@ -38,9 +38,9 @@ export default function ParticipantsPage() {
   const [modules, setModules] = useState<Module[]>([]);
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) { router.push('/login'); return; }
-    if (!loading && user && isAdmin) loadData();
-  }, [user, isAdmin, loading, id]);
+    if (!loading && (!user || (!isAdmin && !isInstructor))) { router.push('/login'); return; }
+    if (!loading && user && (isAdmin || isInstructor)) loadData();
+  }, [user, isAdmin, isInstructor, loading, id]);
 
   const loadData = async () => {
     const [t, enrollments, modules] = await Promise.all([
