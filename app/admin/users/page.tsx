@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import { getAllUsers, updateUserProfile, updateUserRole, deleteUserProfile, AppUser } from '@/lib/db';
+import { getAllUsers, updateUserProfile, updateUserRole, deleteUserProfile, createUserByAdmin, AppUser } from '@/lib/db';
 import Link from 'next/link';
 import styles from '../page.module.css';
-import { Users, Pencil, Trash2, InboxIcon } from 'lucide-react';
+import { Users, Pencil, Trash2, InboxIcon, Plus } from 'lucide-react';
 
 export default function UsersDashboard() {
   const { user, isAdmin, loading } = useAuth();
@@ -19,6 +18,14 @@ export default function UsersDashboard() {
   const [editName, setEditName] = useState('');
   const [editGender, setEditGender] = useState<'Laki-laki' | 'Perempuan'>('Laki-laki');
   const [editRole, setEditRole] = useState<'admin' | 'instructor' | 'participant'>('participant');
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [addPassword, setAddPassword] = useState('');
+  const [addGender, setAddGender] = useState<'Laki-laki' | 'Perempuan'>('Laki-laki');
+  const [addRole, setAddRole] = useState<'admin' | 'instructor' | 'participant'>('participant');
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -45,6 +52,37 @@ export default function UsersDashboard() {
       setEditingUser(null);
     } catch (err: any) {
       alert(`Gagal menyimpan: ${err.message || err}`);
+    }
+  };
+
+  const handleAddUser = async () => {
+    if (!addName || !addEmail) {
+      alert("Nama dan Email wajib diisi!");
+      return;
+    }
+    if (addPassword && addPassword.length < 6) {
+      alert("Password minimal 6 karakter!");
+      return;
+    }
+    
+    setIsAdding(true);
+    try {
+      const newUser = await createUserByAdmin({
+        name: addName,
+        email: addEmail,
+        password: addPassword || undefined,
+        role: addRole,
+        gender: addGender
+      });
+      setUsers(prev => [newUser, ...prev]);
+      setShowAddModal(false);
+      setAddName('');
+      setAddEmail('');
+      setAddPassword('');
+    } catch (err: any) {
+      alert(`Gagal menambahkan user: ${err.message || err}`);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -93,19 +131,25 @@ export default function UsersDashboard() {
         <div className={styles.tableCard}>
           <div className={styles.tableHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Daftar Peserta</h3>
-            <div style={{ position: 'relative', width: '300px' }}>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Cari nama atau email..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', paddingLeft: '36px' }}
-              />
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ position: 'relative', width: '250px' }}>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Cari nama atau email..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ width: '100%', paddingLeft: '36px' }}
+                />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                <Plus size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Tambah User
+              </button>
             </div>
           </div>
           {filteredUsers.length === 0 ? (
@@ -207,6 +251,84 @@ export default function UsersDashboard() {
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setEditingUser(null)}>Batal</button>
               <button className="btn btn-primary" onClick={handleSave}>Simpan Perubahan</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && !isAdding && setShowAddModal(false)}>
+          <div className="modal" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>Tambah User Baru</h3>
+              <button className="btn btn-icon btn-secondary" onClick={() => !isAdding && setShowAddModal(false)} disabled={isAdding}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Nama Lengkap</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  placeholder="Masukkan nama"
+                  disabled={isAdding}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  placeholder="Masukkan email"
+                  disabled={isAdding}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Password (Opsional)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={addPassword}
+                  onChange={(e) => setAddPassword(e.target.value)}
+                  placeholder="Default: Pintar123!"
+                  disabled={isAdding}
+                />
+                <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Kosongkan untuk menggunakan password default "Pintar123!"</small>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Role</label>
+                <select
+                  className="form-input"
+                  value={addRole}
+                  onChange={(e) => setAddRole(e.target.value as 'admin' | 'instructor' | 'participant')}
+                  disabled={isAdding}
+                >
+                  <option value="participant">Peserta</option>
+                  <option value="instructor">Pengajar</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Jenis Kelamin</label>
+                <select
+                  className="form-input"
+                  value={addGender}
+                  onChange={(e) => setAddGender(e.target.value as 'Laki-laki' | 'Perempuan')}
+                  disabled={isAdding}
+                >
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowAddModal(false)} disabled={isAdding}>Batal</button>
+              <button className="btn btn-primary" onClick={handleAddUser} disabled={isAdding}>
+                {isAdding ? 'Menambahkan...' : 'Tambah User'}
+              </button>
             </div>
           </div>
         </div>

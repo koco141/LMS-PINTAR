@@ -14,7 +14,9 @@ import {
   setDoc,
   increment,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { db, firebaseConfig } from './firebase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -426,6 +428,40 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
 
 export async function updateUserProfile(userId: string, data: Partial<AppUser>) {
   await updateDoc(doc(db, 'users', userId), data);
+}
+
+export async function createUserByAdmin(data: { name: string, email: string, role: 'admin' | 'instructor' | 'participant', gender: 'Laki-laki' | 'Perempuan', password?: string }): Promise<AppUser> {
+  const secondaryApp = getApps().find(a => a.name === 'SecondaryApp') || initializeApp(firebaseConfig, 'SecondaryApp');
+  const secondaryAuth = getAuth(secondaryApp);
+  
+  const password = data.password || 'Pintar123!'; 
+  const cred = await createUserWithEmailAndPassword(secondaryAuth, data.email, password);
+  const uid = cred.user.uid;
+  
+  await signOut(secondaryAuth);
+
+  const newUser: AppUser = {
+    id: uid,
+    name: data.name,
+    email: data.email,
+    photoURL: null,
+    role: data.role,
+    fullName: data.name,
+    gender: data.gender,
+    joinedAt: serverTimestamp() as Timestamp,
+  };
+
+  await setDoc(doc(db, 'users', uid), {
+    name: newUser.name,
+    email: newUser.email,
+    photoURL: newUser.photoURL,
+    role: newUser.role,
+    fullName: newUser.fullName,
+    gender: newUser.gender,
+    joinedAt: serverTimestamp(),
+  });
+  
+  return newUser;
 }
 
 export async function updateUserRole(userId: string, newRole: 'admin' | 'instructor' | 'participant') {
