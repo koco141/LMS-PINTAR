@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllTrainings, getTrainingByToken, Training } from '@/lib/db';
+import { getAllTrainings, getTrainingByToken, Training, getUserEnrollments } from '@/lib/db';
+import { useAuth } from '@/lib/auth-context';
 import TrainingCard from '@/components/TrainingCard';
 import styles from './page.module.css';
 import { Rocket, Key, CheckCircle2, AlertTriangle, BookOpen, Circle, GraduationCap, InboxIcon } from 'lucide-react';
@@ -10,7 +11,9 @@ import { Rocket, Key, CheckCircle2, AlertTriangle, BookOpen, Circle, GraduationC
 type FilterType = 'all' | 'ongoing' | 'upcoming' | 'completed';
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [trainings, setTrainings] = useState<Training[]>([]);
+  const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('all');
   const [token, setToken] = useState('');
@@ -25,6 +28,16 @@ export default function HomePage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      getUserEnrollments(user.uid).then((enrollments) => {
+        setEnrolledIds(enrollments.map(e => e.trainingId));
+      });
+    } else {
+      setEnrolledIds([]);
+    }
+  }, [user]);
 
   const handleTokenSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,7 +226,7 @@ export default function HomePage() {
           ) : (
             <div className={styles.trainingsGrid}>
               {filteredTrainings.map((training, idx) => (
-                <TrainingCard key={training.id} training={training} index={idx} />
+                <TrainingCard key={training.id} training={training} index={idx} isEnrolled={training.id ? enrolledIds.includes(training.id) : false} />
               ))}
             </div>
           )}

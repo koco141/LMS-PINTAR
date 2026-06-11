@@ -21,6 +21,7 @@ const COVER_COLORS = [
 interface Props {
   training: Training;
   index?: number;
+  isEnrolled?: boolean;
 }
 
 const STATUS_MAP = {
@@ -29,7 +30,7 @@ const STATUS_MAP = {
   completed: { label: 'Selesai', className: 'badge-completed' },
 };
 
-export default function TrainingCard({ training, index = 0 }: Props) {
+export default function TrainingCard({ training, index = 0, isEnrolled = false }: Props) {
   const router = useRouter();
   const [showTokenPrompt, setShowTokenPrompt] = useState(false);
   const [inputToken, setInputToken] = useState('');
@@ -86,7 +87,13 @@ export default function TrainingCard({ training, index = 0 }: Props) {
 
         {!showTokenPrompt ? (
           <button 
-            onClick={() => setShowTokenPrompt(true)} 
+            onClick={() => {
+              if (isEnrolled) {
+                router.push(`/training/${training.token}`);
+              } else {
+                setShowTokenPrompt(true);
+              }
+            }} 
             className={styles.joinBtn}
             style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
