@@ -4,27 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { getUserEnrollments, getTrainingById, Enrollment, Training } from '@/lib/db';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
 import styles from './page.module.css';
 import { BarChart2, BookOpen, Home, Circle, Play } from 'lucide-react';
-
-ChartJS.register(
-  CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
-  RadialLinearScale, PointElement, LineElement, Filler
-);
 
 interface EnrollmentWithTraining {
   enrollment: Enrollment;
@@ -70,62 +51,9 @@ export default function DashboardPage() {
     (d) => d.enrollment.postTestScore !== null
   ).length;
 
-  const avgImprovement = (() => {
-    const valid = data.filter(
-      (d) => d.enrollment.preTestScore !== null && d.enrollment.postTestScore !== null
-    );
-    if (!valid.length) return null;
-    const sum = valid.reduce(
-      (acc, d) => acc + (d.enrollment.postTestScore! - d.enrollment.preTestScore!),
-      0
-    );
-    return Math.round(sum / valid.length);
-  })();
-
-  const chartData = {
-    labels: data.map((d) => d.training.title.substring(0, 20) + (d.training.title.length > 20 ? '…' : '')),
-    datasets: [
-      {
-        label: 'Pre-Test',
-        data: data.map((d) => d.enrollment.preTestScore ?? 0),
-        backgroundColor: 'rgba(245, 158, 11, 0.7)',
-        borderColor: 'rgba(245, 158, 11, 1)',
-        borderWidth: 1,
-        borderRadius: 6,
-      },
-      {
-        label: 'Post-Test',
-        data: data.map((d) => d.enrollment.postTestScore ?? 0),
-        backgroundColor: 'rgba(16, 185, 129, 0.7)',
-        borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 1,
-        borderRadius: 6,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        labels: { color: '#a0a0c0', font: { family: 'Plus Jakarta Sans', size: 12 } },
-      },
-      title: { display: false },
-    },
-    scales: {
-      x: {
-        ticks: { color: '#5a5a7a', font: { family: 'Plus Jakarta Sans', size: 11 } },
-        grid: { color: 'rgba(255,255,255,0.04)' },
-      },
-      y: {
-        ticks: { color: '#5a5a7a', font: { family: 'Plus Jakarta Sans', size: 11 } },
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        min: 0,
-        max: 100,
-      },
-    },
-  };
+  const totalPassed = data.filter(
+    (d) => d.enrollment.postTestScore !== null
+  ).length;
 
   return (
     <div className={styles.page}>
@@ -166,25 +94,12 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="stat-card">
-            <span className="stat-label">Rata-rata Peningkatan</span>
-            <span className="stat-value" style={{ color: avgImprovement !== null && avgImprovement >= 0 ? 'var(--status-ongoing)' : '#ef4444' }}>
-              {avgImprovement !== null ? (avgImprovement >= 0 ? '+' : '') + avgImprovement : '—'}
+            <span className="stat-label">Lulus Pelatihan</span>
+            <span className="stat-value" style={{ color: 'var(--status-ongoing)' }}>
+              {totalPassed}
             </span>
           </div>
         </div>
-
-        {/* Chart */}
-        {data.length > 0 && (
-          <div className={styles.chartCard}>
-            <h3>
-              <BarChart2 size={17} style={{ marginRight: '8px', verticalAlign: 'middle', color: 'var(--primary-light)' }} />
-              Perbandingan Pre-Test vs Post-Test
-            </h3>
-            <div className={styles.chartWrapper}>
-              <Bar data={chartData} options={chartOptions} />
-            </div>
-          </div>
-        )}
 
         {/* Enrollments List */}
         <h2 className={styles.sectionTitle}>Pelatihan Saya</h2>
