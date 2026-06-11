@@ -106,7 +106,7 @@ export default function TestimonialsPage({ params }: { params: Promise<{ id: str
     <div className={styles.page}>
       <div className="container">
         <div className={styles.breadcrumb}>
-          <Link href="/admin">Panel Admin</Link>
+          <Link href="/admin">{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>/</span>
           <Link href={`/admin/trainings/${training?.id}`}>Kelola Pelatihan</Link>
           <span>/</span>

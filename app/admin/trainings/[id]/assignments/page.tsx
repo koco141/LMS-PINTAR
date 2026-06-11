@@ -155,7 +155,7 @@ export default function AssignmentsPage() {
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', paddingBottom: '40px' }}>
       <div className="container" style={{ paddingTop: '40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
-          <Link href="/admin" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Panel Admin</Link>
+          <Link href="/admin" style={{ color: 'var(--primary)', textDecoration: 'none' }}>{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>›</span>
           <span>{training?.title}</span>
           <span>›</span>

@@ -190,7 +190,7 @@ export default function ParticipantsPage() {
     <div className={styles.page}>
       <div className="container">
         <div className={styles.breadcrumb}>
-          <Link href="/admin">Panel Admin</Link>
+          <Link href="/admin">{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>›</span>
           <span>{training?.title}</span>
           <span>›</span>

@@ -77,7 +77,7 @@ export default function NewTrainingPage() {
     <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.breadcrumb}>
-          <Link href="/admin">Admin</Link>
+          <Link href="/admin">{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>›</span>
           <span>Pelatihan Baru</span>
         </div>

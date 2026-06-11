@@ -104,7 +104,7 @@ export default function AssignmentViewer({
             placeholder="https://..." 
             value={link} 
             onChange={(e) => setLink(e.target.value)}
-            disabled={isTooEarly || isTooLate}
+            disabled={Boolean(isTooEarly) || Boolean(isTooLate)}
             style={{ 
               padding: '12px 16px', 
               borderRadius: '8px', 
@@ -120,7 +120,7 @@ export default function AssignmentViewer({
           <button 
             className="btn btn-primary" 
             onClick={handleSubmit} 
-            disabled={submitting || !link.trim() || link === existingLink || isTooEarly || isTooLate}
+            disabled={submitting || !link.trim() || link === existingLink || Boolean(isTooEarly) || Boolean(isTooLate)}
             style={{ width: '100%', padding: '12px', marginTop: '8px' }}
           >
             {submitting ? 'Mengumpulkan...' : (existingLink ? 'Perbarui Link Tugas' : 'Kumpulkan Tugas & Lanjut')}

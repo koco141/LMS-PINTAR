@@ -218,7 +218,7 @@ export default function TrainingAdminPage() {
 
       <div className="container">
         <div className={styles.breadcrumb}>
-          <Link href="/admin">Admin</Link>
+          <Link href="/admin">{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>›</span>
           <span>{training?.title}</span>
         </div>
