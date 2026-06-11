@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   userProfile: AppUser | null;
   isAdmin: boolean;
+  isInstructor: boolean;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const isAdmin = user?.email === ADMIN_EMAIL;
+  const isInstructor = userProfile?.role === 'instructor';
 
   const fetchUserProfile = async (uid: string) => {
     const userRef = doc(db, 'users', uid);
@@ -94,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, isAdmin, loading, signInWithGoogle, signInWithEmail, signOut, refreshUserProfile }}>
+    <AuthContext.Provider value={{ user, userProfile, isAdmin, isInstructor, loading, signInWithGoogle, signInWithEmail, signOut, refreshUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

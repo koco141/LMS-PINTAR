@@ -8,7 +8,7 @@ import styles from './Navbar.module.css';
 import { GraduationCap, LayoutDashboard, Settings, LogOut, ChevronDown, ChevronUp, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
-  const { user, userProfile, isAdmin, signOut } = useAuth();
+  const { user, userProfile, isAdmin, isInstructor, signOut } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -33,10 +33,10 @@ export default function Navbar() {
 
         <div className={`${styles.navLinks} ${mobileNavOpen ? styles.mobileOpen : ''}`}>
           <Link href="/" className={styles.navLink} onClick={() => setMobileNavOpen(false)}>Beranda</Link>
-          {user && !isAdmin && (
+          {user && !isAdmin && !isInstructor && (
             <Link href="/dashboard" className={styles.navLink} onClick={() => setMobileNavOpen(false)}>Dashboard Saya</Link>
           )}
-          {isAdmin && (
+          {(isAdmin || isInstructor) && (
             <Link href="/admin" className={styles.navLink} onClick={() => setMobileNavOpen(false)}>Panel Admin</Link>
           )}
         </div>
@@ -82,15 +82,16 @@ export default function Navbar() {
                     <p className={styles.dropdownName}>{displayName}</p>
                     <p className={styles.dropdownEmail}>{user.email}</p>
                     {isAdmin && <span className="badge badge-ongoing" style={{ marginTop: '6px' }}>Admin</span>}
+                    {isInstructor && !isAdmin && <span className="badge badge-upcoming" style={{ marginTop: '6px' }}>Pengajar</span>}
                   </div>
                   <div className={styles.dropdownDivider} />
-                  {user && !isAdmin && (
+                  {user && !isAdmin && !isInstructor && (
                     <Link href="/dashboard" className={styles.dropdownItem} onClick={() => setMenuOpen(false)}>
                       <LayoutDashboard size={15} style={{ marginRight: '8px', opacity: 0.7 }} />
                       Dashboard Saya
                     </Link>
                   )}
-                  {isAdmin && (
+                  {(isAdmin || isInstructor) && (
                     <Link href="/admin" className={styles.dropdownItem} onClick={() => setMenuOpen(false)}>
                       <Settings size={15} style={{ marginRight: '8px', opacity: 0.7 }} />
                       Panel Admin

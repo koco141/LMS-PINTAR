@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -20,9 +20,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user || !isAdmin) { router.push('/login'); return; }
+    if (!user || (!isAdmin && !isInstructor)) { router.push('/login'); return; }
     getAllTrainings().then((t) => { setTrainings(t); setDataLoading(false); });
-  }, [user, isAdmin, loading]);
+  }, [user, isAdmin, isInstructor, loading, router]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Hapus pelatihan "${title}"? Tindakan ini tidak dapat dibatalkan.`)) return;
@@ -54,10 +54,12 @@ export default function AdminDashboard() {
             <p>Selamat datang, {user?.displayName || 'Admin'}! Kelola semua pelatihan di sini.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <Link href="/admin/users" className="btn btn-secondary">
-              <Users size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
-              Keseluruhan Peserta
-            </Link>
+            {isAdmin && (
+              <Link href="/admin/users" className="btn btn-secondary">
+                <Users size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                Keseluruhan Peserta
+              </Link>
+            )}
             <Link href="/admin/trainings/new" className="btn btn-primary">
               ＋ Buat Pelatihan Baru
             </Link>

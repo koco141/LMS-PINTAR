@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getAllUsers, updateUserProfile, deleteUserProfile, AppUser } from '@/lib/db';
+import { getAllUsers, updateUserProfile, updateUserRole, deleteUserProfile, AppUser } from '@/lib/db';
 import Link from 'next/link';
 import styles from '../page.module.css';
 import { Users, Pencil, Trash2, InboxIcon } from 'lucide-react';
@@ -18,6 +18,7 @@ export default function UsersDashboard() {
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
   const [editName, setEditName] = useState('');
   const [editGender, setEditGender] = useState<'Laki-laki' | 'Perempuan'>('Laki-laki');
+  const [editRole, setEditRole] = useState<'admin' | 'instructor' | 'participant'>('participant');
 
   useEffect(() => {
     if (loading) return;
@@ -30,13 +31,17 @@ export default function UsersDashboard() {
     setEditingUser(u);
     setEditName(u.fullName || u.name || '');
     setEditGender(u.gender || 'Laki-laki');
+    setEditRole(u.role || 'participant');
   };
 
   const handleSave = async () => {
     if (!editingUser) return;
     try {
       await updateUserProfile(editingUser.id, { fullName: editName, gender: editGender });
-      setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, fullName: editName, gender: editGender } : u));
+      if (editRole !== editingUser.role) {
+        await updateUserRole(editingUser.id, editRole);
+      }
+      setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, fullName: editName, gender: editGender, role: editRole } : u));
       setEditingUser(null);
     } catch (err: any) {
       alert(`Gagal menyimpan: ${err.message || err}`);
@@ -116,6 +121,7 @@ export default function UsersDashboard() {
                     <th>Nama</th>
                     <th>Email</th>
                     <th>Jenis Kelamin</th>
+                    <th>Role</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -125,6 +131,11 @@ export default function UsersDashboard() {
                       <td>{u.fullName || u.name || '-'}</td>
                       <td>{u.email || '-'}</td>
                       <td>{u.gender || '-'}</td>
+                      <td>
+                        <span className={`badge ${u.role === 'admin' ? 'badge-ongoing' : u.role === 'instructor' ? 'badge-upcoming' : 'badge-completed'}`}>
+                          {u.role === 'admin' ? 'Admin' : u.role === 'instructor' ? 'Pengajar' : 'Peserta'}
+                        </span>
+                      </td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
@@ -178,6 +189,18 @@ export default function UsersDashboard() {
                 >
                   <option value="Laki-laki">Laki-laki</option>
                   <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Role</label>
+                <select
+                  className="form-input"
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value as 'admin' | 'instructor' | 'participant')}
+                >
+                  <option value="participant">Peserta</option>
+                  <option value="instructor">Pengajar</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
             </div>

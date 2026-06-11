@@ -407,7 +407,7 @@ export interface AppUser {
   name: string;
   email: string | null;
   photoURL: string | null;
-  role: 'admin' | 'participant';
+  role: 'admin' | 'instructor' | 'participant';
   fullName?: string;
   gender?: 'Laki-laki' | 'Perempuan';
   joinedAt: Timestamp;
@@ -426,6 +426,10 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
 
 export async function updateUserProfile(userId: string, data: Partial<AppUser>) {
   await updateDoc(doc(db, 'users', userId), data);
+}
+
+export async function updateUserRole(userId: string, newRole: 'admin' | 'instructor' | 'participant') {
+  await updateDoc(doc(db, 'users', userId), { role: newRole });
 }
 
 export async function deleteUserProfile(userId: string) {
