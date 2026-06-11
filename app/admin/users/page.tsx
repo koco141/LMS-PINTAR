@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { getAllUsers, updateUserProfile, updateUserRole, deleteUserProfile, createUserByAdmin, AppUser } from '@/lib/db';
 import Link from 'next/link';
 import styles from '../page.module.css';
