@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { Users, ClipboardList, ArrowLeft } from 'lucide-react';
+import { Users, ClipboardList, ArrowLeft, InboxIcon } from 'lucide-react';
 import { getTrainingById, getTrainingEnrollments, getQuiz, getUserById, getModules, Training, Enrollment, Quiz, AppUser, Module } from '@/lib/db';
 import {
   Chart as ChartJS,
@@ -368,7 +368,17 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {enrollments.length === 0 ? (
+          <div className="empty-state" style={{ marginTop: '40px' }}>
+            <div className="empty-state-icon"><InboxIcon size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
+            <h3>Belum ada peserta yang mendaftar</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '8px' }}>
+              Data analisis akan muncul setelah ada peserta yang mendaftar dan mengerjakan evaluasi.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Stats Grid */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Rata-Rata Pre-Test</span>
@@ -642,6 +652,8 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           )}
         </div>
 
+          </>
+        )}
       </div>
     </div>
   );
