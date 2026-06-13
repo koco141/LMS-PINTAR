@@ -20,6 +20,7 @@ export default function AssignmentViewer({
 }) {
   const [link, setLink] = useState(existingLink || '');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     setLink(existingLink || '');
@@ -40,7 +41,20 @@ export default function AssignmentViewer({
   };
 
   const handleSubmit = async () => {
-    if (!link.trim()) return;
+    if (!link.trim()) {
+      setError('Link pengumpulan tidak boleh kosong.');
+      return;
+    }
+
+    const googleDomains = ['drive.google.com', 'docs.google.com', 'sheets.google.com', 'slides.google.com', 'forms.google.com'];
+    const isValid = googleDomains.some(domain => link.toLowerCase().includes(domain));
+
+    if (!isValid) {
+      setError('Harap gunakan link dari ekosistem Google (Google Drive, Docs, Sheets, Slides, Forms).');
+      return;
+    }
+
+    setError('');
     setSubmitting(true);
     await onSubmitLink(link);
     setSubmitting(false);
@@ -108,7 +122,7 @@ export default function AssignmentViewer({
             style={{ 
               padding: '12px 16px', 
               borderRadius: '8px', 
-              border: '1px solid var(--border)',
+              border: error ? '1px solid var(--danger)' : '1px solid var(--border)',
               backgroundColor: isTooEarly || isTooLate ? 'var(--bg-disabled, #e5e7eb)' : 'var(--bg-input)',
               color: 'var(--text-primary)',
               width: '100%',
@@ -116,6 +130,7 @@ export default function AssignmentViewer({
               opacity: isTooEarly || isTooLate ? 0.7 : 1
             }}
           />
+          {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>{error}</p>}
           </div>
           <button 
             className="btn btn-primary" 
