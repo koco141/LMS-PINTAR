@@ -938,6 +938,7 @@ function QuizEditor({
   const [saving, setSaving] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
+  const [excelFile, setExcelFile] = useState<File | null>(null);
 
   const downloadExcelTemplate = () => {
     const headers = [
@@ -1005,68 +1006,71 @@ function QuizEditor({
     XLSX.writeFile(workbook, 'Template_Soal_PintarLMS.xlsx');
   };
 
-  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleUnifiedImport = () => {
+    if (excelFile) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1 });
+          
+          if (jsonData.length <= 1) {
+            alert('Excel kosong atau tidak memiliki data.');
+            return;
+          }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = new Uint8Array(event.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        
-        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, { header: 1 });
-        
-        if (jsonData.length <= 1) {
-          alert('Excel kosong atau tidak memiliki data.');
-          return;
+          const imported: QuizQuestion[] = [];
+          
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length < 2) continue;
+
+            const question = row[1] ? String(row[1]).trim() : '';
+            if (!question) continue;
+
+            const options = [
+              row[2] ? String(row[2]).trim() : '',
+              row[3] ? String(row[3]).trim() : '',
+              row[4] ? String(row[4]).trim() : '',
+              row[5] ? String(row[5]).trim() : '',
+            ];
+
+            const rawKey = row[6] ? String(row[6]).trim().toUpperCase() : 'A';
+            const correctAnswer = ['A', 'B', 'C', 'D'].indexOf(rawKey);
+            const category = row[7] ? String(row[7]).trim() : 'Pemahaman';
+
+            imported.push({
+              id: (Date.now() + i).toString(),
+              question,
+              options,
+              correctAnswer: correctAnswer !== -1 ? correctAnswer : 0,
+              points: 10,
+              category,
+            });
+          }
+
+          if (imported.length > 0) {
+            setQuestions([...questions, ...imported]);
+            setShowImport(false);
+            setExcelFile(null);
+            setImportText('');
+            alert(`Berhasil mengimpor ${imported.length} soal dari Excel!`);
+          } else {
+            alert('Tidak ada soal valid yang berhasil diimpor. Pastikan template sesuai.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Gagal membaca file Excel. Pastikan format file benar.');
         }
-
-        const imported: QuizQuestion[] = [];
-        
-        for (let i = 1; i < jsonData.length; i++) {
-          const row = jsonData[i];
-          if (!row || row.length < 2) continue;
-
-          const question = row[1] ? String(row[1]).trim() : '';
-          if (!question) continue;
-
-          const options = [
-            row[2] ? String(row[2]).trim() : '',
-            row[3] ? String(row[3]).trim() : '',
-            row[4] ? String(row[4]).trim() : '',
-            row[5] ? String(row[5]).trim() : '',
-          ];
-
-          const rawKey = row[6] ? String(row[6]).trim().toUpperCase() : 'A';
-          const correctAnswer = ['A', 'B', 'C', 'D'].indexOf(rawKey);
-          const category = row[7] ? String(row[7]).trim() : 'Pemahaman';
-
-          imported.push({
-            id: (Date.now() + i).toString(),
-            question,
-            options,
-            correctAnswer: correctAnswer !== -1 ? correctAnswer : 0,
-            points: 10,
-            category,
-          });
-        }
-
-        if (imported.length > 0) {
-          setQuestions([...questions, ...imported]);
-          setShowImport(false);
-          alert(`Berhasil mengimpor ${imported.length} soal dari Excel!`);
-        } else {
-          alert('Tidak ada soal valid yang berhasil diimpor. Pastikan template sesuai.');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Gagal membaca file Excel. Pastikan format file benar.');
-      }
-    };
-    reader.readAsArrayBuffer(file);
+      };
+      reader.readAsArrayBuffer(excelFile);
+    } else if (importText.trim()) {
+      handleTextImport();
+    }
   };
 
   // Sync duration changes when quiz changes
@@ -1112,7 +1116,7 @@ function QuizEditor({
     onNext();
   };
 
-  const handleImport = () => {
+  const handleTextImport = () => {
     try {
       const text = importText.trim();
       if (!text) return;
@@ -1321,7 +1325,7 @@ function QuizEditor({
                 <BarChart2 size={16} />
                 Import Soal Kuis
               </h3>
-              <button className="btn btn-icon btn-secondary" onClick={() => setShowImport(false)}>✕</button>
+              <button className="btn btn-icon btn-secondary" onClick={() => { setShowImport(false); setExcelFile(null); setImportText(''); }}>✕</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
@@ -1358,10 +1362,11 @@ function QuizEditor({
                   <input
                     type="file"
                     accept=".xlsx, .xls"
-                    onChange={handleExcelUpload}
+                    onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
                     className="form-input"
                     style={{ padding: '8px' }}
                   />
+                  {excelFile && <p style={{ fontSize: '0.8rem', color: 'var(--status-ongoing)', marginTop: '8px' }}>File terpilih: {excelFile.name}</p>}
                 </div>
               </div>
 
@@ -1384,9 +1389,9 @@ function QuizEditor({
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowImport(false)}>Batal</button>
-              <button className="btn btn-primary" onClick={handleImport} disabled={!importText.trim()}>
-                📥 Import Teks
+              <button className="btn btn-secondary" onClick={() => { setShowImport(false); setExcelFile(null); setImportText(''); }}>Batal</button>
+              <button className="btn btn-primary" onClick={handleUnifiedImport} disabled={!excelFile && !importText.trim()}>
+                📥 Import Soal
               </button>
             </div>
           </div>
