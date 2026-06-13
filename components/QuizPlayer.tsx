@@ -11,6 +11,17 @@ interface Props {
   previousScore: number | null;
 }
 
+const getCategoryWeight = (category?: string) => {
+  switch (category) {
+    case 'Pemahaman': return 1;
+    case 'Penerapan': return 2;
+    case 'Analisis': return 3;
+    case 'Evaluasi': return 4;
+    case 'Inovasi/Kreasi': return 5;
+    default: return 1;
+  }
+};
+
 export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
   const [shuffledQuestions, setShuffledQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -86,11 +97,12 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     let totalPoints = 0;
     const mappedAnswers = new Array(quiz.questions.length).fill(null);
     shuffledQuestions.forEach((q, idx) => {
-      totalPoints += q.points || 10;
+      const weight = getCategoryWeight(q.category);
+      totalPoints += weight;
       const ans = answersRef.current[idx];
       mappedAnswers[q.originalQIdx] = ans;
       if (ans === q.correctAnswer) {
-        totalScore += q.points || 10;
+        totalScore += weight;
       }
     });
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
@@ -111,10 +123,11 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     let totalPoints = 0;
     const mappedAnswers = new Array(quiz.questions.length).fill(null);
     shuffledQuestions.forEach((q, idx) => {
-      totalPoints += q.points || 10;
+      const weight = getCategoryWeight(q.category);
+      totalPoints += weight;
       mappedAnswers[q.originalQIdx] = answers[idx];
       if (answers[idx] === q.correctAnswer) {
-        totalScore += q.points || 10;
+        totalScore += weight;
       }
     });
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
@@ -214,7 +227,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
             </div>
 
             <div className={styles.questionCard}>
-              <div className={styles.qNum}>Pertanyaan {currentQ + 1} ({shuffledQuestions[currentQ].points || 10} Poin)</div>
+              <div className={styles.qNum}>Pertanyaan {currentQ + 1}</div>
               <h2 className={styles.question}>{shuffledQuestions[currentQ].question}</h2>
 
               <div className={styles.options}>

@@ -948,7 +948,6 @@ function QuizEditor({
       'Pilihan C *',
       'Pilihan D *',
       'Kunci Jawaban (A/B/C/D) *',
-      'Poin',
       'Kategori'
     ];
     const sampleData = [
@@ -960,8 +959,7 @@ function QuizEditor({
         'Adobe Illustrator',
         'All In',
         'A',
-        10,
-        'Teori'
+        'Pemahaman'
       ],
       [
         2,
@@ -971,8 +969,7 @@ function QuizEditor({
         'Kroasia',
         'Maroko',
         'B',
-        10,
-        'Teori'
+        'Pemahaman'
       ]
     ];
 
@@ -987,7 +984,6 @@ function QuizEditor({
       { wch: 25 },
       { wch: 25 },
       { wch: 25 },
-      { wch: 8 },
       { wch: 20 }
     ];
     worksheet['!cols'] = wscols;
@@ -995,6 +991,17 @@ function QuizEditor({
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Soal');
     
+    const guideHeaders = ['Kategori', 'Penjelasan', 'Bobot Otomatis'];
+    const guideData = [
+      ['Pemahaman', 'Soal ingatan atau pemahaman konsep dasar.', '1'],
+      ['Penerapan', 'Penggunaan rumus/metode pada kasus sederhana.', '2'],
+      ['Analisis', 'Membedah kasus, mencari pola atau hubungan.', '3'],
+      ['Evaluasi', 'Memberikan penilaian atau keputusan berdasar standar.', '4'],
+      ['Inovasi/Kreasi', 'Merancang solusi, membuat karya atau strategi baru.', '5'],
+    ];
+    const wsGuide = XLSX.utils.aoa_to_sheet([guideHeaders, ...guideData]);
+    XLSX.utils.book_append_sheet(workbook, wsGuide, 'Panduan Kategori');
+
     XLSX.writeFile(workbook, 'Template_Soal_PintarLMS.xlsx');
   };
 
@@ -1035,15 +1042,14 @@ function QuizEditor({
 
           const rawKey = row[6] ? String(row[6]).trim().toUpperCase() : 'A';
           const correctAnswer = ['A', 'B', 'C', 'D'].indexOf(rawKey);
-          const points = typeof row[7] === 'number' ? row[7] : (parseInt(row[7]) || 10);
-          const category = row[8] ? String(row[8]).trim() : 'Teori';
+          const category = row[7] ? String(row[7]).trim() : 'Pemahaman';
 
           imported.push({
             id: (Date.now() + i).toString(),
             question,
             options,
             correctAnswer: correctAnswer !== -1 ? correctAnswer : 0,
-            points,
+            points: 10,
             category,
           });
         }
@@ -1123,7 +1129,7 @@ function QuizEditor({
             options: Array.isArray(q.options) ? q.options : ['', '', '', ''],
             correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
             points: typeof q.points === 'number' ? q.points : 10,
-            category: q.category || 'Teori',
+            category: q.category || 'Pemahaman',
           }));
         }
       } else {
@@ -1137,7 +1143,7 @@ function QuizEditor({
           const options: string[] = ['', '', '', ''];
           let correctAnswer = 0;
           let points = 10;
-          let category = 'Teori';
+          let category = 'Pemahaman';
 
           lines.forEach((line) => {
             const aMatch = line.match(/^A\.\s*(.*)/i);
@@ -1287,12 +1293,7 @@ function QuizEditor({
                 ))}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                <label className="form-label" style={{ margin: 0 }}>Poin:</label>
-                <input className="form-input" type="number" min="1" max="100" value={q.points}
-                  onChange={(e) => updateQuestion(qIdx, 'points', parseInt(e.target.value) || 10)}
-                  style={{ width: '80px' }} />
-                
-                <label className="form-label" style={{ margin: 0, marginLeft: '12px' }}>Kategori:</label>
+                <label className="form-label" style={{ margin: 0 }}>Kategori:</label>
                 <select 
                   className="form-input"
                   value={q.category || 'Pemahaman'}
