@@ -152,6 +152,15 @@ export default function AdminDashboard() {
                           <Link href={`/admin/trainings/${training.id}/participants`} className="btn btn-icon btn-secondary btn-sm" title="Lihat Peserta" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Users size={15} />
                           </Link>
+                          <Link href={`/admin/trainings/${training.id}/assignments`} className="btn btn-icon btn-secondary btn-sm" title="Nilai Tugas" style={{ background: '#f59e0b', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <ClipboardEdit size={15} />
+                          </Link>
+                          <Link href={`/admin/trainings/${training.id}/analytics`} className="btn btn-icon btn-secondary btn-sm" title="Analisis Pelatihan" style={{ background: '#10b981', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <BarChart2 size={15} />
+                          </Link>
+                          <Link href={`/admin/trainings/${training.id}/testimonials`} className="btn btn-icon btn-secondary btn-sm" title="Testimoni" style={{ background: '#8b5cf6', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <MessageSquare size={15} />
+                          </Link>
                           <button
                             className="btn btn-icon btn-secondary btn-sm"
                             style={{ background: 'var(--primary-light)', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -160,15 +169,6 @@ export default function AdminDashboard() {
                           >
                             <Megaphone size={15} />
                           </button>
-                          <Link href={`/admin/trainings/${training.id}/analytics`} className="btn btn-icon btn-secondary btn-sm" title="Analisis Pelatihan" style={{ background: '#10b981', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <BarChart2 size={15} />
-                          </Link>
-                          <Link href={`/admin/trainings/${training.id}/testimonials`} className="btn btn-icon btn-secondary btn-sm" title="Testimoni" style={{ background: '#8b5cf6', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <MessageSquare size={15} />
-                          </Link>
-                          <Link href={`/admin/trainings/${training.id}/assignments`} className="btn btn-icon btn-secondary btn-sm" title="Nilai Tugas" style={{ background: '#f59e0b', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ClipboardEdit size={15} />
-                          </Link>
                           <button
                             className="btn btn-icon btn-danger btn-sm"
                             style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

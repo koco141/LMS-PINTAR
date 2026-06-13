@@ -14,7 +14,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import * as XLSX from 'xlsx';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Key, Clipboard, BarChart2, Users, Trash2, Megaphone, BookOpen, FileText, Star, Pencil, AlertTriangle, Image as ImageIcon, GripVertical, Circle, CheckCircle2, ClipboardList } from 'lucide-react';
+import { Key, Clipboard, BarChart2, Users, Trash2, Megaphone, BookOpen, FileText, Star, Pencil, AlertTriangle, Image as ImageIcon, GripVertical, Circle, CheckCircle2, ClipboardList, MapPin } from 'lucide-react';
 
 type AdminTab = 'info' | 'modules' | 'pre-test' | 'post-test';
 
@@ -44,7 +44,59 @@ export default function TrainingAdminPage() {
   const [infoForm, setInfoForm] = useState({
     title: '', description: '', status: 'upcoming', coverColor: DEFAULT_COVER,
     startDate: '', endDate: '', showLeaderboard: false, assignmentLink: '', targetLevel: 5,
+    province: '', city: '',
   });
+
+  // Location states
+  const [provinces, setProvinces] = useState<{id: string, name: string}[]>([]);
+  const [cities, setCities] = useState<{id: string, name: string}[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState('');
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLoadingProvinces(true);
+      try {
+        const res = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+        const data = await res.json();
+        setProvinces(data);
+      } catch (err) {
+        console.error('Failed to fetch provinces', err);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedProvinceId) {
+      setCities([]);
+      return;
+    }
+    const fetchCities = async () => {
+      setLoadingCities(true);
+      try {
+        const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProvinceId}.json`);
+        const data = await res.json();
+        setCities(data);
+      } catch (err) {
+        console.error('Failed to fetch cities', err);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    fetchCities();
+  }, [selectedProvinceId]);
+
+  // Sync province to ID
+  useEffect(() => {
+    if (provinces.length > 0 && infoForm.province && !selectedProvinceId) {
+      const p = provinces.find(x => x.name === infoForm.province);
+      if (p) setSelectedProvinceId(p.id);
+    }
+  }, [provinces, infoForm.province, selectedProvinceId]);
 
   useEffect(() => {
     if (!loading && (!user || (!isAdmin && !isInstructor))) router.push('/login');
@@ -92,6 +144,8 @@ export default function TrainingAdminPage() {
         showLeaderboard: t.showLeaderboard,
         targetLevel: t.targetLevel || 5,
         assignmentLink: t.assignmentLink || '',
+        province: t.province || '',
+        city: t.city || '',
       });
     }
     setModules(mods);
@@ -120,6 +174,8 @@ export default function TrainingAdminPage() {
         showLeaderboard: infoForm.showLeaderboard,
         targetLevel: infoForm.targetLevel,
         assignmentLink: infoForm.assignmentLink,
+        province: infoForm.province,
+        city: infoForm.city,
       });
       await loadAll();
       showToast('✅ Info pelatihan berhasil disimpan!');
@@ -313,6 +369,56 @@ export default function TrainingAdminPage() {
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                   Pilih level maksimal (Target/Tujuan) kompetensi yang diharapkan dapat dicapai peserta setelah menyelesaikan pelatihan ini.
                 </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <MapPin size={18} style={{ color: 'var(--primary-light)' }} />
+                  <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Lokasi Pelatihan (Indonesia)</h3>
+                </div>
+                
+                <div className={styles.formRow3} style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Provinsi</label>
+                    <select
+                      className="form-input"
+                      value={selectedProvinceId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setSelectedProvinceId(id);
+                        const selectedProv = provinces.find(p => p.id === id);
+                        setInfoForm({ ...infoForm, province: selectedProv ? selectedProv.name : '', city: '' });
+                      }}
+                      disabled={loadingProvinces}
+                    >
+                      <option value="">{loadingProvinces ? 'Memuat Provinsi...' : '-- Pilih Provinsi --'}</option>
+                      {provinces.map(prov => (
+                        <option key={prov.id} value={prov.id}>{prov.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Kabupaten / Kota</label>
+                    <select
+                      className="form-input"
+                      value={infoForm.city ? cities.find(c => c.name === infoForm.city)?.id || '' : ''}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        const selectedCity = cities.find(c => c.id === id);
+                        setInfoForm({ ...infoForm, city: selectedCity ? selectedCity.name : '' });
+                      }}
+                      disabled={!selectedProvinceId || loadingCities}
+                    >
+                      <option value="">
+                        {!selectedProvinceId ? '-- Pilih Provinsi Terlebih Dahulu --' : loadingCities ? 'Memuat Kota...' : '-- Pilih Kota --'}
+                      </option>
+                      {cities.map(city => (
+                        <option key={city.id} value={city.id}>{city.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div className={styles.formRow3}>

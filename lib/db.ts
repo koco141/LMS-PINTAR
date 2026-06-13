@@ -33,6 +33,8 @@ export interface Training {
   assignmentLink?: string;
   participantCount: number;
   targetLevel?: number;
+  province?: string;
+  city?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -7,7 +7,7 @@ import { createTraining, updateTraining, deleteTraining } from '@/lib/db';
 import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { Circle, Trash2 } from 'lucide-react';
+import { Circle, Trash2, MapPin } from 'lucide-react';
 
 const DEFAULT_COVER = 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)';
 
@@ -24,9 +24,56 @@ export default function NewTrainingPage() {
     endDate: '',
     showLeaderboard: false,
     targetLevel: 5,
+    province: '',
+    city: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Location states
+  const [provinces, setProvinces] = useState<{id: string, name: string}[]>([]);
+  const [cities, setCities] = useState<{id: string, name: string}[]>([]);
+  const [selectedProvinceId, setSelectedProvinceId] = useState('');
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+
+  // Fetch provinces
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLoadingProvinces(true);
+      try {
+        const res = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+        const data = await res.json();
+        setProvinces(data);
+      } catch (err) {
+        console.error('Failed to fetch provinces', err);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  // Fetch cities when province changes
+  useEffect(() => {
+    if (!selectedProvinceId) {
+      setCities([]);
+      return;
+    }
+    const fetchCities = async () => {
+      setLoadingCities(true);
+      try {
+        const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProvinceId}.json`);
+        const data = await res.json();
+        setCities(data);
+      } catch (err) {
+        console.error('Failed to fetch cities', err);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    fetchCities();
+  }, [selectedProvinceId]);
 
   const calculateStatus = (startStr: string, endStr: string): 'upcoming' | 'ongoing' | 'completed' => {
     if (!startStr) return 'ongoing';
@@ -59,6 +106,8 @@ export default function NewTrainingPage() {
         endDate: form.endDate ? Timestamp.fromDate(new Date(form.endDate)) : null,
         showLeaderboard: form.showLeaderboard,
         targetLevel: form.targetLevel,
+        province: form.province,
+        city: form.city,
       });
       router.push(`/admin/trainings/${id}`);
     } catch (err: any) {
@@ -87,7 +136,7 @@ export default function NewTrainingPage() {
           Token akan digenerate otomatis setelah pelatihan disimpan.
         </p>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.formCard} onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Nama Pelatihan *</label>
             <input
@@ -127,6 +176,56 @@ export default function NewTrainingPage() {
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
               Pilih level maksimal (Target/Tujuan) kompetensi yang diharapkan dapat dicapai peserta setelah menyelesaikan pelatihan ini.
             </p>
+          </div>
+
+          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <MapPin size={18} style={{ color: 'var(--primary-light)' }} />
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Lokasi Pelatihan (Indonesia)</h3>
+            </div>
+            
+            <div className={styles.row} style={{ gap: '16px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Provinsi</label>
+                <select
+                  className="form-input"
+                  value={selectedProvinceId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedProvinceId(id);
+                    const selectedProv = provinces.find(p => p.id === id);
+                    setForm({ ...form, province: selectedProv ? selectedProv.name : '', city: '' });
+                  }}
+                  disabled={loadingProvinces}
+                >
+                  <option value="">{loadingProvinces ? 'Memuat Provinsi...' : '-- Pilih Provinsi --'}</option>
+                  {provinces.map(prov => (
+                    <option key={prov.id} value={prov.id}>{prov.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Kabupaten / Kota</label>
+                <select
+                  className="form-input"
+                  value={form.city ? cities.find(c => c.name === form.city)?.id || '' : ''}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    const selectedCity = cities.find(c => c.id === id);
+                    setForm({ ...form, city: selectedCity ? selectedCity.name : '' });
+                  }}
+                  disabled={!selectedProvinceId || loadingCities}
+                >
+                  <option value="">
+                    {!selectedProvinceId ? '-- Pilih Provinsi Terlebih Dahulu --' : loadingCities ? 'Memuat Kota...' : '-- Pilih Kota --'}
+                  </option>
+                  {cities.map(city => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className={styles.row}>

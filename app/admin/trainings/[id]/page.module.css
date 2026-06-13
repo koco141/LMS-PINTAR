@@ -139,7 +139,16 @@
 }
 
 /* ─── Info Tab ──────────────────────────────────────────────────────────────── */
-.formGrid { display: flex; flex-direction: column; gap: 20px; }
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px -6px rgba(0,0,0,0.05);
+  padding: 32px;
+}
 
 .formRow3 {
   display: grid;
