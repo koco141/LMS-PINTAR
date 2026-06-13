@@ -29,6 +29,11 @@ ChartJS.register(
 
 const CATEGORIES = ['Teori', 'Teknis Dasar', 'Teknis Penerapan', 'Analisis', 'Strategi Kompleks'];
 
+const toTitleCase = (str: string) => {
+  if (!str) return '';
+  return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+};
+
 export default function AnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { user, isAdmin, isInstructor, loading } = useAuth();
@@ -438,10 +443,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
             <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
               <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem' }}>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem', textAlign: 'justify' }}>
                 Berdasarkan evaluasi pembelajaran yang menggunakan metode <strong>{training?.method === 'luring' ? 'Luring (Offline)' : 'Daring (Online)'}</strong>
-                {training?.method === 'luring' && training?.province ? ` pada lokasi ${training?.province}${training?.city ? `, ${training?.city}` : ''}` : ''}
-                {' '}dari akumulasi nilai akhir dengan tingkat kelulusan <strong>{passedCount}/{enrollments.length}</strong> peserta, sehingga tingkat kompetensi peserta saat ini berada di:
+                {training?.method === 'luring' && training?.province && (
+                  <> pada lokasi <strong>{toTitleCase(training.province)}{training.city ? `, ${toTitleCase(training.city)}` : ''}</strong></>
+                )}
+                {' '}dari akumulasi nilai akhir dengan tingkat kelulusan <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong> peserta, sehingga tingkat kompetensi peserta saat ini berada di:
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '20px', fontStyle: 'italic' }}>
                 *Sumber: Dreyfus Model of Skill Acquisition (Dreyfus & Dreyfus, 1980) & Taksonomi Bloom Revisi (Anderson & Krathwohl, 2001).
