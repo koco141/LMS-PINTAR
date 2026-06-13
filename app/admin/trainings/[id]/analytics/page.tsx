@@ -444,11 +444,11 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
               <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem', textAlign: 'justify' }}>
-                Berdasarkan evaluasi pembelajaran yang menggunakan metode <strong>{training?.method === 'luring' ? 'Luring (Offline)' : 'Daring (Online)'}</strong>
+                Berdasarkan evaluasi pembelajaran dengan akumulasi nilai akhir yang menggunakan metode pelatihan <strong>{training?.method === 'luring' ? 'Luring (Offline)' : 'Daring (Online)'}</strong>
                 {training?.method === 'luring' && training?.province && (
-                  <> pada lokasi <strong>{toTitleCase(training.province)}{training.city ? `, ${toTitleCase(training.city)}` : ''}</strong></>
+                  <> pada lokasi Provinsi <strong>{toTitleCase(training.province)}{training.city ? `, ${toTitleCase(training.city)}` : ''}</strong></>
                 )}
-                {' '}dari akumulasi nilai akhir dengan tingkat kelulusan <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong> peserta, sehingga tingkat kompetensi peserta saat ini berada di:
+                {' '}memiliki kelulusan <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong> peserta dengan tingkat kompetensi:
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '20px', fontStyle: 'italic' }}>
                 *Sumber: Dreyfus Model of Skill Acquisition (Dreyfus & Dreyfus, 1980) & Taksonomi Bloom Revisi (Anderson & Krathwohl, 2001).
