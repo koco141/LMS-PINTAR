@@ -930,7 +930,7 @@ function QuizEditor({
   onBack: () => void;
 }) {
   const [title, setTitle] = useState(quiz?.title || (type === 'pre-test' ? 'Pre-Test' : 'Post-Test'));
-  const [duration, setDuration] = useState<number>(quiz?.duration || 0);
+  const [duration, setDuration] = useState<number | ''>(quiz?.duration || 0);
   const [syncToPostTest, setSyncToPostTest] = useState(true);
   const [questions, setQuestions] = useState<QuizQuestion[]>(
     quiz?.questions || []
@@ -1110,7 +1110,7 @@ function QuizEditor({
   const handleSave = async () => {
     if (questions.length === 0) { alert('Tambahkan minimal 1 pertanyaan.'); return; }
     setSaving(true);
-    const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration }, type === 'pre-test' ? syncToPostTest : false);
+    const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration: duration === '' ? 0 : duration }, type === 'pre-test' ? syncToPostTest : false);
     setSaving(false);
     onSaved(finalQuizId);
     onNext();
@@ -1235,7 +1235,7 @@ function QuizEditor({
             type="number" 
             min="0" 
             value={duration} 
-            onChange={(e) => setDuration(Math.max(0, parseInt(e.target.value) || 0))}
+            onChange={(e) => setDuration(e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))}
             placeholder="0 = Tanpa batas" 
           />
         </div>
