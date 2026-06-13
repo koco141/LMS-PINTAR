@@ -402,7 +402,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           <div className={styles.chartCard}>
             <h3>Pemetaan Penguasaan Kognitif</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
-              Perbandingan skor rata-rata berdasarkan kategori soal (Maksimal 100).
+              Perbandingan skor rata-rata berdasarkan kategori soal.
             </p>
             <div className={styles.chartWrapper}>
               <Radar data={radarData} options={radarOptions} />
