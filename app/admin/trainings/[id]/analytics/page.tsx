@@ -450,9 +450,6 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                 )}
                 {' '}ini berhasil mencapai tingkat kelulusan peserta sebesar <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong>. Dengan hasil tersebut, tingkat kompetensi peserta saat ini berada pada:
               </p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '20px', fontStyle: 'italic' }}>
-                *Sumber: Dreyfus Model of Skill Acquisition (Dreyfus & Dreyfus, 1980) & Taksonomi Bloom Revisi (Anderson & Krathwohl, 2001).
-              </p>
               
               <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
                 <h4 style={{ color: level >= targetLevel ? 'var(--primary)' : '#ef4444', marginBottom: '6px', fontSize: '1.1rem' }}>
