@@ -46,6 +46,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   const [usersDict, setUsersDict] = useState<Record<string, AppUser>>({});
   const [modules, setModules] = useState<Module[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [instructor, setInstructor] = useState<AppUser | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -56,6 +57,10 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         const t = await getTrainingById(resolvedParams.id);
         if (!t) { router.push('/admin'); return; }
         setTraining(t);
+        if (t.instructorId) {
+          const inst = await getUserById(t.instructorId);
+          setInstructor(inst);
+        }
 
         const [enrs, pre, post, mods] = await Promise.all([
           getTrainingEnrollments(resolvedParams.id),
@@ -347,7 +352,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               Analisis Pelatihan
             </h1>
-            <p className={styles.subtitle}>{training?.title}</p>
+            <p className={styles.subtitle} style={{ marginBottom: '4px' }}>{training?.title}</p>
+            {instructor && (
+              <p className={styles.subtitle} style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+                Pengajar: <strong>{instructor.fullName || instructor.name}</strong>
+              </p>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="print-hidden">
             <Link href={`/admin/trainings/${resolvedParams.id}/participants`} className="btn btn-secondary">
