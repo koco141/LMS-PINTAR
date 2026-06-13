@@ -24,6 +24,7 @@ export default function NewTrainingPage() {
     endDate: '',
     showLeaderboard: false,
     targetLevel: 5,
+    method: 'daring' as 'daring' | 'luring',
     province: '',
     city: '',
   });
@@ -106,8 +107,9 @@ export default function NewTrainingPage() {
         endDate: form.endDate ? Timestamp.fromDate(new Date(form.endDate)) : null,
         showLeaderboard: form.showLeaderboard,
         targetLevel: form.targetLevel,
-        province: form.province,
-        city: form.city,
+        method: form.method,
+        province: form.method === 'luring' ? form.province : '',
+        city: form.method === 'luring' ? form.city : '',
       });
       router.push(`/admin/trainings/${id}`);
     } catch (err: any) {
@@ -178,10 +180,22 @@ export default function NewTrainingPage() {
             </p>
           </div>
 
-          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="form-group">
+            <label className="form-label">Metode Pelatihan</label>
+            <select
+              className="form-input"
+              value={form.method}
+              onChange={(e) => setForm({ ...form, method: e.target.value as 'daring' | 'luring' })}
+            >
+              <option value="daring">Daring (Online)</option>
+              <option value="luring">Luring (Offline)</option>
+            </select>
+          </div>
+
+          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', opacity: form.method === 'daring' ? 0.6 : 1, transition: 'all 0.3s ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <MapPin size={18} style={{ color: 'var(--primary-light)' }} />
-              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Lokasi Pelatihan (Indonesia)</h3>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Lokasi Pelatihan</h3>
             </div>
             
             <div className={styles.row} style={{ gap: '16px' }}>
@@ -196,7 +210,7 @@ export default function NewTrainingPage() {
                     const selectedProv = provinces.find(p => p.id === id);
                     setForm({ ...form, province: selectedProv ? selectedProv.name : '', city: '' });
                   }}
-                  disabled={loadingProvinces}
+                  disabled={form.method === 'daring' || loadingProvinces}
                 >
                   <option value="">{loadingProvinces ? 'Memuat Provinsi...' : '-- Pilih Provinsi --'}</option>
                   {provinces.map(prov => (
@@ -215,7 +229,7 @@ export default function NewTrainingPage() {
                     const selectedCity = cities.find(c => c.id === id);
                     setForm({ ...form, city: selectedCity ? selectedCity.name : '' });
                   }}
-                  disabled={!selectedProvinceId || loadingCities}
+                  disabled={form.method === 'daring' || !selectedProvinceId || loadingCities}
                 >
                   <option value="">
                     {!selectedProvinceId ? '-- Pilih Provinsi Terlebih Dahulu --' : loadingCities ? 'Memuat Kota...' : '-- Pilih Kota --'}

@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { Users, ClipboardList, ArrowLeft } from 'lucide-react';
 import { getTrainingById, getTrainingEnrollments, getQuiz, getUserById, getModules, Training, Enrollment, Quiz, AppUser, Module } from '@/lib/db';
 import {
   Chart as ChartJS,
@@ -336,9 +337,23 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             </h1>
             <p className={styles.subtitle}>{training?.title}</p>
           </div>
-          <button className="btn btn-secondary print-hidden" onClick={() => window.print()}>
-            Cetak PDF
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="print-hidden">
+            <Link href={`/admin/trainings/${resolvedParams.id}/participants`} className="btn btn-secondary">
+              <Users size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Lihat Peserta
+            </Link>
+            <Link href={`/admin/trainings/${resolvedParams.id}/assignments`} className="btn btn-secondary">
+              <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Penilaian Tugas
+            </Link>
+            <Link href="/admin" className="btn btn-secondary">
+              <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Kembali
+            </Link>
+            <button className="btn btn-secondary" onClick={() => window.print()}>
+              Cetak PDF
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}

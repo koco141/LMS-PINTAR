@@ -33,6 +33,7 @@ export interface Training {
   assignmentLink?: string;
   participantCount: number;
   targetLevel?: number;
+  method?: 'daring' | 'luring';
   province?: string;
   city?: string;
   createdAt: Timestamp;

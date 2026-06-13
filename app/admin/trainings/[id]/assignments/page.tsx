@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getModules, getUserById, updateAssignmentScore, Training, Module } from '@/lib/db';
 import Link from 'next/link';
-import { ClipboardEdit, BookOpen, ExternalLink } from 'lucide-react';
+import { ClipboardEdit, BookOpen, ExternalLink, Users, BarChart2, ArrowLeft } from 'lucide-react';
 
 interface AssignmentRow {
   userId: string;
@@ -170,9 +170,20 @@ export default function AssignmentsPage() {
             </h1>
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{training?.title}</p>
           </div>
-          <Link href="/admin" className="btn btn-secondary">
-            ← Kembali ke Panel Admin
-          </Link>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Link href={`/admin/trainings/${id}/participants`} className="btn btn-secondary">
+              <Users size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Lihat Peserta
+            </Link>
+            <Link href={`/admin/trainings/${id}/analytics`} className="btn btn-secondary">
+              <BarChart2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Analisis
+            </Link>
+            <Link href="/admin" className="btn btn-secondary">
+              <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Kembali
+            </Link>
+          </div>
         </div>
 
         {taskModules.length === 0 ? (

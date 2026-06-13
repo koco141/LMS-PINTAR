@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { Users, BarChart2, FileText, Trash2, Loader2 } from 'lucide-react';
+import { Users, BarChart2, FileText, Trash2, Loader2, ArrowLeft, ClipboardList } from 'lucide-react';
 
 interface ParticipantRow {
   userId: string;
@@ -206,6 +206,18 @@ export default function ParticipantsPage() {
             <p className={styles.pageSubtitle}>{training?.title}</p>
           </div>
           <div className={styles.exportBtns}>
+            <Link href={`/admin/trainings/${id}/assignments`} className="btn btn-secondary">
+              <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Nilai Tugas
+            </Link>
+            <Link href={`/admin/trainings/${id}/analytics`} className="btn btn-secondary">
+              <BarChart2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Analisis
+            </Link>
+            <Link href="/admin" className="btn btn-secondary">
+              <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Kembali
+            </Link>
             <button
               className="btn btn-secondary"
               onClick={handleExportExcel}
