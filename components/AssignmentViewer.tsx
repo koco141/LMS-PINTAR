@@ -46,14 +46,6 @@ export default function AssignmentViewer({
       return;
     }
 
-    const googleDomains = ['drive.google.com', 'docs.google.com', 'sheets.google.com', 'slides.google.com', 'forms.google.com'];
-    const isValid = googleDomains.some(domain => link.toLowerCase().includes(domain));
-
-    if (!isValid) {
-      setError('Harap gunakan link dari ekosistem Google (Google Drive, Docs, Sheets, Slides, Forms).');
-      return;
-    }
-
     setError('');
     setSubmitting(true);
     await onSubmitLink(link);
@@ -111,7 +103,7 @@ export default function AssignmentViewer({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" style={{ fontWeight: 500 }}>
-              Masukkan Link Pengumpulan (Google Drive, Docs, dll)
+              Masukkan Link Pengumpulan
             </label>
           <input 
             type="url" 
