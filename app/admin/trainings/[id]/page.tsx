@@ -1077,7 +1077,7 @@ function QuizEditor({
       options: ['', '', '', ''],
       correctAnswer: 0,
       points: 10,
-      category: 'Teori',
+      category: 'Pemahaman',
     }]);
   };
 
@@ -1295,15 +1295,15 @@ function QuizEditor({
                 <label className="form-label" style={{ margin: 0, marginLeft: '12px' }}>Kategori:</label>
                 <select 
                   className="form-input"
-                  value={q.category || 'Teori'}
+                  value={q.category || 'Pemahaman'}
                   onChange={(e) => updateQuestion(qIdx, 'category', e.target.value)}
                   style={{ width: '180px', padding: '6px' }}
                 >
-                  <option value="Teori">Teori</option>
-                  <option value="Teknis Dasar">Teknis Dasar</option>
-                  <option value="Teknis Penerapan">Teknis Penerapan</option>
+                  <option value="Pemahaman">Pemahaman</option>
+                  <option value="Penerapan">Penerapan</option>
                   <option value="Analisis">Analisis</option>
-                  <option value="Strategi Kompleks">Strategi Kompleks</option>
+                  <option value="Evaluasi">Evaluasi</option>
+                  <option value="Inovasi/Kreasi">Inovasi/Kreasi</option>
                 </select>
               </div>
             </div>

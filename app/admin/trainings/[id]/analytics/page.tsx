@@ -27,7 +27,7 @@ ChartJS.register(
   Legend
 );
 
-const CATEGORIES = ['Teori', 'Teknis Dasar', 'Teknis Penerapan', 'Analisis', 'Strategi Kompleks'];
+const CATEGORIES = ['Pemahaman', 'Penerapan', 'Analisis', 'Evaluasi', 'Inovasi/Kreasi'];
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
