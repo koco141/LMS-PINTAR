@@ -371,8 +371,8 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         {/* Stats Grid */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>Peserta Evaluasi</span>
-            <span className={styles.statValue}>{participantCount}</span>
+            <span className={styles.statLabel}>Rata-Rata Pre-Test</span>
+            <span className={styles.statValue}>{avgPreTestScore.toFixed(1)}</span>
           </div>
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Rata-Rata Post-Test</span>
@@ -593,7 +593,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
 
         {/* Question Analysis Table Post-Test */}
         <div className={styles.tableCard} style={{ marginTop: '24px' }}>
-          <h3>Analisis Per Soal (Post-Test)</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0 }}>Analisis Per Soal (Post-Test)</h3>
+            <span style={{ background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              Rata-rata: {avgPostTestScore.toFixed(1)}
+            </span>
+          </div>
           {postTestStats.length === 0 ? (
             <p style={{ color: 'var(--text-muted)' }}>Belum ada data evaluasi soal.</p>
           ) : (
