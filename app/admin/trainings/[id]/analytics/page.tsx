@@ -373,7 +373,6 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Peserta Evaluasi</span>
             <span className={styles.statValue}>{participantCount}</span>
-            <span className={styles.statDesc}>Yang telah menyelesaikan Pre-Test</span>
           </div>
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Rata-Rata Post-Test</span>
