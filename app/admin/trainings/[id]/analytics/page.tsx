@@ -109,6 +109,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   const tModules = modules.filter(m => m.type === 'tugas');
   let avgTaskScore = 0;
   let avgFinalScore = avgPostTestScore;
+  let passedCount = 0;
 
   if (enrollments.length > 0) {
     let sumTotalFinal = 0;
@@ -131,6 +132,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         }
       }
       sumTotalFinal += eFinal;
+      
+      let individualLevel = 2;
+      if (eFinal >= 80) individualLevel = 5;
+      else if (eFinal >= 75) individualLevel = 4;
+      else if (eFinal >= 70) individualLevel = 3;
+      if (individualLevel >= tLvl) passedCount++;
     });
     
     avgTaskScore = sumTotalTask / enrollments.length;
@@ -432,7 +439,9 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
               <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem' }}>
-                Berdasarkan evaluasi pembelajaran dari akumulasi nilai akhir, tingkat kompetensi peserta saat ini berada di:
+                Berdasarkan evaluasi pembelajaran yang menggunakan metode <strong>{training?.method === 'luring' ? 'Luring (Offline)' : 'Daring (Online)'}</strong>
+                {training?.method === 'luring' && training?.province ? ` pada lokasi ${training?.province}${training?.city ? `, ${training?.city}` : ''}` : ''}
+                {' '}dari akumulasi nilai akhir dengan tingkat kelulusan <strong>{passedCount}/{enrollments.length}</strong> peserta, sehingga tingkat kompetensi peserta saat ini berada di:
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '20px', fontStyle: 'italic' }}>
                 *Sumber: Dreyfus Model of Skill Acquisition (Dreyfus & Dreyfus, 1980) & Taksonomi Bloom Revisi (Anderson & Krathwohl, 2001).
