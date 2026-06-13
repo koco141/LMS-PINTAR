@@ -36,6 +36,7 @@ export interface Training {
   method?: 'daring' | 'luring';
   province?: string;
   city?: string;
+  instructorId?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

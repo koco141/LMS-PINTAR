@@ -6,8 +6,8 @@ import { useAuth } from '@/lib/auth-context';
 import {
   getTrainingById, getModules, getQuiz, updateTraining, deleteTraining,
   createModule, updateModule, deleteModule, saveQuiz, updateModuleOrders,
-  Training, Module, Quiz, QuizQuestion,
-  generateToken,
+  Training, Module, Quiz, QuizQuestion, AppUser,
+  generateToken, getAllUsers,
 } from '@/lib/db';
 import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
@@ -34,6 +34,8 @@ export default function TrainingAdminPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [instructors, setInstructors] = useState<AppUser[]>([]);
+  const [instructorId, setInstructorId] = useState<string>('');
 
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
@@ -127,14 +129,19 @@ export default function TrainingAdminPage() {
   };
 
   const loadAll = async () => {
-    const [t, mods, pre, post] = await Promise.all([
+    const [t, mods, pre, post, allUsers] = await Promise.all([
       getTrainingById(id),
       getModules(id),
       getQuiz(id, 'pre-test'),
       getQuiz(id, 'post-test'),
+      getAllUsers()
     ]);
+    const validInstructors = allUsers.filter(u => u.role === 'admin' || u.role === 'instructor');
+    setInstructors(validInstructors);
+
     if (t) {
       setTraining(t);
+      setInstructorId(t.instructorId || '');
       setInfoForm({
         title: t.title,
         description: t.description,
@@ -179,6 +186,7 @@ export default function TrainingAdminPage() {
         method: infoForm.method,
         province: infoForm.method === 'luring' ? infoForm.province : '',
         city: infoForm.method === 'luring' ? infoForm.city : '',
+        instructorId,
       });
       await loadAll();
       showToast('✅ Info pelatihan berhasil disimpan!');
@@ -371,6 +379,23 @@ export default function TrainingAdminPage() {
                 </select>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                   Pilih level maksimal (Target/Tujuan) kompetensi yang diharapkan dapat dicapai peserta setelah menyelesaikan pelatihan ini.
+                </p>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Pengajar Pelatihan</label>
+                <select
+                  className="form-input"
+                  value={instructorId}
+                  onChange={(e) => setInstructorId(e.target.value)}
+                >
+                  <option value="">-- Pilih Pengajar --</option>
+                  {instructors.map(inst => (
+                    <option key={inst.id} value={inst.id}>{inst.fullName || inst.name}</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  Pilih pengajar untuk pelatihan ini (hanya menampilkan user dengan role Pengajar/Admin).
                 </p>
               </div>
 
