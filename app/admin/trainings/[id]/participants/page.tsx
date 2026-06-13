@@ -214,10 +214,6 @@ export default function ParticipantsPage() {
               <BarChart2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
               Analisis
             </Link>
-            <Link href="/admin" className="btn btn-secondary">
-              <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-              Kembali
-            </Link>
             <button
               className="btn btn-secondary"
               onClick={handleExportExcel}
@@ -238,6 +234,10 @@ export default function ParticipantsPage() {
                 : <><FileText size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Export PDF</>
               }
             </button>
+            <Link href="/admin" className="btn btn-secondary">
+              <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              Kembali
+            </Link>
           </div>
         </div>
 

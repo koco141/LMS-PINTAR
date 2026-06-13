@@ -346,13 +346,13 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
               <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
               Penilaian Tugas
             </Link>
+            <button className="btn btn-secondary" onClick={() => window.print()}>
+              Cetak PDF
+            </button>
             <Link href="/admin" className="btn btn-secondary">
               <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
               Kembali
             </Link>
-            <button className="btn btn-secondary" onClick={() => window.print()}>
-              Cetak PDF
-            </button>
           </div>
         </div>
 
