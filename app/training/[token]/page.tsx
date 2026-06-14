@@ -268,6 +268,11 @@ export default function TrainingPage() {
     return fallback;
   };
 
+  const postTestMaxAttempts = postTest?.maxAttempts || 1;
+  const postTestHistory = enrollment?.postTestHistory || [];
+  const postTestCurrentAttempts = Math.max(postTestHistory.length, enrollment?.postTestScore !== null ? 1 : 0);
+  const canRetakePostTest = postTestMaxAttempts === 0 || postTestCurrentAttempts < postTestMaxAttempts;
+
   return (
     <div className={styles.trainingLayout}>
       {/* Sidebar */}
@@ -597,7 +602,7 @@ export default function TrainingPage() {
                 />
               )
             ) : activeStep === 'post-test' && postTest ? (
-              enrollment?.postTestScore !== null ? (
+              enrollment?.postTestScore !== null && !quizStarted ? (
                 /* Post Test Completed Result */
                 <div className={styles.completedPage}>
                   <div className={styles.completedCard}>
@@ -614,19 +619,45 @@ export default function TrainingPage() {
                         </span>
                       </div>
                       <div className={styles.scoreItem}>
-                        <span className={styles.scoreLabel}>Post-Test</span>
+                        <span className={styles.scoreLabel}>Post-Test (Tertinggi)</span>
                         <span className={styles.scoreValue} style={{ color: 'var(--status-ongoing)' }}>
                           {enrollment?.postTestScore}
                         </span>
                       </div>
                     </div>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => setActiveStep('completed')}
-                    >
-                      <Trophy size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
-                      Lihat Hasil Pelatihan Lengkap
-                    </button>
+
+                    {postTestHistory.length > 0 && (
+                      <div style={{ marginTop: '24px', textAlign: 'left', background: 'var(--bg-input)', padding: '16px', borderRadius: '12px' }}>
+                        <h4 style={{ marginBottom: '12px', fontSize: '0.95rem' }}>Riwayat Percobaan:</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {postTestHistory.map((hist, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid var(--border)', fontSize: '0.9rem' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Percobaan {idx + 1}</span>
+                              <strong style={{ color: 'var(--text-primary)' }}>{hist.score} poin</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
+                      {canRetakePostTest && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => setQuizStarted(true)}
+                        >
+                          <Play size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                          Coba Lagi ({postTestMaxAttempts === 0 ? 'Tanpa Batas' : `Sisa ${postTestMaxAttempts - postTestCurrentAttempts} Kali`})
+                        </button>
+                      )}
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => setActiveStep('completed')}
+                      >
+                        <Trophy size={15} style={{ marginRight: '7px', verticalAlign: 'middle' }} />
+                        Lihat Hasil Pelatihan Lengkap
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : !quizStarted ? (

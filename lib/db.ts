@@ -93,6 +93,7 @@ export interface Enrollment {
   assignmentScores?: Record<string, number>; // moduleId -> score
   assignmentRubrics?: Record<string, Record<string, number>>; // moduleId -> { dimensionName: score }
   evaluations?: Record<string, { ratings: Record<string, number>, testimonial: string }>; // moduleId -> evaluation data
+  postTestHistory?: Array<{ score: number, completedAt: Timestamp }>;
 }
 
 // ─── Token Generator ──────────────────────────────────────────────────────────
@@ -341,11 +342,49 @@ export async function submitQuizResult(
 ) {
   const id = `${userId}_${trainingId}`;
   const field = type === 'pre-test' ? 'preTest' : 'postTest';
-  await updateDoc(doc(db, 'enrollments', id), {
+  const updates: any = {
     [`${field}Score`]: score,
     [`${field}Answers`]: answers,
     [`${field}CompletedAt`]: serverTimestamp(),
-  });
+  };
+
+  if (type === 'post-test') {
+    const enrollment = await getEnrollment(userId, trainingId);
+    if (enrollment) {
+      const history = enrollment.postTestHistory || [];
+      
+      // Migrate existing first attempt if history is empty but score exists
+      if (history.length === 0 && enrollment.postTestScore !== null && enrollment.postTestCompletedAt) {
+        history.push({
+          score: enrollment.postTestScore,
+          completedAt: enrollment.postTestCompletedAt,
+        });
+      }
+
+      // Add the current attempt
+      history.push({
+        score: score,
+        completedAt: new Date(),
+      });
+
+      updates.postTestHistory = history;
+
+      // Determine the highest score
+      const maxScore = Math.max(...history.map((h: any) => h.score));
+      updates.postTestScore = maxScore;
+
+      // Keep the answers and completedAt of the highest score
+      if (score === maxScore) {
+        updates.postTestAnswers = answers;
+        // completedAt is already set to serverTimestamp() in updates
+      } else {
+        updates.postTestAnswers = enrollment.postTestAnswers;
+        updates.postTestCompletedAt = enrollment.postTestCompletedAt;
+      }
+    }
+  }
+
+  await updateDoc(doc(db, 'enrollments', id), updates);
 }
 
 export async function submitEvaluation(
