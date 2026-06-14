@@ -364,7 +364,7 @@ export async function submitQuizResult(
       // Add the current attempt
       history.push({
         score: score,
-        completedAt: new Date(),
+        completedAt: Timestamp.now(),
       });
 
       updates.postTestHistory = history;
