@@ -72,6 +72,7 @@ export interface Quiz {
   title: string;
   questions: QuizQuestion[];
   duration?: number; // durasi kuis dalam menit
+  maxAttempts?: number; // batas maksimal percobaan (0 = tanpa batas)
   createdAt: Timestamp;
 }
 
@@ -264,6 +265,7 @@ export async function saveQuiz(
       title: 'Post-Test',
       questions: data.questions,
       duration: data.duration ?? 0,
+      maxAttempts: data.maxAttempts ?? 1,
     };
     if (postExisting) {
       await updateDoc(doc(db, 'trainings', trainingId, 'quizzes', postExisting.id), {

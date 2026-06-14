@@ -956,6 +956,7 @@ function QuizEditor({
 }) {
   const [title, setTitle] = useState(quiz?.title || (type === 'pre-test' ? 'Pre-Test' : 'Post-Test'));
   const [duration, setDuration] = useState<number | ''>(quiz?.duration || 0);
+  const [maxAttempts, setMaxAttempts] = useState<number | ''>(quiz?.maxAttempts ?? 1);
   const [syncToPostTest, setSyncToPostTest] = useState(true);
   const [questions, setQuestions] = useState<QuizQuestion[]>(
     quiz?.questions || []
@@ -1102,6 +1103,7 @@ function QuizEditor({
   useEffect(() => {
     setTitle(quiz?.title || (type === 'pre-test' ? 'Pre-Test' : 'Post-Test'));
     setDuration(quiz?.duration || 0);
+    setMaxAttempts(quiz?.maxAttempts ?? 1);
     setQuestions(quiz?.questions || []);
   }, [quiz, type]);
 
@@ -1135,7 +1137,13 @@ function QuizEditor({
   const handleSave = async () => {
     if (questions.length === 0) { alert('Tambahkan minimal 1 pertanyaan.'); return; }
     setSaving(true);
-    const finalQuizId = await saveQuiz(trainingId, type, { type, title, questions, duration: duration === '' ? 0 : duration }, type === 'pre-test' ? syncToPostTest : false);
+    const finalQuizId = await saveQuiz(trainingId, type, { 
+      type, 
+      title, 
+      questions, 
+      duration: duration === '' ? 0 : duration,
+      maxAttempts: maxAttempts === '' ? 1 : maxAttempts
+    }, type === 'pre-test' ? syncToPostTest : false);
     setSaving(false);
     onSaved(finalQuizId);
     onNext();
@@ -1262,6 +1270,17 @@ function QuizEditor({
             value={duration} 
             onChange={(e) => setDuration(e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))}
             placeholder="0 = Tanpa batas" 
+          />
+        </div>
+        <div className="form-group" style={{ width: '180px' }}>
+          <label className="form-label">Batas Percobaan</label>
+          <input 
+            className="form-input" 
+            type="number" 
+            min="0" 
+            value={maxAttempts} 
+            onChange={(e) => setMaxAttempts(e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0))}
+            placeholder="0 = Tanpa batas, 1 = Sekali" 
           />
         </div>
       </div>
