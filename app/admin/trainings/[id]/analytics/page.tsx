@@ -143,11 +143,13 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
       }
       sumTotalFinal += eFinal;
       
-      let individualLevel = 2;
-      if (eFinal >= 80) individualLevel = 5;
-      else if (eFinal >= 75) individualLevel = 4;
-      else if (eFinal >= 70) individualLevel = 3;
-      if (individualLevel >= tLvl) passedCount++;
+      let passed = false;
+      if (tLvl >= 3) {
+        passed = eFinal >= 75;
+      } else {
+        passed = eFinal >= 70;
+      }
+      if (passed) passedCount++;
     });
     
     avgTaskScore = sumTotalTask / enrollments.length;
@@ -167,10 +169,11 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   // Level Logic
   const targetLevel = training?.targetLevel || 5;
   
-  let computedLevel = 2;
-  if (avgFinalScore >= 80) computedLevel = 5;
-  else if (avgFinalScore >= 75) computedLevel = 4;
-  else if (avgFinalScore >= 70) computedLevel = 3;
+  let computedLevel = 1;
+  if (avgFinalScore >= 85) computedLevel = 5;
+  else if (avgFinalScore >= 80) computedLevel = 4;
+  else if (avgFinalScore >= 75) computedLevel = 3;
+  else if (avgFinalScore >= 70) computedLevel = 2;
   
   if (computedLevel > targetLevel) {
     computedLevel = targetLevel;
