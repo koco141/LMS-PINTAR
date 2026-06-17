@@ -119,17 +119,22 @@ export default function ParticipantsPage() {
     setExportLoading('excel');
     try {
       const XLSX = await import('xlsx');
-      const data = filteredParticipants.map((p, idx) => ({
-        'No': idx + 1,
-        'Nama': p.name,
-        'Email': p.email,
-        'Pre-Test': p.preTestScore ?? 'Belum',
-        'Post-Test': p.postTestScore ?? 'Belum',
-        'Nilai Tugas': p.totalAssignmentScore,
-        'Nilai Akhir': p.finalScore,
-        'Status Lulus': p.passed ? 'LULUS' : 'GAGAL',
-        'Progress (%)': p.progress,
-      }));
+      const data = filteredParticipants.map((p, idx) => {
+        const row: any = {
+          'No': idx + 1,
+          'Nama': p.name,
+          'Email': p.email,
+          'Pre-Test': p.preTestScore ?? 'Belum',
+          'Post-Test': p.postTestScore ?? 'Belum',
+        };
+        if (modules.some(m => m.type === 'tugas')) {
+          row['Nilai Tugas'] = p.totalAssignmentScore;
+        }
+        row['Nilai Akhir'] = p.finalScore;
+        row['Status Lulus'] = p.passed ? 'LULUS' : 'GAGAL';
+        row['Progress (%)'] = p.progress;
+        return row;
+      });
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Peserta');
@@ -153,19 +158,26 @@ export default function ParticipantsPage() {
       doc.setFontSize(10);
       doc.text(`Daftar Peserta | Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 24);
 
+      const exportHasTugas = modules.some(m => m.type === 'tugas');
+      const headRow = exportHasTugas
+        ? ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Lulus?']
+        : ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Akhir', 'Lulus?'];
+
       autoTable(doc, {
         startY: 30,
-        head: [['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Lulus?']],
-        body: filteredParticipants.map((p, idx) => [
-          idx + 1,
-          p.name,
-          p.email,
-          p.preTestScore ?? 'Belum',
-          p.postTestScore ?? 'Belum',
-          p.totalAssignmentScore,
-          p.finalScore,
-          p.passed ? 'LULUS' : 'GAGAL',
-        ]),
+        head: [headRow],
+        body: filteredParticipants.map((p, idx) => {
+          const row: any[] = [
+            idx + 1,
+            p.name,
+            p.email,
+            p.preTestScore ?? 'Belum',
+            p.postTestScore ?? 'Belum',
+          ];
+          if (exportHasTugas) row.push(p.totalAssignmentScore);
+          row.push(p.finalScore, p.passed ? 'LULUS' : 'GAGAL');
+          return row;
+        }),
         styles: { fontSize: 9, cellPadding: 4 },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 },
         alternateRowStyles: { fillColor: [245, 245, 250] },
@@ -182,6 +194,8 @@ export default function ParticipantsPage() {
   if (pageLoading) {
     return <div className="loading-screen"><div className="spinner" /></div>;
   }
+
+  const hasTugas = modules.some(m => m.type === 'tugas');
 
   const avgPre = participants.filter((p) => p.preTestScore !== null).reduce((s, p) => s + (p.preTestScore || 0), 0) / (participants.filter((p) => p.preTestScore !== null).length || 1);
   const avgPost = participants.filter((p) => p.postTestScore !== null).reduce((s, p) => s + (p.postTestScore || 0), 0) / (participants.filter((p) => p.postTestScore !== null).length || 1);
@@ -206,10 +220,12 @@ export default function ParticipantsPage() {
             <p className={styles.pageSubtitle}>{training?.title}</p>
           </div>
           <div className={styles.exportBtns}>
-            <Link href={`/admin/trainings/${id}/assignments`} className="btn btn-secondary">
-              <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-              Nilai Tugas
-            </Link>
+            {hasTugas && (
+              <Link href={`/admin/trainings/${id}/assignments`} className="btn btn-secondary">
+                <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Nilai Tugas
+              </Link>
+            )}
             <Link href={`/admin/trainings/${id}/analytics`} className="btn btn-secondary">
               <BarChart2 size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
               Analisis
@@ -294,7 +310,7 @@ export default function ParticipantsPage() {
                   <th>Nama Peserta</th>
                   <th>Pre-Test</th>
                   <th>Post-Test</th>
-                  <th>Nilai Tugas</th>
+                  {hasTugas && <th>Nilai Tugas</th>}
                   <th>Nilai Akhir</th>
                   <th>Status Kelulusan</th>
                   <th>Progress Materi</th>
@@ -328,11 +344,13 @@ export default function ParticipantsPage() {
                         {p.postTestScore !== null ? `${p.postTestScore}` : '—'}
                       </span>
                     </td>
-                    <td>
-                      <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
-                        {p.totalAssignmentScore}
-                      </span>
-                    </td>
+                    {hasTugas && (
+                      <td>
+                        <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                          {p.totalAssignmentScore}
+                        </span>
+                      </td>
+                    )}
                     <td>
                       <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
                         {p.finalScore}

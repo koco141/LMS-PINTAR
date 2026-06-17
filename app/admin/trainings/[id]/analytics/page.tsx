@@ -367,10 +367,12 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
               <Users size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
               Lihat Peserta
             </Link>
-            <Link href={`/admin/trainings/${resolvedParams.id}/assignments`} className="btn btn-secondary">
-              <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-              Penilaian Tugas
-            </Link>
+            {tModules.length > 0 && (
+              <Link href={`/admin/trainings/${resolvedParams.id}/assignments`} className="btn btn-secondary">
+                <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Penilaian Tugas
+              </Link>
+            )}
             <button className="btn btn-secondary" onClick={() => window.print()}>
               Cetak PDF
             </button>
@@ -404,14 +406,20 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
               {delta > 0 ? `▲ +${delta.toFixed(1)}` : `▼ ${delta.toFixed(1)}`}
             </span>
           </div>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>Rata-Rata Tugas</span>
-            <span className={styles.statValue}>{avgTaskScore.toFixed(1)}</span>
-          </div>
+          {tModules.length > 0 && (
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Rata-Rata Tugas</span>
+              <span className={styles.statValue}>{avgTaskScore.toFixed(1)}</span>
+            </div>
+          )}
           <div className={styles.statCard} style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
             <span className={styles.statLabel}>Rata-Rata Nilai Akhir</span>
             <span className={styles.statValue}>{avgFinalScore.toFixed(1)}</span>
-            <span className={styles.statDesc}>Bobot {targetLevel >= 3 ? '40% Post-Test, 60% Tugas' : '70% Post-Test, 30% Tugas'}</span>
+            <span className={styles.statDesc}>
+              {tModules.length > 0 
+                ? `Bobot ${targetLevel >= 3 ? '40% Post-Test, 60% Tugas' : '70% Post-Test, 30% Tugas'}` 
+                : 'Bobot 100% Post-Test'}
+            </span>
           </div>
           <div className={`${styles.statCard} ${styles.levelCard}`}>
             <span className={styles.statLabel}>Level Kompetensi</span>
