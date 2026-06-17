@@ -75,6 +75,8 @@ export default function ParticipantsPage() {
         
         const passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
 
+        const validCompletedCount = (e.completedModules || []).filter((id: string) => modules.some(m => m.id === id)).length;
+
         return {
           userId: e.userId,
           name: u?.fullName || u?.name || 'Anonim',
@@ -85,9 +87,9 @@ export default function ParticipantsPage() {
           totalAssignmentScore: Math.round(avgTaskScore),
           finalScore,
           passed,
-          completedModules: e.completedModules.length,
+          completedModules: validCompletedCount,
           totalModules: modules.length,
-          progress: modules.length > 0 ? Math.round((e.completedModules.length / modules.length) * 100) : 0,
+          progress: modules.length > 0 ? Math.round((validCompletedCount / modules.length) * 100) : 0,
           enrolledAt: e.enrolledAt,
           assignments: e.assignments,
         };
