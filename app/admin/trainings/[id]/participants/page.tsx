@@ -36,6 +36,7 @@ export default function ParticipantsPage() {
   const [exportLoading, setExportLoading] = useState<'excel' | 'pdf' | null>(null);
   const [search, setSearch] = useState('');
   const [modules, setModules] = useState<Module[]>([]);
+  const [instructorName, setInstructorName] = useState<string>('-');
   
   const [sortConfig, setSortConfig] = useState<{ key: keyof ParticipantRow | '', direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
 
@@ -52,6 +53,11 @@ export default function ParticipantsPage() {
     ]);
     setTraining(t);
     setModules(modules);
+
+    if (t?.instructorId) {
+      const inst: any = await getUserById(t.instructorId);
+      if (inst) setInstructorName(inst.fullName || inst.name || '-');
+    }
 
     const rows = await Promise.all(
       enrollments.map(async (e) => {
@@ -203,18 +209,23 @@ export default function ParticipantsPage() {
       const { default: autoTable } = await import('jspdf-autotable');
       const doc = new jsPDF({ orientation: 'landscape' });
 
+      const startDateStr = training?.startDate ? new Date((training.startDate as any).toMillis ? (training.startDate as any).toMillis() : training.startDate).toLocaleDateString('id-ID') : '-';
+      const endDateStr = training?.endDate ? new Date((training.endDate as any).toMillis ? (training.endDate as any).toMillis() : training.endDate).toLocaleDateString('id-ID') : '-';
+      const locationStr = training?.method === 'daring' ? 'Daring (Online)' : training?.city ? `${training?.city}, ${training?.province}` : '-';
+
       doc.setFontSize(16);
       doc.text(`PINTAR — ${training?.title}`, 14, 16);
       doc.setFontSize(10);
-      doc.text(`Daftar Peserta | Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 24);
+      doc.text(`Instruktur: ${instructorName} | Lokasi: ${locationStr}`, 14, 22);
+      doc.text(`Pelaksanaan: ${startDateStr} - ${endDateStr} | Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 28);
 
       const exportHasTugas = modules.some(m => m.type === 'tugas');
       const headRow = exportHasTugas
-        ? ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Lulus?']
-        : ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Akhir', 'Lulus?'];
+        ? ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Status']
+        : ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Akhir', 'Status'];
 
       autoTable(doc, {
-        startY: 30,
+        startY: 34,
         head: [headRow],
         body: sortedParticipants.map((p, idx) => {
           const row: any[] = [
@@ -375,7 +386,7 @@ export default function ParticipantsPage() {
                     <div style={{ display: 'flex', alignItems: 'center' }}>Nilai Akhir <SortIcon columnKey="finalScore" /></div>
                   </th>
                   <th onClick={() => requestSort('passed')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>Status Kelulusan <SortIcon columnKey="passed" /></div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Status <SortIcon columnKey="passed" /></div>
                   </th>
                   <th onClick={() => requestSort('progress')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>Progress Materi <SortIcon columnKey="progress" /></div>
