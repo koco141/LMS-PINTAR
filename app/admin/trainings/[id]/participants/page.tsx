@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { Users, BarChart2, FileText, Trash2, Loader2, ArrowLeft, ClipboardList } from 'lucide-react';
+import { Users, BarChart2, FileText, Trash2, Loader2, ArrowLeft, ClipboardList, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 
 interface ParticipantRow {
   userId: string;
@@ -36,6 +36,8 @@ export default function ParticipantsPage() {
   const [exportLoading, setExportLoading] = useState<'excel' | 'pdf' | null>(null);
   const [search, setSearch] = useState('');
   const [modules, setModules] = useState<Module[]>([]);
+  
+  const [sortConfig, setSortConfig] = useState<{ key: keyof ParticipantRow | '', direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
 
   useEffect(() => {
     if (!loading && (!user || (!isAdmin && !isInstructor))) { router.push('/login'); return; }
@@ -107,6 +109,52 @@ export default function ParticipantsPage() {
       p.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const sortedParticipants = useMemo(() => {
+    let sortableItems = [...filteredParticipants];
+    if (sortConfig.key !== '' && sortConfig.direction !== null) {
+      sortableItems.sort((a, b) => {
+        const aValue = a[sortConfig.key as keyof ParticipantRow];
+        const bValue = b[sortConfig.key as keyof ParticipantRow];
+        
+        if (aValue === null || aValue === undefined) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (bValue === null || bValue === undefined) return sortConfig.direction === 'asc' ? -1 : 1;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [filteredParticipants, sortConfig]);
+
+  const requestSort = (key: keyof ParticipantRow) => {
+    let direction: 'asc' | 'desc' | null = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = null;
+      key = '' as keyof ParticipantRow;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: keyof ParticipantRow }) => {
+    if (sortConfig.key !== columnKey) {
+      return <ChevronsUpDown size={14} style={{ marginLeft: '4px', opacity: 0.3, cursor: 'pointer', verticalAlign: 'middle', display: 'inline-block' }} />;
+    }
+    if (sortConfig.direction === 'asc') {
+      return <ChevronUp size={14} style={{ marginLeft: '4px', cursor: 'pointer', verticalAlign: 'middle', display: 'inline-block' }} />;
+    }
+    if (sortConfig.direction === 'desc') {
+      return <ChevronDown size={14} style={{ marginLeft: '4px', cursor: 'pointer', verticalAlign: 'middle', display: 'inline-block' }} />;
+    }
+    return null;
+  };
+
   const handleDeleteParticipant = async (userId: string, name: string) => {
     if (!confirm(`Hapus peserta "${name}"? Data evaluasi dan progress mereka akan hilang.`)) return;
     try {
@@ -121,7 +169,7 @@ export default function ParticipantsPage() {
     setExportLoading('excel');
     try {
       const XLSX = await import('xlsx');
-      const data = filteredParticipants.map((p, idx) => {
+      const data = sortedParticipants.map((p, idx) => {
         const row: any = {
           'No': idx + 1,
           'Nama': p.name,
@@ -168,7 +216,7 @@ export default function ParticipantsPage() {
       autoTable(doc, {
         startY: 30,
         head: [headRow],
-        body: filteredParticipants.map((p, idx) => {
+        body: sortedParticipants.map((p, idx) => {
           const row: any[] = [
             idx + 1,
             p.name,
@@ -297,7 +345,7 @@ export default function ParticipantsPage() {
         </div>
 
         {/* Table */}
-        {filteredParticipants.length === 0 ? (
+        {sortedParticipants.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon"><Users size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
             <h3>Belum ada peserta</h3>
@@ -309,18 +357,34 @@ export default function ParticipantsPage() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Nama Peserta</th>
-                  <th>Pre-Test</th>
-                  <th>Post-Test</th>
-                  {hasTugas && <th>Nilai Tugas</th>}
-                  <th>Nilai Akhir</th>
-                  <th>Status Kelulusan</th>
-                  <th>Progress Materi</th>
+                  <th onClick={() => requestSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Nama Peserta <SortIcon columnKey="name" /></div>
+                  </th>
+                  <th onClick={() => requestSort('preTestScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Pre-Test <SortIcon columnKey="preTestScore" /></div>
+                  </th>
+                  <th onClick={() => requestSort('postTestScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Post-Test <SortIcon columnKey="postTestScore" /></div>
+                  </th>
+                  {hasTugas && (
+                    <th onClick={() => requestSort('totalAssignmentScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>Nilai Tugas <SortIcon columnKey="totalAssignmentScore" /></div>
+                    </th>
+                  )}
+                  <th onClick={() => requestSort('finalScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Nilai Akhir <SortIcon columnKey="finalScore" /></div>
+                  </th>
+                  <th onClick={() => requestSort('passed')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Status Kelulusan <SortIcon columnKey="passed" /></div>
+                  </th>
+                  <th onClick={() => requestSort('progress')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>Progress Materi <SortIcon columnKey="progress" /></div>
+                  </th>
                   <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredParticipants.map((p, idx) => (
+                {sortedParticipants.map((p, idx) => (
                   <tr key={p.userId}>
                     <td>{idx + 1}</td>
                     <td>
