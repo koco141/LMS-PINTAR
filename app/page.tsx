@@ -90,7 +90,7 @@ export default function HomePage() {
           <h1 className={styles.heroTitle}>
             Tingkatkan Kompetensi
             <br />
-            <span className={styles.heroGradient}>Bersama PINTAR</span>
+            <span className={styles.heroGradient}>Bersama PINTER</span>
           </h1>
           <p className={styles.heroSubtitle}>
             Platform Pintar untuk Training — Akses pelatihan berkualitas, lacak progress,
