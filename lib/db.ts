@@ -264,26 +264,25 @@ export async function saveQuiz(
     finalQuizId = ref.id;
   }
 
-  // If syncToPostTest is true and this is a pre-test, also copy all questions and duration to post-test!
+  // If syncToPostTest is true and this is a pre-test, also copy all questions and config to post-test
   if (syncToPostTest && type === 'pre-test') {
     const postExisting = await getQuiz(trainingId, 'post-test');
-    const postData = {
-      type: 'post-test' as const,
-      title: 'Post-Test',
-      questions: data.questions,
-      hasSelfAssessment: data.hasSelfAssessment ?? false,
-      selfAssessmentQuestions: data.selfAssessmentQuestions ?? [],
-      duration: data.duration ?? 0,
-      maxAttempts: data.maxAttempts ?? 1,
-    };
     if (postExisting) {
       await updateDoc(doc(db, 'trainings', trainingId, 'quizzes', postExisting.id), {
-        ...postData,
+        questions: data.questions,
+        hasSelfAssessment: data.hasSelfAssessment ?? false,
+        selfAssessmentQuestions: data.selfAssessmentQuestions ?? [],
         updatedAt: serverTimestamp(),
       });
     } else {
       await addDoc(collection(db, 'trainings', trainingId, 'quizzes'), {
-        ...postData,
+        type: 'post-test' as const,
+        title: 'Post-Test',
+        questions: data.questions,
+        hasSelfAssessment: data.hasSelfAssessment ?? false,
+        selfAssessmentQuestions: data.selfAssessmentQuestions ?? [],
+        duration: data.duration ?? 0,
+        maxAttempts: data.maxAttempts ?? 1,
         trainingId,
         createdAt: serverTimestamp(),
       });
