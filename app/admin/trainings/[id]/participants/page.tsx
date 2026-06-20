@@ -25,7 +25,7 @@ interface ParticipantRow {
   assignments?: Record<string, string>;
 }
 
-export default function ParticipantsPage() {
+export default function ParticipantsPage({ onReady }: { onReady?: () => void }) {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
@@ -107,6 +107,7 @@ export default function ParticipantsPage() {
     rows.sort((a, b) => (b.postTestScore || 0) - (a.postTestScore || 0));
     setParticipants(rows);
     setPageLoading(false);
+    if (onReady) onReady();
   };
 
   const filteredParticipants = participants.filter(

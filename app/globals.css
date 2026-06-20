@@ -670,9 +670,39 @@ tr:hover td {
   }
   body {
     background: white !important;
+    color: black !important;
   }
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+  
+  /* Fix overlapping issues by breaking flex/grid into block and allowing natural flow */
+  .full-report-print div[class*="mainGrid"],
+  .full-report-print div[class*="statsGrid"],
+  .full-report-print div[class*="chartCard"],
+  .full-report-print div[class*="tableCard"],
+  .full-report-print div[class*="statCard"] {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 24px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    overflow: visible !important;
+  }
+  
+  .full-report-print div[class*="statsGrid"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+  }
+  
+  .full-report-print div[class*="statCard"] {
+    flex: 1 1 150px !important;
+  }
+  
+  .full-report-print .tableWrapper {
+    overflow: visible !important;
   }
 }

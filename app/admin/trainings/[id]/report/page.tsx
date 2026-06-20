@@ -9,17 +9,22 @@ import Link from 'next/link';
 
 export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [isReady, setIsReady] = useState(false);
+  
+  const [analyticsReady, setAnalyticsReady] = useState(false);
+  const [participantsReady, setParticipantsReady] = useState(false);
+  const [testimonialsReady, setTestimonialsReady] = useState(false);
+
+  const isReady = analyticsReady && participantsReady && testimonialsReady;
 
   useEffect(() => {
-    // We give it a generous 3 seconds to fetch data from Firestore.
-    // In a real app, we'd wait for all child components to signal they've loaded.
-    const timer = setTimeout(() => {
-      setIsReady(true);
-      window.print();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (isReady) {
+      // Small delay to ensure rendering is fully complete
+      const timer = setTimeout(() => {
+        window.print();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isReady]);
 
   return (
     <div className="full-report-print">
@@ -47,13 +52,13 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
           </div>
         )}
         <div className="report-section">
-          <AnalyticsPage params={params} />
+          <AnalyticsPage params={params} onReady={() => setAnalyticsReady(true)} />
         </div>
         <div className="report-section" style={{ pageBreakBefore: 'always' }}>
-          <ParticipantsPage />
+          <ParticipantsPage onReady={() => setParticipantsReady(true)} />
         </div>
         <div className="report-section" style={{ pageBreakBefore: 'always' }}>
-          <TestimonialsPage params={params} />
+          <TestimonialsPage params={params} onReady={() => setTestimonialsReady(true)} />
         </div>
       </div>
     </div>

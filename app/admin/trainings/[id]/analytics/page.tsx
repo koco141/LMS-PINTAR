@@ -38,7 +38,7 @@ const toTitleCase = (str: string) => {
   return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 };
 
-export default function AnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function AnalyticsPage({ params, onReady }: { params: Promise<{ id: string }>, onReady?: () => void }) {
   const resolvedParams = use(params);
   const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
@@ -87,9 +87,11 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
         setUsersDict(uDict);
 
         setDataLoading(false);
+        if (onReady) onReady();
       } catch (err) {
         console.error(err);
         alert('Gagal memuat data analisis');
+        if (onReady) onReady();
       }
     };
     fetchData();

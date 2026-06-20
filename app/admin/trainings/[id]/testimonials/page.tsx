@@ -38,7 +38,7 @@ const getAvatarColor = (name: string) => {
   return avatarColors[index];
 };
 
-export default function TestimonialsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function TestimonialsPage({ params, onReady }: { params: Promise<{ id: string }>, onReady?: () => void }) {
   const resolvedParams = use(params);
   const { user, isAdmin, isInstructor, loading } = useAuth();
   const router = useRouter();
@@ -106,13 +106,15 @@ export default function TestimonialsPage({ params }: { params: Promise<{ id: str
 
         setTestimonials(testimoList);
         setDataLoading(false);
+        if (onReady) onReady();
       } catch (err) {
         console.error(err);
-        alert('Gagal memuat data testimoni');
+        alert('Gagal memuat testimoni');
+        if (onReady) onReady(); // Prevent hanging
       }
     };
     fetchData();
-  }, [resolvedParams.id, user, isAdmin, isInstructor, loading, router]);
+  }, [resolvedParams.id, user, isAdmin, isInstructor, loading, router, onReady]);
 
   if (loading || dataLoading) {
     return (
