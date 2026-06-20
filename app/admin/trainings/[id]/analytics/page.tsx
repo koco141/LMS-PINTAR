@@ -521,21 +521,23 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           </div>
 
           {/* Scatter Chart (Self Assessment Quadrant) */}
-          <div className={styles.chartCard}>
-            <h3>Kuadran Kompetensi (Dunning-Kruger)</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
-              Perbandingan persepsi diri (Self-Assessment) dengan kompetensi aktual (Nilai Kuis).
-            </p>
-            {scatterData.datasets.length > 0 ? (
-              <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: '350px' }}>
-                <Scatter data={scatterData} options={scatterOptions} />
-              </div>
-            ) : (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                Belum ada data Self-Assessment
-              </div>
-            )}
-          </div>
+          {(preTest?.enableSelfAssessment || postTest?.enableSelfAssessment) && (
+            <div className={styles.chartCard}>
+              <h3>Kuadran Kompetensi (Dunning-Kruger)</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
+                Perbandingan persepsi diri (Self-Assessment) dengan kompetensi aktual (Nilai Kuis).
+              </p>
+              {scatterData.datasets.length > 0 ? (
+                <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: '350px' }}>
+                  <Scatter data={scatterData} options={scatterOptions} />
+                </div>
+              ) : (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                  Belum ada data Self-Assessment
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Additional Info / Level Summary */}
