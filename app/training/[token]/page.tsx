@@ -627,7 +627,7 @@ export default function TrainingPage() {
                     </div>
 
                     {postTestHistory.length > 0 && (
-                      <div style={{ marginTop: '24px', textAlign: 'left', background: 'var(--bg-input)', padding: '16px', borderRadius: '12px' }}>
+                      <div style={{ marginTop: '24px', width: '100%', boxSizing: 'border-box', textAlign: 'left', background: 'var(--bg-input)', padding: '16px', borderRadius: '12px' }}>
                         <h4 style={{ marginBottom: '12px', fontSize: '0.95rem' }}>Riwayat Percobaan:</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {postTestHistory.map((hist, idx) => (
