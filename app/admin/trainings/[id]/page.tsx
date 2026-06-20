@@ -210,10 +210,10 @@ export default function TrainingAdminPage() {
   const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', startDate: mod.startDate || '', endDate: mod.endDate || '' });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '' });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', startDate: '', endDate: '' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '' });
     }
     setShowModuleForm(true);
   };
@@ -238,6 +238,7 @@ export default function TrainingAdminPage() {
     }
     if (moduleForm.type === 'tugas' && moduleForm.competencyCategory) {
       dataToSave.competencyCategory = moduleForm.competencyCategory;
+      dataToSave.submissionType = moduleForm.submissionType || 'link';
       dataToSave.startDate = moduleForm.startDate || '';
       dataToSave.endDate = moduleForm.endDate || '';
     }
