@@ -711,7 +711,19 @@ tr:hover td {
     flex: 1 1 150px !important;
   }
   
-  .full-report-print .tableWrapper {
+  .full-report-print div[class*="tableWrapper"] {
     overflow: visible !important;
+  }
+  
+  .full-report-print table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  
+  .full-report-print table thead th {
+    background: #4f46e5 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

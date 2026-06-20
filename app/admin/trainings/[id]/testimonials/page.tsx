@@ -128,7 +128,7 @@ export default function TestimonialsPage({ params, onReady }: { params: Promise<
   return (
     <div className={styles.page}>
       <div className="container">
-        <div className={styles.breadcrumb}>
+        <div className={`${styles.breadcrumb} print-hidden`}>
           <Link href="/admin">{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>/</span>
           <Link href={`/admin/trainings/${training?.id}`}>Kelola Pelatihan</Link>
@@ -136,7 +136,11 @@ export default function TestimonialsPage({ params, onReady }: { params: Promise<
           <span>Testimoni</span>
         </div>
 
-        <div className={styles.header}>
+        <div className="print-only" style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Testimoni Peserta — {training?.title}</h1>
+        </div>
+
+        <div className={`${styles.header} print-hidden`}>
           <div>
             <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <MessageSquare size={20} style={{ color: 'var(--primary-light)' }} />

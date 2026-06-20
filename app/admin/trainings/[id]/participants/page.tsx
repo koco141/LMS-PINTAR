@@ -265,7 +265,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
   return (
     <div className={styles.page}>
       <div className="container">
-        <div className={styles.breadcrumb}>
+        <div className={`${styles.breadcrumb} print-hidden`}>
           <Link href="/admin">{isAdmin ? 'Panel Admin' : 'Panel Pengajar'}</Link>
           <span>›</span>
           <span>{training?.title}</span>
@@ -273,7 +273,14 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
           <span>Peserta</span>
         </div>
 
-        <div className={styles.pageHeader}>
+        <div className="print-only" style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Daftar Peserta — {training?.title}</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
+            Instruktur: {instructorName} | Lokasi: {training?.method === 'daring' ? 'Daring (Online)' : training?.city ? `${training?.city}, ${training?.province}` : '-'}
+          </p>
+        </div>
+
+        <div className={`${styles.pageHeader} print-hidden`}>
           <div>
             <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Users size={20} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />
@@ -320,7 +327,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
         </div>
 
         {/* Stats */}
-        <div className="grid-4" style={{ marginBottom: '24px' }}>
+        <div className="grid-4 print-hidden" style={{ marginBottom: '24px' }}>
           <div className="stat-card">
             <span className="stat-label">Total Peserta</span>
             <span className="stat-value">{participants.length}</span>
@@ -346,7 +353,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
         </div>
 
         {/* Search */}
-        <div className={styles.searchBar}>
+        <div className={`${styles.searchBar} print-hidden`}>
           <input
             className="form-input"
             type="text"
