@@ -5,13 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { getTrainingById, getTrainingEnrollments, getModules, getUserById, updateAssignmentScore, Training, Module } from '@/lib/db';
 import Link from 'next/link';
-import { ClipboardEdit, BookOpen, ExternalLink, Users, BarChart2, ArrowLeft } from 'lucide-react';
+import { ClipboardEdit, BookOpen, ExternalLink, Users, BarChart2, ArrowLeft, FileText, X } from 'lucide-react';
 
 interface AssignmentRow {
   userId: string;
   name: string;
   email: string;
   assignments: Record<string, string>; // moduleId -> link
+  assignmentTexts: Record<string, string>; // moduleId -> text
   assignmentScores: Record<string, number>; // moduleId -> score
   assignmentRubrics: Record<string, Record<string, number>>; // moduleId -> { dimensionName: score }
   totalScore: number;
@@ -42,6 +43,7 @@ export default function AssignmentsPage() {
   // State for tracking inline edits: { [userId_moduleId]: value }
   const [editingScores, setEditingScores] = useState<Record<string, string>>({});
   const [savingStatus, setSavingStatus] = useState<Record<string, boolean>>({});
+  const [viewTextModal, setViewTextModal] = useState<{ isOpen: boolean; text: string; title: string; userName: string }>({ isOpen: false, text: '', title: '', userName: '' });
 
   useEffect(() => {
     if (!loading && (!user || (!isAdmin && !isInstructor))) { router.push('/login'); return; }
@@ -79,6 +81,7 @@ export default function AssignmentsPage() {
           name: u?.fullName || u?.name || 'Anonim',
           email: u?.email || '',
           assignments: e.assignments || {},
+          assignmentTexts: (e as any).assignmentTexts || {},
           assignmentScores: scores,
           assignmentRubrics: (e as any).assignmentRubrics || {},
           totalScore: total,
@@ -240,6 +243,7 @@ export default function AssignmentsPage() {
                         </td>
                         {taskModules.map((m, i) => {
                           const link = p.assignments[m.id];
+                          const text = p.assignmentTexts[m.id];
                           const score = p.assignmentScores[m.id] ?? '';
                           const key = `${p.userId}_${m.id}`;
                           
@@ -250,12 +254,25 @@ export default function AssignmentsPage() {
                           return (
                             <td key={m.id} style={{ padding: '16px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {link ? (
+                                {link && m.submissionType !== 'text' ? (
                                   <a href={link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                     <ExternalLink size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                                    Lihat Tugas {i + 1}
+                                    Lihat Link
                                   </a>
-                                ) : (
+                                ) : null}
+                                
+                                {text && m.submissionType !== 'link' ? (
+                                   <button 
+                                     onClick={() => setViewTextModal({ isOpen: true, text, title: m.title, userName: p.name })}
+                                     className="btn btn-secondary btn-sm"
+                                     style={{ padding: '4px 8px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px', width: 'fit-content' }}
+                                   >
+                                      <FileText size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                                      Lihat Jawaban
+                                   </button>
+                                ) : null}
+
+                                {!link && !text && (
                                   <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Belum kumpul</span>
                                 )}
                                 
@@ -314,6 +331,24 @@ export default function AssignmentsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal for viewing text assignment */}
+      {viewTextModal.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--bg-primary)', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Jawaban: {viewTextModal.title}</h3>
+              <button onClick={() => setViewTextModal({ ...viewTextModal, isOpen: false })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Oleh: {viewTextModal.userName}</p>
+            <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', whiteSpace: 'pre-wrap', color: 'var(--text-primary)', fontSize: '0.95rem', border: '1px solid var(--border)' }}>
+              {viewTextModal.text}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
