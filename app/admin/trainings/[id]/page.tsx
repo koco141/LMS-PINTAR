@@ -14,7 +14,11 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import * as XLSX from 'xlsx';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Key, Clipboard, BarChart2, Users, Trash2, Megaphone, BookOpen, FileText, Star, Pencil, AlertTriangle, Image as ImageIcon, GripVertical, Circle, CheckCircle2, ClipboardList, MapPin } from 'lucide-react';
+import { Key, Clipboard, BarChart2, Users, Trash2, Megaphone, BookOpen, FileText, Star, Pencil, AlertTriangle, Image as ImageIcon, GripVertical, Circle, CheckCircle2, ClipboardList, MapPin, Eye } from 'lucide-react';
+import QuizPlayer from '@/components/QuizPlayer';
+import ModuleViewer from '@/components/ModuleViewer';
+import AssignmentViewer from '@/components/AssignmentViewer';
+import EvaluationViewer from '@/components/EvaluationViewer';
 
 type AdminTab = 'info' | 'modules' | 'pre-test' | 'post-test';
 
@@ -41,6 +45,10 @@ export default function TrainingAdminPage() {
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, startDate?: string, endDate?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+
+  // Preview Mode
+  const [previewModeModules, setPreviewModeModules] = useState(false);
+  const [previewActiveModule, setPreviewActiveModule] = useState<Module | null>(null);
 
   // Info form
   const [infoForm, setInfoForm] = useState({
@@ -614,19 +622,73 @@ export default function TrainingAdminPage() {
             <div className={styles.sectionBar}>
               <h3>Daftar Materi</h3>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn btn-primary btn-sm" onClick={() => openModuleForm(undefined, 'materi')}>
-                  ＋ Tambah Materi
+                <button className="btn btn-secondary btn-sm" onClick={() => {
+                  setPreviewModeModules(!previewModeModules);
+                  if (!previewModeModules && modules.length > 0) setPreviewActiveModule(modules[0]);
+                }}>
+                  <Eye size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                  {previewModeModules ? 'Tutup Preview' : 'Preview Peserta'}
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'tugas')}>
-                  <FileText size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Tugas
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'evaluasi')}>
-                  <Star size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Evaluasi
-                </button>
+                {!previewModeModules && (
+                  <>
+                    <button className="btn btn-primary btn-sm" onClick={() => openModuleForm(undefined, 'materi')}>
+                      ＋ Tambah Materi
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'tugas')}>
+                      <FileText size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Tugas
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => openModuleForm(undefined, 'evaluasi')}>
+                      <Star size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Evaluasi
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            {modules.length === 0 ? (
+            {previewModeModules ? (
+              <div style={{ display: 'flex', gap: '20px', marginTop: '20px', alignItems: 'flex-start' }}>
+                 <div style={{ width: '260px', flexShrink: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
+                    <h4 style={{ marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Daftar Modul</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {modules.map(m => (
+                        <button key={m.id} 
+                          onClick={() => setPreviewActiveModule(m)}
+                          style={{
+                            textAlign: 'left',
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: previewActiveModule?.id === m.id ? 'var(--primary-light)' : 'transparent',
+                            color: previewActiveModule?.id === m.id ? 'white' : 'var(--text-primary)',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {m.type === 'tugas' ? <FileText size={14} style={{ flexShrink: 0 }} /> : m.type === 'evaluasi' ? <Star size={14} style={{ flexShrink: 0 }} /> : <BookOpen size={14} style={{ flexShrink: 0 }} />}
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                 </div>
+                 <div style={{ flex: 1, minWidth: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                    {previewActiveModule ? (
+                      previewActiveModule.type === 'tugas' ? (
+                        <AssignmentViewer module={previewActiveModule} isCompleted={false} onComplete={() => alert('[PREVIEW] Modul diselesaikan')} onSubmitLink={async () => alert('[PREVIEW] Link tugas dikirim')} />
+                      ) : previewActiveModule.type === 'evaluasi' ? (
+                        <EvaluationViewer module={previewActiveModule} isCompleted={false} onComplete={() => alert('[PREVIEW] Modul diselesaikan')} onSubmitEvaluation={async () => alert('[PREVIEW] Evaluasi dikirim')} />
+                      ) : (
+                        <ModuleViewer module={previewActiveModule} isCompleted={false} onComplete={() => alert('[PREVIEW] Modul diselesaikan')} />
+                      )
+                    ) : (
+                      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Pilih modul di samping untuk preview</div>
+                    )}
+                 </div>
+              </div>
+            ) : modules.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon"><BookOpen size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
                 <h3>Belum ada modul</h3>
@@ -965,6 +1027,7 @@ function QuizEditor({
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const downloadExcelTemplate = () => {
     const headers = [
@@ -1248,15 +1311,35 @@ function QuizEditor({
           <button className="btn btn-secondary btn-sm" onClick={onBack}>
             ← Kembali
           </button>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>📥 Import Soal</button>
-          <button className="btn btn-secondary btn-sm" onClick={addQuestion}>＋ Tambah Soal</button>
-          <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-            {saving ? 'Menyimpan...' : type === 'pre-test' ? '💾 Simpan & Lanjutkan' : '💾 Simpan & Selesai'}
-          </button>
+          {questions.length > 0 && (
+             <button className="btn btn-secondary btn-sm" onClick={() => setPreviewMode(!previewMode)}>
+               <Eye size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+               {previewMode ? 'Tutup Preview' : 'Preview Peserta'}
+             </button>
+          )}
+          {!previewMode && (
+             <>
+               <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>📥 Import Soal</button>
+               <button className="btn btn-secondary btn-sm" onClick={addQuestion}>＋ Tambah Soal</button>
+               <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+                 {saving ? 'Menyimpan...' : type === 'pre-test' ? '💾 Simpan & Lanjutkan' : '💾 Simpan & Selesai'}
+               </button>
+             </>
+          )}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '8px' }}>
+      {previewMode ? (
+         <div style={{ marginTop: '20px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+            <QuizPlayer 
+              quiz={{ type, title, duration: duration === '' ? 0 : duration, maxAttempts: maxAttempts === '' ? 1 : maxAttempts, questions } as Quiz}
+              onSubmit={(score) => alert(`[PREVIEW] Kuis disubmit dengan nilai ${score}!`)}
+              previousScore={null}
+            />
+         </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '8px' }}>
         <div className="form-group" style={{ flex: '1', minWidth: '250px' }}>
           <label className="form-label">Judul Kuis</label>
           <input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -1358,6 +1441,8 @@ function QuizEditor({
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
 
       {/* Import Questions Modal */}
