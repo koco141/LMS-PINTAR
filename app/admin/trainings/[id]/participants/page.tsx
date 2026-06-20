@@ -280,7 +280,7 @@ export default function ParticipantsPage() {
             </h1>
             <p className={styles.pageSubtitle}>{training?.title}</p>
           </div>
-          <div className={styles.exportBtns}>
+          <div className={`${styles.exportBtns} print-hidden`}>
             {hasTugas && (
               <Link href={`/admin/trainings/${id}/assignments`} className="btn btn-secondary">
                 <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />

@@ -641,9 +641,32 @@ tr:hover td {
   transform: translateX(20px);
 }
 
+.print-only {
+  display: none !important;
+}
+
+/* Report Page specific overrides */
+.full-report-print .print-hidden { display: none !important; }
+.full-report-print .breadcrumb { display: none !important; }
+.full-report-print div[class*="page"] { 
+  padding: 0 !important; 
+  min-height: auto !important; 
+  background: white !important;
+}
+.full-report-print .container {
+  padding: 0 40px !important;
+  max-width: 100% !important;
+}
+.full-report-print .report-section {
+  padding-bottom: 20px;
+}
+
 @media print {
   nav, header, .print-hidden {
     display: none !important;
+  }
+  .print-only {
+    display: block !important;
   }
   body {
     background: white !important;

@@ -533,9 +533,14 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             </h1>
             <p className={styles.subtitle} style={{ marginBottom: '4px' }}>{training?.title}</p>
             {instructor && (
-              <p className={styles.subtitle} style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-                Pengajar: <strong>{instructor.fullName || instructor.name}</strong>
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <p className={styles.subtitle} style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+                  Pengajar: <strong>{instructor.fullName || instructor.name}</strong>
+                </p>
+                <p className="print-only" style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+                  Lokasi: <strong>{training?.method === 'daring' ? 'Daring (Online)' : training?.city ? `${training?.city}, ${training?.province}` : '-'}</strong> | Tanggal: <strong>{training?.startDate ? new Date((training.startDate as any).toMillis ? (training.startDate as any).toMillis() : training.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} - {training?.endDate ? new Date((training.endDate as any).toMillis ? (training.endDate as any).toMillis() : training.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</strong>
+                </p>
+              </div>
             )}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="print-hidden">
@@ -550,8 +555,11 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
               </Link>
             )}
             <button className="btn btn-secondary" onClick={() => window.print()}>
-              Cetak PDF
+              Cetak Analisis PDF
             </button>
+            <Link href={`/admin/trainings/${resolvedParams.id}/report`} target="_blank" className="btn btn-primary">
+              Cetak Laporan Lengkap
+            </Link>
             <Link href="/admin" className="btn btn-secondary">
               <ArrowLeft size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
               Kembali
