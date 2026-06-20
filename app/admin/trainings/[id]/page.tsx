@@ -736,12 +736,12 @@ export default function TrainingAdminPage() {
 
                       {(!moduleForm.type || moduleForm.type === 'materi') && (
                         <div className="form-group">
-                          <label className="form-label">Link Google Slides (Publish URL) *</label>
+                          <label className="form-label">Link Materi (Google Slides / YouTube) *</label>
                           <input className="form-input"
-                            placeholder="https://docs.google.com/presentation/d/.../pub?..."
+                            placeholder="https://docs.google.com/presentation/... atau https://youtube.com/..."
                             value={moduleForm.embedUrl} onChange={(e) => setModuleForm({ ...moduleForm, embedUrl: e.target.value })} />
                           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            File → Bagikan → Terbitkan ke web → Embed atau salin link
+                            Untuk Google Slides: Salin link Publish to web. Untuk YouTube: Salin link video.
                           </p>
                         </div>
                       )}

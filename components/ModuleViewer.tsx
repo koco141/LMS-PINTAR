@@ -15,7 +15,7 @@ export default function ModuleViewer({ module, isCompleted, onComplete }: Props)
   const [completing, setCompleting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  // Convert Google Slides publish URL to embed URL if needed
+  // Convert URL to embed URL if needed (Google Slides or YouTube)
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
     
@@ -28,7 +28,28 @@ export default function ModuleViewer({ module, isCompleted, onComplete }: Props)
       }
     }
 
-    // If it contains /d/e/ (which is the published to web format)
+    // YouTube Handling
+    if (cleanUrl.includes('youtube.com') || cleanUrl.includes('youtu.be')) {
+      if (cleanUrl.includes('/embed/')) {
+        return cleanUrl;
+      }
+      let videoId = '';
+      if (cleanUrl.includes('youtu.be/')) {
+        videoId = cleanUrl.split('youtu.be/')[1]?.split('?')[0] || '';
+      } else {
+        try {
+          const urlObj = new URL(cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`);
+          videoId = urlObj.searchParams.get('v') || '';
+        } catch (e) {
+          console.error('Invalid URL', e);
+        }
+      }
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}?rel=0`;
+      }
+    }
+
+    // Google Slides Handling
     if (cleanUrl.includes('docs.google.com/presentation')) {
       if (cleanUrl.includes('/d/e/')) {
         // Change '/pub' to '/embed' for a better embedded viewing experience
