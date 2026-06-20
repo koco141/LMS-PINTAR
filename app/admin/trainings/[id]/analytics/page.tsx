@@ -521,7 +521,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           </div>
 
           {/* Scatter Chart (Self Assessment Quadrant) */}
-          {(preTest?.enableSelfAssessment || postTest?.enableSelfAssessment) && (
+          {(preTest?.hasSelfAssessment || postTest?.hasSelfAssessment) && (
             <div className={styles.chartCard}>
               <h3>Kuadran Kompetensi (Dunning-Kruger)</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
