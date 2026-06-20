@@ -699,14 +699,15 @@ export default function TrainingPage() {
                   module={activeModule}
                   isCompleted={enrollment?.completedModules.includes(activeModule.id) || false}
                   onComplete={() => handleModuleComplete(activeModule.id)}
-                  onSubmitLink={async (link) => {
+                  onSubmitLink={async (link, text) => {
                     if (!enrollment || !user || !training) return;
-                    await submitAssignment(user.uid, training.id, activeModule.id, link);
+                    await submitAssignment(user.uid, training.id, activeModule.id, link, text);
                     await markModuleComplete(user.uid, training.id, activeModule.id);
                     const updated = await getEnrollment(user.uid, training.id);
                     setEnrollment(updated);
                   }}
                   existingLink={enrollment?.assignments?.[activeModule.id]}
+                  existingText={enrollment?.assignmentTexts?.[activeModule.id]}
                 />
               ) : activeModule.type === 'evaluasi' ? (
                 <EvaluationViewer

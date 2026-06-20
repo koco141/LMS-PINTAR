@@ -44,7 +44,7 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, startDate?: string, endDate?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Preview Mode
   const [previewModeModules, setPreviewModeModules] = useState(false);
@@ -827,6 +827,18 @@ export default function TrainingAdminPage() {
                             {infoForm.targetLevel >= 5 && (
                               <option value="Mentoring / Presentasi Ahli">Mentoring / Presentasi Ahli</option>
                             )}
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Tipe Pengumpulan *</label>
+                          <select 
+                            className="form-input" 
+                            value={moduleForm.submissionType || 'link'} 
+                            onChange={(e) => setModuleForm({ ...moduleForm, submissionType: e.target.value as 'link' | 'text' | 'both' })}
+                          >
+                            <option value="link">Link Tautan Saja (Misal: Google Drive)</option>
+                            <option value="text">Teks Deskripsi Saja (Peserta mengetik langsung)</option>
+                            <option value="both">Keduanya (Teks & Link Tautan)</option>
                           </select>
                         </div>
                         <div style={{ display: 'flex', gap: '16px' }}>

@@ -52,6 +52,7 @@ export interface Module {
   type?: 'materi' | 'tugas' | 'evaluasi';
   ratingCategories?: string[]; // If type is 'evaluasi', list of categories to rate
   competencyCategory?: string; // If type is 'tugas', the competency category
+  submissionType?: 'text' | 'link' | 'both'; // If type is 'tugas', submission requirement
   startDate?: string; // If type is 'tugas', start datetime
   endDate?: string; // If type is 'tugas', end datetime
 }
@@ -93,7 +94,8 @@ export interface Enrollment {
   preTestCompletedAt: Timestamp | null;
   postTestCompletedAt: Timestamp | null;
   totalTimeSpent: number; // minutes
-  assignments?: Record<string, string>; // moduleId -> submitted link
+  assignments?: Record<string, string>; // moduleId -> submitted link (or text depending on submissionType)
+  assignmentTexts?: Record<string, string>; // moduleId -> submitted text
   assignmentScores?: Record<string, number>; // moduleId -> score
   assignmentRubrics?: Record<string, Record<string, number>>; // moduleId -> { dimensionName: score }
   evaluations?: Record<string, { ratings: Record<string, number>, testimonial: string }>; // moduleId -> evaluation data
@@ -417,12 +419,15 @@ export async function submitAssignment(
   userId: string,
   trainingId: string,
   moduleId: string,
-  link: string
+  link: string,
+  text?: string
 ) {
   const id = `${userId}_${trainingId}`;
-  await updateDoc(doc(db, 'enrollments', id), {
-    [`assignments.${moduleId}`]: link,
-  });
+  const updates: any = {};
+  if (link !== undefined) updates[`assignments.${moduleId}`] = link;
+  if (text !== undefined) updates[`assignmentTexts.${moduleId}`] = text;
+
+  await updateDoc(doc(db, 'enrollments', id), updates);
 }
 
 export async function updateModuleOrders(trainingId: string, moduleIds: string[]) {

@@ -10,21 +10,29 @@ export default function AssignmentViewer({
   isCompleted,
   onComplete,
   onSubmitLink,
-  existingLink
+  existingLink,
+  existingText
 }: {
   module: Module;
   isCompleted: boolean;
   onComplete: () => void;
-  onSubmitLink: (link: string) => Promise<void>;
+  onSubmitLink: (link: string, text?: string) => Promise<void>;
   existingLink?: string;
+  existingText?: string;
 }) {
   const [link, setLink] = useState(existingLink || '');
+  const [text, setText] = useState(existingText || '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const type = module.submissionType || 'link';
+  const requireLink = type === 'link' || type === 'both';
+  const requireText = type === 'text' || type === 'both';
+
   useEffect(() => {
     setLink(existingLink || '');
-  }, [module.id, existingLink]);
+    setText(existingText || '');
+  }, [module.id, existingLink, existingText]);
 
   const now = new Date();
   const startDate = module.startDate ? new Date(module.startDate) : null;
@@ -41,16 +49,28 @@ export default function AssignmentViewer({
   };
 
   const handleSubmit = async () => {
-    if (!link.trim()) {
+    if (requireLink && !link.trim()) {
       setError('Link pengumpulan tidak boleh kosong.');
+      return;
+    }
+    if (requireText && !text.trim()) {
+      setError('Teks jawaban tidak boleh kosong.');
       return;
     }
 
     setError('');
     setSubmitting(true);
-    await onSubmitLink(link);
+    await onSubmitLink(requireLink ? link : '', requireText ? text : '');
     setSubmitting(false);
     onComplete();
+  };
+
+  const isFormValid = () => {
+    if (requireLink && !link.trim()) return false;
+    if (requireText && !text.trim()) return false;
+    // Check if nothing changed
+    if (link === (existingLink || '') && text === (existingText || '')) return false;
+    return true;
   };
 
   return (
@@ -65,11 +85,11 @@ export default function AssignmentViewer({
         </div>
         
         <div className={styles.moduleDesc} style={{ marginBottom: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <p>{module.description || 'Tidak ada deskripsi penugasan.'}</p>
+          <p style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>{module.description || 'Tidak ada deskripsi penugasan.'}</p>
         </div>
 
         <div style={{ padding: '32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
-          <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Link Pengumpulan Tugas</h3>
+          <h3 style={{ marginBottom: '24px', fontSize: '1.1rem', textAlign: 'center' }}>Pengumpulan Tugas</h3>
 
           {isTooEarly && (
             <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#b45309', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
@@ -91,46 +111,84 @@ export default function AssignmentViewer({
             </div>
           )}
           
-        {existingLink && (
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-input)', borderRadius: '8px', textAlign: 'center' }}>
+        {(existingLink || existingText) && (
+          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-input)', borderRadius: '8px', textAlign: 'left' }}>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Tugas Anda telah dikumpulkan:</p>
-            <a href={existingLink} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all', color: 'var(--primary)', fontWeight: '600' }}>
-              {existingLink}
-            </a>
+            {existingLink && (
+              <div style={{ marginBottom: '8px' }}>
+                <strong>Link:</strong> <a href={existingLink} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all', color: 'var(--primary)', fontWeight: '600' }}>{existingLink}</a>
+              </div>
+            )}
+            {existingText && (
+              <div>
+                <strong>Jawaban:</strong>
+                <p style={{ whiteSpace: 'pre-wrap', margin: '4px 0 0 0', color: 'var(--text-primary)' }}>{existingText}</p>
+              </div>
+            )}
           </div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 500 }}>
-              Masukkan Link Pengumpulan
-            </label>
-          <input 
-            type="url" 
-            placeholder="https://..." 
-            value={link} 
-            onChange={(e) => setLink(e.target.value)}
-            disabled={Boolean(isTooEarly) || Boolean(isTooLate)}
-            style={{ 
-              padding: '12px 16px', 
-              borderRadius: '8px', 
-              border: error ? '1px solid var(--danger)' : '1px solid var(--border)',
-              backgroundColor: isTooEarly || isTooLate ? 'var(--bg-disabled, #e5e7eb)' : 'var(--bg-input)',
-              color: 'var(--text-primary)',
-              width: '100%',
-              fontSize: '1rem',
-              opacity: isTooEarly || isTooLate ? 0.7 : 1
-            }}
-          />
-          {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>{error}</p>}
-          </div>
+          {requireText && (
+            <div className="form-group" style={{ marginBottom: 0, textAlign: 'left' }}>
+              <label className="form-label" style={{ fontWeight: 500 }}>
+                Jawaban / Deskripsi Tugas
+              </label>
+              <textarea 
+                placeholder="Ketik jawaban Anda di sini..." 
+                value={text} 
+                onChange={(e) => setText(e.target.value)}
+                disabled={Boolean(isTooEarly) || Boolean(isTooLate)}
+                rows={5}
+                style={{ 
+                  padding: '12px 16px', 
+                  borderRadius: '8px', 
+                  border: error && !text.trim() ? '1px solid var(--danger)' : '1px solid var(--border)',
+                  backgroundColor: isTooEarly || isTooLate ? 'var(--bg-disabled, #e5e7eb)' : 'var(--bg-input)',
+                  color: 'var(--text-primary)',
+                  width: '100%',
+                  fontSize: '1rem',
+                  fontFamily: 'inherit',
+                  opacity: isTooEarly || isTooLate ? 0.7 : 1,
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          )}
+
+          {requireLink && (
+            <div className="form-group" style={{ marginBottom: 0, textAlign: 'left' }}>
+              <label className="form-label" style={{ fontWeight: 500 }}>
+                Masukkan Link Pengumpulan
+              </label>
+              <input 
+                type="url" 
+                placeholder="https://..." 
+                value={link} 
+                onChange={(e) => setLink(e.target.value)}
+                disabled={Boolean(isTooEarly) || Boolean(isTooLate)}
+                style={{ 
+                  padding: '12px 16px', 
+                  borderRadius: '8px', 
+                  border: error && !link.trim() ? '1px solid var(--danger)' : '1px solid var(--border)',
+                  backgroundColor: isTooEarly || isTooLate ? 'var(--bg-disabled, #e5e7eb)' : 'var(--bg-input)',
+                  color: 'var(--text-primary)',
+                  width: '100%',
+                  fontSize: '1rem',
+                  opacity: isTooEarly || isTooLate ? 0.7 : 1
+                }}
+              />
+            </div>
+          )}
+          {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', margin: '4px 0 0 0', textAlign: 'left' }}>{error}</p>}
+
           <button 
             className="btn btn-primary" 
             onClick={handleSubmit} 
-            disabled={submitting || !link.trim() || link === existingLink || Boolean(isTooEarly) || Boolean(isTooLate)}
+            disabled={submitting || !isFormValid() || Boolean(isTooEarly) || Boolean(isTooLate)}
             style={{ width: '100%', padding: '12px', marginTop: '8px' }}
           >
-            {submitting ? 'Mengumpulkan...' : (existingLink ? 'Perbarui Link Tugas' : 'Kumpulkan Tugas & Lanjut')}
+            {submitting ? 'Mengumpulkan...' : ((existingLink || existingText) ? 'Perbarui Jawaban' : 'Kumpulkan Tugas & Lanjut')}
           </button>
         </div>
       </div>
