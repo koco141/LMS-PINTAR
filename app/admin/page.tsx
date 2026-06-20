@@ -149,7 +149,7 @@ export default function AdminDashboard() {
                           <Link href={`/admin/trainings/${training.id}`} className="btn btn-icon btn-secondary btn-sm" title="Kelola Pelatihan" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Pencil size={15} />
                           </Link>
-                          <Link href={`/admin/trainings/${training.id}/participants`} className="btn btn-icon btn-secondary btn-sm" title="Lihat Peserta" style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Link href={`/admin/trainings/${training.id}/participants`} className="btn btn-icon btn-secondary btn-sm" title="Lihat Peserta" style={{ background: '#3b82f6', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Users size={15} />
                           </Link>
                           <Link href={`/admin/trainings/${training.id}/assignments`} className="btn btn-icon btn-secondary btn-sm" title="Nilai Tugas" style={{ background: '#f59e0b', color: 'white', border: 'none', width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
