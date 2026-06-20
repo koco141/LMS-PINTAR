@@ -453,7 +453,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
         </div>
       </div>
 
-      <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px', flex: 1 }}>
+      <div className={`${styles.chartCard} print-block`} style={{ alignItems: 'flex-start', padding: '24px' }}>
         <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
         <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem', textAlign: 'justify' }}>
           Berdasarkan evaluasi akumulasi nilai akhir, pelatihan yang dilaksanakan secara <strong>{training?.method === 'luring' ? 'Luring' : 'Daring'}</strong>
@@ -644,7 +644,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
+            <div className="print-block" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {additionalInfoCards}
             </div>
           )}
@@ -675,7 +675,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
           </div>
           
           {evalStats.categoryAverages.length > 0 && (
-            <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            <div className="print-flex" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
               {evalStats.categoryAverages.map((cat, i) => (
                 <div key={i} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px' }}>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>{cat.category}</div>

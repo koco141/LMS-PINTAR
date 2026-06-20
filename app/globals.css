@@ -677,6 +677,15 @@ tr:hover td {
     print-color-adjust: exact !important;
   }
   
+  .print-block {
+    display: block !important;
+    height: auto !important;
+  }
+  .print-flex {
+    display: flex !important;
+    flex-wrap: wrap !important;
+  }
+
   /* Fix overlapping issues by breaking flex/grid into block and allowing natural flow */
   .full-report-print div[class*="mainGrid"],
   .full-report-print div[class*="statsGrid"],
