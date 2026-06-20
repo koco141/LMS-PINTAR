@@ -17,6 +17,27 @@ interface TestimonialData {
   averageRating: number;
 }
 
+const avatarColors = [
+  { bg: '#fee2e2', text: '#ef4444' }, // Red
+  { bg: '#ffedd5', text: '#f97316' }, // Orange
+  { bg: '#fef3c7', text: '#f59e0b' }, // Amber
+  { bg: '#dcfce7', text: '#10b981' }, // Emerald
+  { bg: '#e0f2fe', text: '#0ea5e9' }, // Sky
+  { bg: '#dbeafe', text: '#3b82f6' }, // Blue
+  { bg: '#e0e7ff', text: '#6366f1' }, // Indigo
+  { bg: '#fae8ff', text: '#d946ef' }, // Fuchsia
+  { bg: '#fce7f3', text: '#ec4899' }, // Pink
+];
+
+const getAvatarColor = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % avatarColors.length;
+  return avatarColors[index];
+};
+
 export default function TestimonialsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { user, isAdmin, isInstructor, loading } = useAuth();
@@ -139,13 +160,22 @@ export default function TestimonialsPage({ params }: { params: Promise<{ id: str
               <div key={item.id} className={styles.chartCard} style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'flex-start' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                      {item.user?.name?.substring(0, 1).toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{item.user?.name || 'Anonim'}</h3>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.user?.email}</p>
-                    </div>
+                    {(() => {
+                      const displayName = item.user?.fullName || item.user?.name || 'Anonim';
+                      const initial = displayName.substring(0, 1).toUpperCase();
+                      const colors = getAvatarColor(displayName);
+                      return (
+                        <>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.text, fontWeight: 'bold', fontSize: '1.2rem' }}>
+                            {initial}
+                          </div>
+                          <div>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{displayName}</h3>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.user?.email}</p>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1.25rem', color: '#f59e0b', fontWeight: 'bold' }}>
