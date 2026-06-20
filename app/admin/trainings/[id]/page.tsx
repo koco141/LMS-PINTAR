@@ -1028,6 +1028,8 @@ function QuizEditor({
   const [importText, setImportText] = useState('');
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [hasSelfAssessment, setHasSelfAssessment] = useState(quiz?.hasSelfAssessment || false);
+  const [selfAssessmentQuestions, setSelfAssessmentQuestions] = useState<string[]>(quiz?.selfAssessmentQuestions || []);
 
   const downloadExcelTemplate = () => {
     const headers = [
@@ -1198,12 +1200,17 @@ function QuizEditor({
   };
 
   const handleSave = async () => {
-    if (questions.length === 0) { alert('Tambahkan minimal 1 pertanyaan.'); return; }
+    if (questions.length === 0 && (!hasSelfAssessment || selfAssessmentQuestions.length === 0)) { 
+      alert('Tambahkan minimal 1 pertanyaan atau pernyataan self-assessment.'); 
+      return; 
+    }
     setSaving(true);
     const finalQuizId = await saveQuiz(trainingId, type, { 
       type, 
       title, 
       questions, 
+      hasSelfAssessment,
+      selfAssessmentQuestions: hasSelfAssessment ? selfAssessmentQuestions.filter(q => q.trim() !== '') : [],
       duration: duration === '' ? 0 : duration,
       maxAttempts: maxAttempts === '' ? 1 : maxAttempts
     }, type === 'pre-test' ? syncToPostTest : false);
@@ -1332,7 +1339,7 @@ function QuizEditor({
       {previewMode ? (
          <div style={{ marginTop: '20px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
             <QuizPlayer 
-              quiz={{ type, title, duration: duration === '' ? 0 : duration, maxAttempts: maxAttempts === '' ? 1 : maxAttempts, questions } as Quiz}
+              quiz={{ type, title, duration: duration === '' ? 0 : duration, maxAttempts: maxAttempts === '' ? 1 : maxAttempts, questions, hasSelfAssessment, selfAssessmentQuestions } as Quiz}
               onSubmit={(score) => alert(`[PREVIEW] Kuis disubmit dengan nilai ${score}!`)}
               previousScore={null}
             />
@@ -1369,15 +1376,44 @@ function QuizEditor({
       </div>
 
       {type === 'pre-test' && (
-        <div className={styles.toggleRow} style={{ maxWidth: '600px', padding: '12px 16px', margin: '8px 0 20px' }}>
-          <div>
-            <p className={styles.toggleLabel} style={{ fontSize: '0.85rem' }}>Duplikasikan soal ke Post-Test otomatis</p>
-            <p className={styles.toggleHint} style={{ fontSize: '0.75rem' }}>Menyalin kuis Pre-Test ini langsung menjadi Post-Test saat disimpan</p>
-          </div>
-          <label className="toggle">
-            <input type="checkbox" checked={syncToPostTest} onChange={(e) => setSyncToPostTest(e.target.checked)} />
-            <span className="toggle-slider" />
-          </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '0.9rem' }}>
+          <input type="checkbox" checked={syncToPostTest} onChange={(e) => setSyncToPostTest(e.target.checked)} />
+          Otomatis duplikasi soal ini ke Post-Test (Akan menimpa Post-Test yang ada)
+        </label>
+      )}
+
+      {/* Self Assessment UI */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+        <input 
+          type="checkbox" 
+          checked={hasSelfAssessment} 
+          onChange={(e) => setHasSelfAssessment(e.target.checked)} 
+          style={{ width: '18px', height: '18px' }} 
+        />
+        <label style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text-primary)' }}>Aktifkan Penilaian Mandiri (Self-Assessment) Sebelum Kuis</label>
+      </div>
+
+      {hasSelfAssessment && (
+        <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+          <h4 style={{ marginBottom: '8px' }}>Pernyataan Self-Assessment</h4>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Peserta akan menilai pernyataan berikut dengan skala 1 (Sangat Rendah) sampai 5 (Sangat Tinggi).</p>
+          
+          {selfAssessmentQuestions.map((q, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <input 
+                className="form-input" 
+                value={q} 
+                onChange={(e) => {
+                  const newQ = [...selfAssessmentQuestions];
+                  newQ[idx] = e.target.value;
+                  setSelfAssessmentQuestions(newQ);
+                }} 
+                placeholder={`Pernyataan ${idx + 1}`}
+              />
+              <button className="btn btn-danger btn-sm" onClick={() => setSelfAssessmentQuestions(selfAssessmentQuestions.filter((_, i) => i !== idx))}><Trash2 size={16} /></button>
+            </div>
+          ))}
+          <button className="btn btn-secondary btn-sm" onClick={() => setSelfAssessmentQuestions([...selfAssessmentQuestions, ''])}>＋ Tambah Pernyataan</button>
         </div>
       )}
 

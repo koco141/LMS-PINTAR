@@ -14,8 +14,10 @@ import {
   Filler,
   Tooltip,
   Legend,
+  LinearScale,
+  ScatterController
 } from 'chart.js';
-import { Radar } from 'react-chartjs-2';
+import { Radar, Scatter } from 'react-chartjs-2';
 import styles from './page.module.css';
 
 ChartJS.register(
@@ -24,7 +26,9 @@ ChartJS.register(
   LineElement,
   Filler,
   Tooltip,
-  Legend
+  Legend,
+  LinearScale,
+  ScatterController
 );
 
 const CATEGORIES = ['Pemahaman', 'Penerapan', 'Analisis', 'Evaluasi', 'Inovasi/Kreasi'];
@@ -287,6 +291,82 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
     maintainAspectRatio: false,
   };
 
+  // Scatter Plot Data Logic
+  const scatterDataPointsPre: any[] = [];
+  const scatterDataPointsPost: any[] = [];
+
+  enrollments.forEach(enr => {
+    if (enr.preTestScore !== null && enr.preTestSelfAssessment && enr.preTestSelfAssessment.length > 0) {
+      const avgSA = enr.preTestSelfAssessment.reduce((a,b)=>a+b, 0) / enr.preTestSelfAssessment.length;
+      scatterDataPointsPre.push({ x: avgSA, y: enr.preTestScore });
+    }
+    if (enr.postTestScore !== null && enr.postTestSelfAssessment && enr.postTestSelfAssessment.length > 0) {
+      const avgSA = enr.postTestSelfAssessment.reduce((a,b)=>a+b, 0) / enr.postTestSelfAssessment.length;
+      scatterDataPointsPost.push({ x: avgSA, y: enr.postTestScore });
+    }
+  });
+
+  const scatterData = {
+    datasets: [] as any[]
+  };
+
+  if (scatterDataPointsPre.length > 0) {
+    scatterData.datasets.push({
+      label: 'Pre-Test',
+      data: scatterDataPointsPre,
+      backgroundColor: 'rgba(239, 68, 68, 0.7)',
+      borderColor: 'rgba(239, 68, 68, 1)',
+      pointRadius: 6,
+    });
+  }
+  if (scatterDataPointsPost.length > 0) {
+    scatterData.datasets.push({
+      label: 'Post-Test',
+      data: scatterDataPointsPost,
+      backgroundColor: 'rgba(16, 185, 129, 0.7)',
+      borderColor: 'rgba(16, 185, 129, 1)',
+      pointRadius: 6,
+    });
+  }
+
+  const scatterOptions = {
+    scales: {
+      x: {
+        type: 'linear' as const,
+        position: 'bottom' as const,
+        title: { display: true, text: 'Self-Assessment (Persepsi)', color: '#4b5563', font: { family: "'Inter', sans-serif", weight: 'bold' as const } },
+        min: 1,
+        max: 5,
+        ticks: { stepSize: 1 },
+        grid: { color: (ctx: any) => ctx.tick.value === 3 ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.05)' }
+      },
+      y: {
+        title: { display: true, text: 'Nilai Kuis (Aktual)', color: '#4b5563', font: { family: "'Inter', sans-serif", weight: 'bold' as const } },
+        min: 0,
+        max: 100,
+        grid: { color: (ctx: any) => ctx.tick.value === 70 ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.05)' }
+      }
+    },
+    plugins: {
+      legend: { position: 'bottom' as const },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => {
+            const x = ctx.parsed.x;
+            const y = ctx.parsed.y;
+            let quad = '';
+            if (x < 3 && y < 70) quad = 'Sadar Inkompeten';
+            if (x >= 3 && y < 70) quad = 'Overconfident';
+            if (x < 3 && y >= 70) quad = 'Imposter Syndrome';
+            if (x >= 3 && y >= 70) quad = 'Sadar Kompeten';
+            return ` Persepsi: ${x.toFixed(1)}, Aktual: ${y} (${quad})`;
+          }
+        }
+      }
+    },
+    maintainAspectRatio: false,
+  };
+
   // Question Analysis Logic
   const getQuestionStats = (quiz: Quiz | null, testType: 'preTestAnswers' | 'postTestAnswers') => {
     const validEnrs = testType === 'preTestAnswers' ? preTestEnrollments : postTestEnrollments;
@@ -440,9 +520,27 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             </div>
           </div>
 
-          {/* Additional Info / Level Summary */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
+          {/* Scatter Chart (Self Assessment Quadrant) */}
+          <div className={styles.chartCard}>
+            <h3>Kuadran Kompetensi (Dunning-Kruger)</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
+              Perbandingan persepsi diri (Self-Assessment) dengan kompetensi aktual (Nilai Kuis).
+            </p>
+            {scatterData.datasets.length > 0 ? (
+              <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: '350px' }}>
+                <Scatter data={scatterData} options={scatterOptions} />
+              </div>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                Belum ada data Self-Assessment
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Additional Info / Level Summary */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+          <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
               <h3 style={{ marginBottom: '16px' }}>Demografi Peserta</h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
                 <div style={{ textAlign: 'center', flex: 1 }}>
@@ -532,7 +630,6 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                 </div>
               </div>
             </div>
-          </div>
         </div>
 
         {/* Evaluation Summary */}

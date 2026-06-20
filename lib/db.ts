@@ -71,6 +71,8 @@ export interface Quiz {
   type: 'pre-test' | 'post-test';
   title: string;
   questions: QuizQuestion[];
+  hasSelfAssessment?: boolean;
+  selfAssessmentQuestions?: string[];
   duration?: number; // durasi kuis dalam menit
   maxAttempts?: number; // batas maksimal percobaan (0 = tanpa batas)
   createdAt: Timestamp;
@@ -86,6 +88,8 @@ export interface Enrollment {
   postTestScore: number | null;
   preTestAnswers: number[] | null;
   postTestAnswers: number[] | null;
+  preTestSelfAssessment?: number[] | null;
+  postTestSelfAssessment?: number[] | null;
   preTestCompletedAt: Timestamp | null;
   postTestCompletedAt: Timestamp | null;
   totalTimeSpent: number; // minutes
@@ -265,6 +269,8 @@ export async function saveQuiz(
       type: 'post-test' as const,
       title: 'Post-Test',
       questions: data.questions,
+      hasSelfAssessment: data.hasSelfAssessment ?? false,
+      selfAssessmentQuestions: data.selfAssessmentQuestions ?? [],
       duration: data.duration ?? 0,
       maxAttempts: data.maxAttempts ?? 1,
     };
@@ -338,7 +344,8 @@ export async function submitQuizResult(
   trainingId: string,
   type: 'pre-test' | 'post-test',
   score: number,
-  answers: number[]
+  answers: number[],
+  selfAssessment?: number[]
 ) {
   const id = `${userId}_${trainingId}`;
   const field = type === 'pre-test' ? 'preTest' : 'postTest';
@@ -347,6 +354,10 @@ export async function submitQuizResult(
     [`${field}Answers`]: answers,
     [`${field}CompletedAt`]: serverTimestamp(),
   };
+
+  if (selfAssessment) {
+    updates[`${field}SelfAssessment`] = selfAssessment;
+  }
 
   if (type === 'post-test') {
     const enrollment = await getEnrollment(userId, trainingId);
@@ -376,9 +387,11 @@ export async function submitQuizResult(
       // Keep the answers and completedAt of the highest score
       if (score === maxScore) {
         updates.postTestAnswers = answers;
+        if (selfAssessment) updates.postTestSelfAssessment = selfAssessment;
         // completedAt is already set to serverTimestamp() in updates
       } else {
         updates.postTestAnswers = enrollment.postTestAnswers;
+        updates.postTestSelfAssessment = enrollment.postTestSelfAssessment;
         updates.postTestCompletedAt = enrollment.postTestCompletedAt;
       }
     }

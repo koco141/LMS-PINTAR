@@ -132,9 +132,9 @@ export default function TrainingPage() {
     }
   };
 
-  const handleQuizSubmit = async (type: 'pre-test' | 'post-test', score: number, answers: number[]) => {
+  const handleQuizSubmit = async (type: 'pre-test' | 'post-test', score: number, answers: number[], selfAssessment?: number[]) => {
     if (!user || !training) return;
-    await submitQuizResult(user.uid, training.id, type, score, answers);
+    await submitQuizResult(user.uid, training.id, type, score, answers, selfAssessment);
     const updated = await getEnrollment(user.uid, training.id);
     setEnrollment(updated);
     setQuizStarted(false);
@@ -597,7 +597,7 @@ export default function TrainingPage() {
                 /* Active Pre Test */
                 <QuizPlayer
                   quiz={preTest}
-                  onSubmit={(score, answers) => handleQuizSubmit('pre-test', score, answers)}
+                  onSubmit={(score, answers, selfAssessment) => handleQuizSubmit('pre-test', score, answers, selfAssessment)}
                   previousScore={null}
                 />
               )
@@ -689,7 +689,7 @@ export default function TrainingPage() {
                 /* Active Post Test */
                 <QuizPlayer
                   quiz={postTest}
-                  onSubmit={(score, answers) => handleQuizSubmit('post-test', score, answers)}
+                  onSubmit={(score, answers, selfAssessment) => handleQuizSubmit('post-test', score, answers, selfAssessment)}
                   previousScore={enrollment?.preTestScore ?? null}
                 />
               )

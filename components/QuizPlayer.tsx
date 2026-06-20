@@ -7,7 +7,7 @@ import { ClipboardList, FileText, CheckCircle2, Timer, TrendingUp, BookOpen, Thu
 
 interface Props {
   quiz: Quiz;
-  onSubmit: (score: number, answers: number[]) => void;
+  onSubmit: (score: number, answers: number[], selfAssessment?: number[]) => void;
   previousScore: number | null;
 }
 
@@ -29,6 +29,11 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
   const [score, setScore] = useState(0);
   const [currentQ, setCurrentQ] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  
+  const [phase, setPhase] = useState<'self-assessment' | 'quiz'>(
+    quiz?.hasSelfAssessment && quiz?.selfAssessmentQuestions?.length ? 'self-assessment' : 'quiz'
+  );
+  const [selfAssessmentAnswers, setSelfAssessmentAnswers] = useState<(number | null)[]>([]);
 
   const answersRef = useRef(answers);
   useEffect(() => {
@@ -66,6 +71,8 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     setAnswers(new Array(prepared.length).fill(null));
     setCurrentQ(0);
     setSubmitted(false);
+    setPhase(quiz.hasSelfAssessment && quiz.selfAssessmentQuestions?.length ? 'self-assessment' : 'quiz');
+    setSelfAssessmentAnswers(new Array(quiz.selfAssessmentQuestions?.length || 0).fill(null));
 
     // 3. Setup Timer
     if (quiz.duration && quiz.duration > 0) {
@@ -108,7 +115,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
     setScore(percentage);
     setSubmitted(true);
-    onSubmit(percentage, mappedAnswers);
+    onSubmit(percentage, mappedAnswers, quiz.hasSelfAssessment ? selfAssessmentAnswers.map(a => a || 3) : undefined);
   };
 
   const handleAnswer = (qIdx: number, optOriginalIdx: number) => {
@@ -133,7 +140,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
     setScore(percentage);
     setSubmitted(true);
-    onSubmit(percentage, mappedAnswers);
+    onSubmit(percentage, mappedAnswers, quiz.hasSelfAssessment ? (selfAssessmentAnswers as number[]) : undefined);
   };
 
   const formatTime = (seconds: number) => {
@@ -163,8 +170,91 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
   return (
     <div className={styles.container} style={{ minHeight: 'auto', padding: '24px 0' }}>
       {!submitted ? (
-        <>
-          {/* Quiz Header */}
+        phase === 'self-assessment' ? (
+          <>
+            <div className={styles.header}>
+              <div className={styles.headerInfo}>
+                <div className={styles.quizType}>
+                  <ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                  Penilaian Mandiri (Self-Assessment)
+                </div>
+                <h1 className={styles.title}>Sebelum Memulai...</h1>
+                <p className={styles.subtitle}>
+                  Nilai tingkat kemampuan Anda saat ini sesuai kondisi yang sebenarnya.
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                {timeLeft !== null && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '6px 14px',
+                    background: timeLeft < 30 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(79, 70, 229, 0.05)',
+                    border: `1px solid ${timeLeft < 30 ? '#ef4444' : 'var(--border)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    color: timeLeft < 30 ? '#ef4444' : 'var(--text-primary)',
+                    fontWeight: '700',
+                    fontFamily: 'Sora, monospace',
+                    fontSize: '0.9rem',
+                  }}>
+                    <Timer size={15} style={{ opacity: 0.8 }} />
+                    {formatTime(timeLeft)}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.questionArea} style={{ padding: '24px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '12px', borderBottom: '2px solid var(--border)' }}>Pernyataan</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid var(--border)', width: '80px', fontSize: '0.85rem' }}>Sangat Rendah (1)</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid var(--border)', width: '80px', fontSize: '0.85rem' }}>Rendah (2)</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid var(--border)', width: '80px', fontSize: '0.85rem' }}>Sedang (3)</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid var(--border)', width: '80px', fontSize: '0.85rem' }}>Tinggi (4)</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid var(--border)', width: '80px', fontSize: '0.85rem' }}>Sangat Tinggi (5)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quiz.selfAssessmentQuestions?.map((q, qIdx) => (
+                    <tr key={qIdx} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ textAlign: 'left', padding: '16px 12px', fontSize: '0.95rem' }}>{q}</td>
+                      {[1, 2, 3, 4, 5].map(val => (
+                        <td key={val} style={{ padding: '16px 12px' }}>
+                          <input 
+                            type="radio" 
+                            name={`sa-${qIdx}`} 
+                            checked={selfAssessmentAnswers[qIdx] === val}
+                            onChange={() => {
+                              const newAns = [...selfAssessmentAnswers];
+                              newAns[qIdx] = val;
+                              setSelfAssessmentAnswers(newAns);
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className={styles.nav} style={{ marginTop: '32px', justifyContent: 'flex-end' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setPhase('quiz')}
+                  disabled={selfAssessmentAnswers.includes(null)}
+                >
+                  Lanjut ke Soal Kuis →
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Quiz Header */}
           <div className={styles.header}>
             <div className={styles.headerInfo}>
               <div className={styles.quizType}>
@@ -278,6 +368,7 @@ export default function QuizPlayer({ quiz, onSubmit, previousScore }: Props) {
             </div>
           </div>
         </>
+        )
       ) : (
         /* Result Screen */
         <div className={styles.resultArea}>
