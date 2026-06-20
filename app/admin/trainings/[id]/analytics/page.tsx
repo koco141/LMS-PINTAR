@@ -418,6 +418,102 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
   };
 
   const evalStats = calculateEvaluationStats();
+  const hasSelfAssessment = preTest?.hasSelfAssessment || postTest?.hasSelfAssessment;
+
+  const additionalInfoCards = (
+    <>
+      <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px', flex: 1 }}>
+        <h3 style={{ marginBottom: '16px' }}>Demografi Peserta</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{enrollments.length}</div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Peserta Terdaftar</div>
+          </div>
+          <div style={{ width: '1px', background: 'var(--border)', margin: '0 16px' }}></div>
+          <div style={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6', lineHeight: '1.2' }}>{maleCount}</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Laki-laki</div>
+            </div>
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899', lineHeight: '1.2' }}>{femaleCount}</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Perempuan</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px', flex: 1 }}>
+        <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem', textAlign: 'justify' }}>
+          Berdasarkan evaluasi akumulasi nilai akhir, pelatihan yang dilaksanakan secara <strong>{training?.method === 'luring' ? 'Luring' : 'Daring'}</strong>
+          {training?.method === 'luring' && training?.province && (
+            <> di <strong>{toTitleCase(training.city || '')}</strong>, Provinsi <strong>{toTitleCase(training.province)}</strong></>
+          )}
+          {' '}ini berhasil mencapai tingkat kelulusan peserta sebesar <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong>. Dengan hasil tersebut, tingkat kompetensi peserta saat ini berada pada:
+        </p>
+        
+        <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
+          <h4 style={{ color: level >= targetLevel ? 'var(--primary)' : '#ef4444', marginBottom: '6px', fontSize: '1.1rem' }}>
+            Level {level} - {levelLabel}
+          </h4>
+          <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '12px' }}>
+            {levelDesc}
+          </p>
+          <div style={{
+            display: 'inline-block',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            background: level >= targetLevel ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            color: level >= targetLevel ? 'var(--primary)' : '#ef4444'
+          }}>
+            {level >= targetLevel ? `Telah memenuhi target pelatihan (Target: Level ${targetLevel})` : `Belum memenuhi target pelatihan (Target: Level ${targetLevel})`}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Peningkatan Tertinggi</span>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+              {(() => {
+                let maxDiff = -999;
+                let bestCat = '-';
+                CATEGORIES.forEach((cat, i) => {
+                  const diff = postTestCatScores[i] - preTestCatScores[i];
+                  if (diff > maxDiff) { maxDiff = diff; bestCat = cat; }
+                });
+                return maxDiff > 0 ? `${bestCat} (+${maxDiff.toFixed(1)})` : '-';
+              })()}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Evaluasi Dibutuhkan</span>
+            <span style={{ fontWeight: 600, color: 'var(--status-upcoming)', fontSize: '0.9rem' }}>
+              {(() => {
+                let minDiff = 999;
+                let worstCat = '-';
+                CATEGORIES.forEach((cat, i) => {
+                  const diff = postTestCatScores[i] - preTestCatScores[i];
+                  if (diff < minDiff) { minDiff = diff; worstCat = cat; }
+                });
+                return worstCat !== '-' ? `${worstCat}` : '-';
+              })()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className={styles.page}>
@@ -520,8 +616,8 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
             </div>
           </div>
 
-          {/* Scatter Chart (Self Assessment Quadrant) */}
-          {(preTest?.hasSelfAssessment || postTest?.hasSelfAssessment) && (
+          {/* Scatter Chart (Self Assessment Quadrant) or Demografi/Kesimpulan */}
+          {hasSelfAssessment ? (
             <div className={styles.chartCard}>
               <h3>Kuadran Kompetensi (Dunning-Kruger)</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
@@ -537,102 +633,19 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
                 </div>
               )}
             </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
+              {additionalInfoCards}
+            </div>
           )}
         </div>
 
         {/* Additional Info / Level Summary */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-          <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
-              <h3 style={{ marginBottom: '16px' }}>Demografi Peserta</h3>
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{enrollments.length}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Peserta Terdaftar</div>
-                </div>
-                <div style={{ width: '1px', background: 'var(--border)', margin: '0 16px' }}></div>
-                <div style={{ display: 'flex', flex: 1, justifyContent: 'space-around' }}>
-                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6', lineHeight: '1.2' }}>{maleCount}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Laki-laki</div>
-                  </div>
-                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899', lineHeight: '1.2' }}>{femaleCount}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Perempuan</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.chartCard} style={{ alignItems: 'flex-start', padding: '24px' }}>
-              <h3 style={{ marginBottom: '12px' }}>Kesimpulan Peningkatan</h3>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', fontSize: '0.9rem', textAlign: 'justify' }}>
-                Berdasarkan evaluasi akumulasi nilai akhir, pelatihan yang dilaksanakan secara <strong>{training?.method === 'luring' ? 'Luring' : 'Daring'}</strong>
-                {training?.method === 'luring' && training?.province && (
-                  <> di <strong>{toTitleCase(training.city || '')}</strong>, Provinsi <strong>{toTitleCase(training.province)}</strong></>
-                )}
-                {' '}ini berhasil mencapai tingkat kelulusan peserta sebesar <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong>. Dengan hasil tersebut, tingkat kompetensi peserta saat ini berada pada:
-              </p>
-              
-              <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
-                <h4 style={{ color: level >= targetLevel ? 'var(--primary)' : '#ef4444', marginBottom: '6px', fontSize: '1.1rem' }}>
-                  Level {level} - {levelLabel}
-                </h4>
-                <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '12px' }}>
-                  {levelDesc}
-                </p>
-                <div style={{
-                  display: 'inline-block',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: level >= targetLevel ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                  color: level >= targetLevel ? 'var(--primary)' : '#ef4444'
-                }}>
-                  {level >= targetLevel ? `Telah memenuhi target pelatihan (Target: Level ${targetLevel})` : `Belum memenuhi target pelatihan (Target: Level ${targetLevel})`}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Peningkatan Tertinggi</span>
-                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                    {(() => {
-                      let maxDiff = -999;
-                      let bestCat = '-';
-                      CATEGORIES.forEach((cat, i) => {
-                        const diff = postTestCatScores[i] - preTestCatScores[i];
-                        if (diff > maxDiff) { maxDiff = diff; bestCat = cat; }
-                      });
-                      return maxDiff > 0 ? `${bestCat} (+${maxDiff.toFixed(1)})` : '-';
-                    })()}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Evaluasi Dibutuhkan</span>
-                  <span style={{ fontWeight: 600, color: 'var(--status-upcoming)', fontSize: '0.9rem' }}>
-                    {(() => {
-                      let minDiff = 999;
-                      let worstCat = '-';
-                      CATEGORIES.forEach((cat, i) => {
-                        const diff = postTestCatScores[i] - preTestCatScores[i];
-                        if (diff < minDiff) { minDiff = diff; worstCat = cat; }
-                      });
-                      return worstCat !== '-' ? `${worstCat}` : '-';
-                    })()}
-                  </span>
-                </div>
-              </div>
-            </div>
-        </div>
+        {hasSelfAssessment && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+            {additionalInfoCards}
+          </div>
+        )}
 
         {/* Evaluation Summary */}
         <div className={styles.tableCard} style={{ marginTop: '24px' }}>
