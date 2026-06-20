@@ -138,7 +138,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className={styles.enrollmentList}>
-            {data.map(({ enrollment, training }) => {
+            {data.map(({ enrollment, training, isPassed }) => {
               const totalMods = enrollment.completedModules.length;
               const isFinished = enrollment.postTestScore !== null;
               return (
