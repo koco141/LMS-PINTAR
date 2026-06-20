@@ -3,13 +3,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getUserEnrollments, getTrainingById, Enrollment, Training } from '@/lib/db';
+import { getUserEnrollments, getTrainingById, getModules, Enrollment, Training } from '@/lib/db';
 import styles from './page.module.css';
 import { BarChart2, BookOpen, Home, Circle, Play } from 'lucide-react';
 
 interface EnrollmentWithTraining {
   enrollment: Enrollment;
   training: Training;
+  isPassed: boolean;
 }
 
 export default function DashboardPage() {
@@ -31,7 +32,29 @@ export default function DashboardPage() {
     const withTraining = await Promise.all(
       enrollments.map(async (e) => {
         const training = await getTrainingById(e.trainingId);
-        return training ? { enrollment: e, training } : null;
+        if (!training) return null;
+        const modules = await getModules(e.trainingId);
+        
+        const tModules = modules.filter(m => m.type === 'tugas');
+        let sumTask = 0;
+        const assignmentScores = e.assignmentScores || {};
+        tModules.forEach(m => { sumTask += (Number(assignmentScores[m.id]) || 0); });
+        const avgTaskScore = tModules.length > 0 ? sumTask / tModules.length : 0;
+        
+        const level = training.targetLevel || 5;
+        let finalScore = e.postTestScore || 0;
+        
+        if (tModules.length > 0) {
+          if (level >= 3) {
+            finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
+          } else {
+            finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
+          }
+        }
+        
+        const isPassed = e.postTestScore !== null ? (level >= 3 ? finalScore >= 75 : finalScore >= 70) : false;
+
+        return { enrollment: e, training, isPassed };
       })
     );
     setData(withTraining.filter(Boolean) as EnrollmentWithTraining[]);
@@ -52,7 +75,7 @@ export default function DashboardPage() {
   ).length;
 
   const totalPassed = data.filter(
-    (d) => d.enrollment.postTestScore !== null
+    (d) => d.isPassed
   ).length;
 
   return (
@@ -122,7 +145,22 @@ export default function DashboardPage() {
                 <div key={enrollment.id} className={styles.enrollmentCard}>
                   <div className={styles.enrollmentHeader}>
                     <div>
-                      <h4 className={styles.enrollmentTitle}>{training.title}</h4>
+                      <h4 className={styles.enrollmentTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        {training.title}
+                        {isFinished && (
+                          <span style={{
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            padding: '3px 8px',
+                            borderRadius: '12px',
+                            background: isPassed ? '#dcfce7' : '#fee2e2',
+                            color: isPassed ? '#16a34a' : '#dc2626',
+                            border: `1px solid ${isPassed ? '#bbf7d0' : '#fecaca'}`
+                          }}>
+                            {isPassed ? 'LULUS' : 'BELUM LULUS'}
+                          </span>
+                        )}
+                      </h4>
                       <span className={`badge badge-${training.status}`} style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                         <Circle size={7} fill="currentColor" />
                         {training.status === 'ongoing' ? 'Berlangsung' : training.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
