@@ -335,26 +335,32 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
     });
   }
 
-  const watermarkPlugin = {
-    id: 'watermark',
+  const quadrantBackgroundPlugin = {
+    id: 'quadrantBackground',
     beforeDraw: (chart: any) => {
       const { ctx, chartArea, scales: { x, y } } = chart;
       if (!chartArea) return;
       ctx.save();
-      ctx.font = 'bold 18px "Inter", sans-serif';
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
 
-      // Kanan Atas
-      ctx.fillText('KOMPETEN & PERCAYA DIRI', x.getPixelForValue(4), y.getPixelForValue(85));
-      // Kanan Bawah
-      ctx.fillText('ILUSI KOMPETENSI', x.getPixelForValue(4), y.getPixelForValue(35));
-      // Kiri Atas
-      ctx.fillText('IMPOSTER SYNDROME', x.getPixelForValue(2), y.getPixelForValue(85));
-      // Kiri Bawah
-      ctx.fillText('FASE PEMULA', x.getPixelForValue(2), y.getPixelForValue(35));
-      
+      const xCenter = x.getPixelForValue(3);
+      const yCenter = y.getPixelForValue(70);
+
+      // Kiri Atas (Imposter)
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+      ctx.fillRect(chartArea.left, chartArea.top, xCenter - chartArea.left, yCenter - chartArea.top);
+
+      // Kanan Atas (Kompeten)
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+      ctx.fillRect(xCenter, chartArea.top, chartArea.right - xCenter, yCenter - chartArea.top);
+
+      // Kiri Bawah (Pemula)
+      ctx.fillStyle = 'rgba(156, 163, 175, 0.08)';
+      ctx.fillRect(chartArea.left, yCenter, xCenter - chartArea.left, chartArea.bottom - yCenter);
+
+      // Kanan Bawah (Ilusi)
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+      ctx.fillRect(xCenter, yCenter, chartArea.right - xCenter, chartArea.bottom - yCenter);
+
       ctx.restore();
     }
   };
@@ -664,15 +670,27 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
               {scatterData.datasets.length > 0 ? (
                 <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: 'auto', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ height: '350px', width: '100%' }}>
-                    <Scatter data={scatterData} options={scatterOptions} plugins={[watermarkPlugin]} />
+                    <Scatter data={scatterData} options={scatterOptions} plugins={[quadrantBackgroundPlugin]} />
                   </div>
                   <div style={{ marginTop: '32px', textAlign: 'left', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
                     <h4 style={{ marginBottom: '12px', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Keterangan Kuadran:</h4>
-                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <li><strong>Kanan Atas (Kompeten & Percaya Diri):</strong> Peserta menguasai materi dan menyadarinya (Aktual &ge; 70, Persepsi &ge; 3).</li>
-                      <li><strong>Kanan Bawah (Ilusi Kompetensi / Overconfident):</strong> Peserta merasa ahli, namun nilai aktualnya di bawah standar efek *Dunning-Kruger* (Aktual &lt; 70, Persepsi &ge; 3).</li>
-                      <li><strong>Kiri Atas (Imposter Syndrome):</strong> Peserta memiliki kemampuan baik, namun merasa dirinya kurang (Aktual &ge; 70, Persepsi &lt; 3).</li>
-                      <li><strong>Kiri Bawah (Fase Pemula):</strong> Peserta belum menguasai materi dan menyadari perlunya belajar (Aktual &lt; 70, Persepsi &lt; 3).</li>
+                    <ul style={{ margin: 0, paddingLeft: '0', listStyle: 'none', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.5)', flexShrink: 0, marginTop: '2px' }} />
+                        <div><strong>Kanan Atas (Kompeten & Percaya Diri):</strong> Peserta menguasai materi dan menyadarinya (Aktual &ge; 70, Persepsi &ge; 3).</div>
+                      </li>
+                      <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(245, 158, 11, 0.2)', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.5)', flexShrink: 0, marginTop: '2px' }} />
+                        <div><strong>Kanan Bawah (Ilusi Kompetensi / Overconfident):</strong> Peserta merasa ahli, namun nilai aktualnya di bawah standar efek *Dunning-Kruger* (Aktual &lt; 70, Persepsi &ge; 3).</div>
+                      </li>
+                      <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(59, 130, 246, 0.2)', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.5)', flexShrink: 0, marginTop: '2px' }} />
+                        <div><strong>Kiri Atas (Imposter Syndrome):</strong> Peserta memiliki kemampuan baik, namun merasa dirinya kurang (Aktual &ge; 70, Persepsi &lt; 3).</div>
+                      </li>
+                      <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(156, 163, 175, 0.2)', borderRadius: '4px', border: '1px solid rgba(156, 163, 175, 0.5)', flexShrink: 0, marginTop: '2px' }} />
+                        <div><strong>Kiri Bawah (Fase Pemula):</strong> Peserta belum menguasai materi dan menyadari perlunya belajar (Aktual &lt; 70, Persepsi &lt; 3).</div>
+                      </li>
                     </ul>
                   </div>
                 </div>
