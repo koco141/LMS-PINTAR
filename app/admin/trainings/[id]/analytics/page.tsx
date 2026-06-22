@@ -335,6 +335,30 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
     });
   }
 
+  const watermarkPlugin = {
+    id: 'watermark',
+    beforeDraw: (chart: any) => {
+      const { ctx, chartArea, scales: { x, y } } = chart;
+      if (!chartArea) return;
+      ctx.save();
+      ctx.font = 'bold 18px "Inter", sans-serif';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Kanan Atas
+      ctx.fillText('KOMPETEN & PERCAYA DIRI', x.getPixelForValue(4), y.getPixelForValue(85));
+      // Kanan Bawah
+      ctx.fillText('ILUSI KOMPETENSI', x.getPixelForValue(4), y.getPixelForValue(35));
+      // Kiri Atas
+      ctx.fillText('IMPOSTER SYNDROME', x.getPixelForValue(2), y.getPixelForValue(85));
+      // Kiri Bawah
+      ctx.fillText('FASE PEMULA', x.getPixelForValue(2), y.getPixelForValue(35));
+      
+      ctx.restore();
+    }
+  };
+
   const scatterOptions = {
     scales: {
       x: {
@@ -640,7 +664,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
               {scatterData.datasets.length > 0 ? (
                 <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: 'auto', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ height: '350px', width: '100%' }}>
-                    <Scatter data={scatterData} options={scatterOptions} />
+                    <Scatter data={scatterData} options={scatterOptions} plugins={[watermarkPlugin]} />
                   </div>
                   <div style={{ marginTop: '32px', textAlign: 'left', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
                     <h4 style={{ marginBottom: '12px', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Keterangan Kuadran:</h4>
