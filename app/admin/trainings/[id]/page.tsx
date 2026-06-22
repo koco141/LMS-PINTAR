@@ -45,7 +45,7 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string, hasExternalButton?: boolean, externalButtonLabel?: string, externalButtonUrl?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string, hasExternalButton?: boolean, externalButtonLabel?: string, externalButtonUrl?: string, externalButtonIcon?: 'paper'|'submit'|'share'|'hyperlink'}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Preview Mode
   const [previewModeModules, setPreviewModeModules] = useState(false);
@@ -217,10 +217,10 @@ export default function TrainingAdminPage() {
   const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '', hasExternalButton: mod.hasExternalButton || false, externalButtonLabel: mod.externalButtonLabel || '', externalButtonUrl: mod.externalButtonUrl || '' });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '', hasExternalButton: mod.hasExternalButton || false, externalButtonLabel: mod.externalButtonLabel || '', externalButtonUrl: mod.externalButtonUrl || '', externalButtonIcon: mod.externalButtonIcon || 'hyperlink' });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '', hasExternalButton: false, externalButtonLabel: '', externalButtonUrl: '' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '', hasExternalButton: false, externalButtonLabel: '', externalButtonUrl: '', externalButtonIcon: 'hyperlink' });
     }
     setShowModuleForm(true);
   };
@@ -252,9 +252,11 @@ export default function TrainingAdminPage() {
       if (moduleForm.hasExternalButton) {
         dataToSave.externalButtonLabel = moduleForm.externalButtonLabel || '';
         dataToSave.externalButtonUrl = moduleForm.externalButtonUrl || '';
+        dataToSave.externalButtonIcon = moduleForm.externalButtonIcon || 'hyperlink';
       } else {
         dataToSave.externalButtonLabel = '';
         dataToSave.externalButtonUrl = '';
+        dataToSave.externalButtonIcon = 'hyperlink';
       }
     }
 
@@ -874,6 +876,7 @@ export default function TrainingAdminPage() {
                             Tambahkan Tombol Eksternal (Misal: Link Soal)
                           </label>
                           {moduleForm.hasExternalButton && (
+                            <>
                             <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
                               <div className="form-group" style={{ flex: 1, margin: 0 }}>
                                 <label className="form-label" style={{ fontSize: '0.8rem' }}>Nama Tombol</label>
@@ -884,6 +887,20 @@ export default function TrainingAdminPage() {
                                 <input className="form-input" type="url" placeholder="https://..." value={moduleForm.externalButtonUrl || ''} onChange={(e) => setModuleForm({ ...moduleForm, externalButtonUrl: e.target.value })} />
                               </div>
                             </div>
+                            <div className="form-group" style={{ margin: '12px 0 0 0' }}>
+                              <label className="form-label" style={{ fontSize: '0.8rem' }}>Ikon Tombol</label>
+                              <select 
+                                className="form-input" 
+                                value={moduleForm.externalButtonIcon || 'hyperlink'} 
+                                onChange={(e) => setModuleForm({ ...moduleForm, externalButtonIcon: e.target.value as any })}
+                              >
+                                <option value="hyperlink">Hyperlink (Tautan)</option>
+                                <option value="paper">Paper (Dokumen)</option>
+                                <option value="submit">Submit (Kirim)</option>
+                                <option value="share">Share (Bagikan)</option>
+                              </select>
+                            </div>
+                            </>
                           )}
                         </div>
                         </>

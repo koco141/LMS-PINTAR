@@ -58,6 +58,7 @@ export interface Module {
   hasExternalButton?: boolean;
   externalButtonLabel?: string;
   externalButtonUrl?: string;
+  externalButtonIcon?: 'paper' | 'submit' | 'share' | 'hyperlink';
 }
 
 export interface QuizQuestion {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
-import { FileEdit } from 'lucide-react';
+import { FileEdit, FileText, Send, Share2, ExternalLink } from 'lucide-react';
 import Linkify from './Linkify';
 
 export default function AssignmentViewer({
@@ -74,6 +74,19 @@ export default function AssignmentViewer({
     return true;
   };
 
+  const renderIcon = () => {
+    const iconType = module.externalButtonIcon || 'hyperlink';
+    const props = { size: 16, style: { marginLeft: '6px', verticalAlign: 'middle' } as const };
+    switch (iconType) {
+      case 'paper': return <FileText {...props} />;
+      case 'submit': return <Send {...props} />;
+      case 'share': return <Share2 {...props} />;
+      case 'hyperlink':
+      default:
+        return <ExternalLink {...props} />;
+    }
+  };
+
   return (
     <div className={styles.moduleContainer} style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{ width: '100%', maxWidth: '600px' }}>
@@ -88,16 +101,16 @@ export default function AssignmentViewer({
         <div className={styles.moduleDesc} style={{ marginBottom: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
           <p style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}><Linkify>{module.description || 'Tidak ada deskripsi penugasan.'}</Linkify></p>
           {module.hasExternalButton && module.externalButtonUrl && (
-            <div style={{ marginTop: '16px', textAlign: 'left' }}>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
               <a 
                 href={module.externalButtonUrl} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn btn-primary"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                style={{ display: 'inline-flex', alignItems: 'center', padding: '10px 24px', fontSize: '1rem', borderRadius: '8px' }}
               >
                 {module.externalButtonLabel || 'Buka Link Eksternal'}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                {renderIcon()}
               </a>
             </div>
           )}
