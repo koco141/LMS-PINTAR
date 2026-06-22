@@ -663,7 +663,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
           {/* Scatter Chart (Self Assessment Quadrant) or Demografi/Kesimpulan */}
           {hasSelfAssessment ? (
             <div className={styles.chartCard}>
-              <h3>Kuadran Kompetensi (Dunning-Kruger)</h3>
+              <h3>Kuadran Kompetensi</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', textAlign: 'center' }}>
                 Perbandingan persepsi diri (Self-Assessment) dengan kompetensi aktual (Nilai Kuis).
               </p>
