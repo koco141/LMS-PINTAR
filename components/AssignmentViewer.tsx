@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
 import { FileEdit } from 'lucide-react';
+import Linkify from './Linkify';
 
 export default function AssignmentViewer({
   module,
@@ -85,7 +86,7 @@ export default function AssignmentViewer({
         </div>
         
         <div className={styles.moduleDesc} style={{ marginBottom: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <p style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>{module.description || 'Tidak ada deskripsi penugasan.'}</p>
+          <p style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}><Linkify>{module.description || 'Tidak ada deskripsi penugasan.'}</Linkify></p>
         </div>
 
         <div style={{ padding: '32px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>

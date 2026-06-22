@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import styles from './TrainingCard.module.css';
 import { CalendarDays, Users, BarChart2, PlayCircle, Circle } from 'lucide-react';
+import Linkify from './Linkify';
 
 const COVER_COLORS = [
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -69,7 +70,7 @@ export default function TrainingCard({ training, index = 0, isEnrolled = false }
           </span>
         </div>
 
-        <p className={styles.description}>{training.description}</p>
+        <p className={styles.description}><Linkify>{training.description}</Linkify></p>
 
         <div className={styles.meta}>
           <div className={styles.metaItem}>

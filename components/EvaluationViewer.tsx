@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
 import { Star, CheckCircle2 } from 'lucide-react';
+import Linkify from './Linkify';
 
 function StarRating({ value, onChange, disabled }: { value: number, onChange: (v: number) => void, disabled?: boolean }) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
@@ -112,7 +113,7 @@ export default function EvaluationViewer({
         
         {module.description && (
           <div className={styles.moduleDescription} style={{ marginBottom: '24px', textAlign: 'center' }}>
-            <p>{module.description}</p>
+            <p><Linkify>{module.description}</Linkify></p>
           </div>
         )}
 

@@ -19,6 +19,7 @@ import QuizPlayer from '@/components/QuizPlayer';
 import ModuleViewer from '@/components/ModuleViewer';
 import AssignmentViewer from '@/components/AssignmentViewer';
 import EvaluationViewer from '@/components/EvaluationViewer';
+import Linkify from '@/components/Linkify';
 
 type AdminTab = 'info' | 'modules' | 'pre-test' | 'post-test';
 
@@ -720,7 +721,7 @@ export default function TrainingAdminPage() {
                                   })()}
                                   {mod.title}
                                 </h4>
-                                <p>{mod.description}</p>
+                                <p><Linkify>{mod.description}</Linkify></p>
                                 {(!mod.type || mod.type === 'materi') && (
                                   <code className={styles.embedUrl}>{mod.embedUrl.substring(0, 60)}...</code>
                                 )}

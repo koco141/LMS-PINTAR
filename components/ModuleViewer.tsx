@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Module } from '@/lib/db';
 import styles from './ModuleViewer.module.css';
 import { BookOpen, CheckCircle2, PartyPopper } from 'lucide-react';
+import Linkify from './Linkify';
 
 interface Props {
   module: Module;
@@ -87,7 +88,7 @@ export default function ModuleViewer({ module, isCompleted, onComplete }: Props)
           </div>
           <h1 className={styles.title}>{module.title}</h1>
           {module.description && (
-            <p className={styles.description}>{module.description}</p>
+            <p className={styles.description}><Linkify>{module.description}</Linkify></p>
           )}
         </div>
         {isCompleted && (
