@@ -638,8 +638,19 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
                 Perbandingan persepsi diri (Self-Assessment) dengan kompetensi aktual (Nilai Kuis).
               </p>
               {scatterData.datasets.length > 0 ? (
-                <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: '350px' }}>
-                  <Scatter data={scatterData} options={scatterOptions} />
+                <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: 'auto', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ height: '350px', width: '100%' }}>
+                    <Scatter data={scatterData} options={scatterOptions} />
+                  </div>
+                  <div style={{ marginTop: '32px', textAlign: 'left', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                    <h4 style={{ marginBottom: '12px', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Keterangan Kuadran:</h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <li><strong>Kanan Atas (Kompeten & Percaya Diri):</strong> Peserta menguasai materi dan menyadarinya (Aktual &ge; 70, Persepsi &ge; 3).</li>
+                      <li><strong>Kanan Bawah (Ilusi Kompetensi / Overconfident):</strong> Peserta merasa ahli, namun nilai aktualnya di bawah standar efek *Dunning-Kruger* (Aktual &lt; 70, Persepsi &ge; 3).</li>
+                      <li><strong>Kiri Atas (Imposter Syndrome):</strong> Peserta memiliki kemampuan baik, namun merasa dirinya kurang (Aktual &ge; 70, Persepsi &lt; 3).</li>
+                      <li><strong>Kiri Bawah (Fase Pemula):</strong> Peserta belum menguasai materi dan menyadari perlunya belajar (Aktual &lt; 70, Persepsi &lt; 3).</li>
+                    </ul>
+                  </div>
                 </div>
               ) : (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
