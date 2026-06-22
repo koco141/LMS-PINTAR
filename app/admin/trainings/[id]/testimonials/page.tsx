@@ -55,6 +55,10 @@ export default function TestimonialsPage({ params, onReady }: { params: Promise<
       try {
         const t = await getTrainingById(resolvedParams.id);
         if (!t) { router.push('/admin'); return; }
+        if (isInstructor && !isAdmin && t.instructorId !== user?.uid) {
+          router.push('/admin');
+          return;
+        }
         setTraining(t);
 
         const [enrs, mods] = await Promise.all([

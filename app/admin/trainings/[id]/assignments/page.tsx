@@ -55,6 +55,14 @@ export default function AssignmentsPage() {
       getTrainingEnrollments(id),
       getModules(id),
     ]);
+
+    if (t) {
+      if (isInstructor && !isAdmin && t.instructorId !== user?.uid) {
+        router.push('/admin');
+        return;
+      }
+    }
+
     setTraining(t);
     
     const tModules = modules.filter(m => m.type === 'tugas');

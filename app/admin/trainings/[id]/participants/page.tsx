@@ -51,6 +51,14 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
       getTrainingEnrollments(id),
       getModules(id),
     ]);
+
+    if (t) {
+      if (isInstructor && !isAdmin && t.instructorId !== user?.uid) {
+        router.push('/admin');
+        return;
+      }
+    }
+
     setTraining(t);
     setModules(modules);
 

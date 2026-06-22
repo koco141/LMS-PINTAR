@@ -149,6 +149,12 @@ export default function TrainingAdminPage() {
     setInstructors(validInstructors);
 
     if (t) {
+      // Protection: if instructor is not admin and does not own this training, redirect back
+      if (isInstructor && !isAdmin && t.instructorId !== user?.uid) {
+        router.push('/admin');
+        return;
+      }
+
       setTraining(t);
       setInstructorId(t.instructorId || '');
       setInfoForm({

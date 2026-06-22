@@ -21,7 +21,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (loading) return;
     if (!user || (!isAdmin && !isInstructor)) { router.push('/login'); return; }
-    getAllTrainings().then((t) => { setTrainings(t); setDataLoading(false); });
+    getAllTrainings().then((t) => {
+      if (isInstructor && !isAdmin) {
+        setTrainings(t.filter((tr) => tr.instructorId === user.uid));
+      } else {
+        setTrainings(t);
+      }
+      setDataLoading(false);
+    });
   }, [user, isAdmin, isInstructor, loading, router]);
 
   const handleDelete = async (id: string, title: string) => {
