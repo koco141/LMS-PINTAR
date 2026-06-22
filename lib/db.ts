@@ -55,6 +55,9 @@ export interface Module {
   submissionType?: 'text' | 'link' | 'both'; // If type is 'tugas', submission requirement
   startDate?: string; // If type is 'tugas', start datetime
   endDate?: string; // If type is 'tugas', end datetime
+  hasExternalButton?: boolean;
+  externalButtonLabel?: string;
+  externalButtonUrl?: string;
 }
 
 export interface QuizQuestion {

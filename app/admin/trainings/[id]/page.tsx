@@ -45,7 +45,7 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string, hasExternalButton?: boolean, externalButtonLabel?: string, externalButtonUrl?: string}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
 
   // Preview Mode
   const [previewModeModules, setPreviewModeModules] = useState(false);
@@ -217,10 +217,10 @@ export default function TrainingAdminPage() {
   const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '' });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '', hasExternalButton: mod.hasExternalButton || false, externalButtonLabel: mod.externalButtonLabel || '', externalButtonUrl: mod.externalButtonUrl || '' });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '', hasExternalButton: false, externalButtonLabel: '', externalButtonUrl: '' });
     }
     setShowModuleForm(true);
   };
@@ -248,6 +248,14 @@ export default function TrainingAdminPage() {
       dataToSave.submissionType = moduleForm.submissionType || 'link';
       dataToSave.startDate = moduleForm.startDate || '';
       dataToSave.endDate = moduleForm.endDate || '';
+      dataToSave.hasExternalButton = moduleForm.hasExternalButton || false;
+      if (moduleForm.hasExternalButton) {
+        dataToSave.externalButtonLabel = moduleForm.externalButtonLabel || '';
+        dataToSave.externalButtonUrl = moduleForm.externalButtonUrl || '';
+      } else {
+        dataToSave.externalButtonLabel = '';
+        dataToSave.externalButtonUrl = '';
+      }
     }
 
     if (editingModule) {
@@ -858,6 +866,25 @@ export default function TrainingAdminPage() {
                             <label className="form-label">Batas Akses (Opsional)</label>
                             <input className="form-input" type="datetime-local" value={moduleForm.endDate || ''} onChange={(e) => setModuleForm({ ...moduleForm, endDate: e.target.value })} />
                           </div>
+                        </div>
+
+                        <div style={{ marginBottom: '16px', background: 'var(--bg-input)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <input type="checkbox" checked={moduleForm.hasExternalButton || false} onChange={(e) => setModuleForm({ ...moduleForm, hasExternalButton: e.target.checked })} />
+                            Tambahkan Tombol Eksternal (Misal: Link Soal)
+                          </label>
+                          {moduleForm.hasExternalButton && (
+                            <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+                              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Nama Tombol</label>
+                                <input className="form-input" placeholder="Misal: Buka Soal Latihan" value={moduleForm.externalButtonLabel || ''} onChange={(e) => setModuleForm({ ...moduleForm, externalButtonLabel: e.target.value })} />
+                              </div>
+                              <div className="form-group" style={{ flex: 2, margin: 0 }}>
+                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Link Tujuan</label>
+                                <input className="form-input" type="url" placeholder="https://..." value={moduleForm.externalButtonUrl || ''} onChange={(e) => setModuleForm({ ...moduleForm, externalButtonUrl: e.target.value })} />
+                              </div>
+                            </div>
+                          )}
                         </div>
                         </>
                       )}

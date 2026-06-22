@@ -106,6 +106,72 @@ export default function UsersDashboard() {
     return nameMatch || emailMatch;
   });
 
+  const admins = filteredUsers.filter(u => u.role === 'admin');
+  const instructors = filteredUsers.filter(u => u.role === 'instructor');
+  const participants = filteredUsers.filter(u => u.role === 'participant' || !u.role);
+
+  const renderTable = (title: string, data: AppUser[]) => (
+    <div className={styles.tableCard} style={{ marginBottom: '24px' }}>
+      <div className={styles.tableHeader}>
+        <h3>{title} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>({data.length})</span></h3>
+      </div>
+      {data.length === 0 ? (
+        <div className="empty-state" style={{ padding: '30px', minHeight: 'auto' }}>
+          <div className="empty-state-icon" style={{ marginBottom: '10px' }}>
+            <InboxIcon size={30} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          </div>
+          <h3 style={{ fontSize: '1rem', margin: 0 }}>Tidak ada data {title.toLowerCase()}</h3>
+        </div>
+      ) : (
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Jenis Kelamin</th>
+                <th>Role</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.fullName || u.name || '-'}</td>
+                  <td>{u.email || '-'}</td>
+                  <td>{u.gender || '-'}</td>
+                  <td>
+                    <span className={`badge ${u.role === 'admin' ? 'badge-ongoing' : u.role === 'instructor' ? 'badge-upcoming' : 'badge-completed'}`}>
+                      {u.role === 'admin' ? 'Admin' : u.role === 'instructor' ? 'Pengajar' : 'Peserta'}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleEdit(u)}
+                      >
+                        <Pencil size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(u)}
+                      >
+                        <Trash2 size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                        Hapus
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className={styles.page}>
       <div className="container">
@@ -116,89 +182,36 @@ export default function UsersDashboard() {
         <div className={styles.header}>
           <div>
             <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              Keseluruhan Peserta <Users size={20} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />
+              Keseluruhan Pengguna <Users size={20} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />
             </h1>
-            <p>Kelola dan reset data nama atau jenis kelamin peserta jika terjadi kesalahan input.</p>
+            <p>Kelola dan reset data pengguna berdasarkan role masing-masing.</p>
           </div>
         </div>
 
-        <div className={styles.tableCard}>
-          <div className={styles.tableHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Daftar Peserta</h3>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <div style={{ position: 'relative', width: '250px' }}>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="Cari nama atau email..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ width: '100%', paddingLeft: '36px' }}
-                />
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </div>
-              <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                <Plus size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                Tambah User
-              </button>
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Cari nama atau email..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: '100%', paddingLeft: '36px' }}
+            />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
           </div>
-          {filteredUsers.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><InboxIcon size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
-              <h3>Belum ada peserta terdaftar atau tidak ditemukan</h3>
-            </div>
-          ) : (
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Jenis Kelamin</th>
-                    <th>Role</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((u) => (
-                    <tr key={u.id}>
-                      <td>{u.fullName || u.name || '-'}</td>
-                      <td>{u.email || '-'}</td>
-                      <td>{u.gender || '-'}</td>
-                      <td>
-                        <span className={`badge ${u.role === 'admin' ? 'badge-ongoing' : u.role === 'instructor' ? 'badge-upcoming' : 'badge-completed'}`}>
-                          {u.role === 'admin' ? 'Admin' : u.role === 'instructor' ? 'Pengajar' : 'Peserta'}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => handleEdit(u)}
-                          >
-                            <Pencil size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                            Edit
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDelete(u)}
-                          >
-                            <Trash2 size={13} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                            Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+            <Plus size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+            Tambah User
+          </button>
         </div>
+
+        {renderTable("Admin", admins)}
+        {renderTable("Pengajar", instructors)}
+        {renderTable("Peserta", participants)}
       </div>
 
       {editingUser && (
