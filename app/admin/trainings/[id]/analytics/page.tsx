@@ -677,19 +677,19 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
                     <ul style={{ margin: 0, paddingLeft: '0', listStyle: 'none', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.5)', flexShrink: 0, marginTop: '2px' }} />
-                        <div><strong>Kanan Atas (Kompeten & Percaya Diri):</strong> Peserta menguasai materi dan menyadarinya (Aktual &ge; 70, Persepsi &ge; 3).</div>
+                        <div><strong>Kanan Atas (Kompeten & Percaya Diri):</strong> Peserta menguasai materi dan menyadarinya.</div>
                       </li>
                       <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(245, 158, 11, 0.2)', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.5)', flexShrink: 0, marginTop: '2px' }} />
-                        <div><strong>Kanan Bawah (Ilusi Kompetensi / Overconfident):</strong> Peserta merasa ahli, namun nilai aktualnya di bawah standar efek *Dunning-Kruger* (Aktual &lt; 70, Persepsi &ge; 3).</div>
+                        <div><strong>Kanan Bawah (Ilusi Kompetensi / Overconfident):</strong> Peserta merasa ahli, namun nilai aktualnya di bawah standar.</div>
                       </li>
                       <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(59, 130, 246, 0.2)', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.5)', flexShrink: 0, marginTop: '2px' }} />
-                        <div><strong>Kiri Atas (Imposter Syndrome):</strong> Peserta memiliki kemampuan baik, namun merasa dirinya kurang (Aktual &ge; 70, Persepsi &lt; 3).</div>
+                        <div><strong>Kiri Atas (Imposter Syndrome):</strong> Peserta memiliki kemampuan baik, namun merasa dirinya kurang.</div>
                       </li>
                       <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <div style={{ width: '16px', height: '16px', backgroundColor: 'rgba(156, 163, 175, 0.2)', borderRadius: '4px', border: '1px solid rgba(156, 163, 175, 0.5)', flexShrink: 0, marginTop: '2px' }} />
-                        <div><strong>Kiri Bawah (Fase Pemula):</strong> Peserta belum menguasai materi dan menyadari perlunya belajar (Aktual &lt; 70, Persepsi &lt; 3).</div>
+                        <div><strong>Kiri Bawah (Fase Pemula):</strong> Peserta belum menguasai materi dan menyadari perlunya belajar.</div>
                       </li>
                     </ul>
                   </div>
