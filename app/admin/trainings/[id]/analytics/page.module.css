@@ -139,6 +139,12 @@
   align-items: center;
 }
 
+.scatterWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .tableCard {
   background: white;
   border-radius: 12px;
@@ -259,6 +265,10 @@
   .chartWrapper {
     max-width: 250px !important;
     margin: 0 auto !important;
+  }
+  .scatterWrapper {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   .tableWrapper th, .tableWrapper td {
     padding: 8px !important;

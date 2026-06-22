@@ -668,7 +668,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
                 Perbandingan persepsi diri (Self-Assessment) dengan kompetensi aktual (Nilai Kuis).
               </p>
               {scatterData.datasets.length > 0 ? (
-                <div className={styles.chartWrapper} style={{ width: '100%', maxWidth: 'none', height: 'auto', display: 'flex', flexDirection: 'column' }}>
+                <div className={styles.scatterWrapper} style={{ height: 'auto' }}>
                   <div style={{ height: '350px', width: '100%' }}>
                     <Scatter data={scatterData} options={scatterOptions} plugins={[quadrantBackgroundPlugin]} />
                   </div>
