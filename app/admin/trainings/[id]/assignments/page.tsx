@@ -16,6 +16,8 @@ interface AssignmentRow {
   assignmentScores: Record<string, number>; // moduleId -> score
   assignmentRubrics: Record<string, Record<string, number>>; // moduleId -> { dimensionName: score }
   totalScore: number;
+  groupId?: string | null;
+  isGroupLeader?: boolean;
 }
 
 const getTaskWeight = (category?: string) => {
@@ -92,6 +94,8 @@ export default function AssignmentsPage() {
           assignmentScores: scores,
           assignmentRubrics: (e as any).assignmentRubrics || {},
           totalScore: total,
+          groupId: e.groupId || null,
+          isGroupLeader: e.isGroupLeader || false,
         };
       })
     );
@@ -128,11 +132,22 @@ export default function AssignmentsPage() {
 
     setSavingStatus(prev => ({ ...prev, [key]: true }));
     try {
-      await updateAssignmentScore(userId, id, moduleId, finalScore, undefined);
+      const module = taskModules.find(m => m.id === moduleId);
+      const isGroupTask = training?.learningModel === 'GROUP' && module?.isGroupAssignment;
+      
+      const participant = participants.find(p => p.userId === userId);
+      const groupId = participant?.groupId;
+
+      const userIdsToUpdate = isGroupTask && groupId 
+        ? participants.filter(p => p.groupId === groupId).map(p => p.userId)
+        : [userId];
+
+      const promises = userIdsToUpdate.map(uid => updateAssignmentScore(uid, id, moduleId, finalScore, undefined));
+      await Promise.all(promises);
       
       // Update local state
       setParticipants(prev => prev.map(p => {
-        if (p.userId === userId) {
+        if (userIdsToUpdate.includes(p.userId)) {
           const newScores = { ...p.assignmentScores, [moduleId]: finalScore };
           let sumProduct = 0;
           let sumWeight = 0;
@@ -235,6 +250,11 @@ export default function AssignmentsPage() {
                               Kategori: {m.competencyCategory}
                             </div>
                           )}
+                          {m.isGroupAssignment && training?.learningModel === 'GROUP' && (
+                            <div style={{ fontSize: '0.65rem', color: 'var(--status-ongoing)', fontWeight: 700, padding: '4px 8px', background: 'rgba(234, 179, 8, 0.1)', borderRadius: '4px', display: 'inline-block', marginLeft: '4px' }}>
+                              👥 Tugas Kelompok
+                            </div>
+                          )}
                         </th>
                       ))}
                       <th style={{ padding: '16px', fontWeight: 600 }}>Total Nilai</th>
@@ -287,6 +307,12 @@ export default function AssignmentsPage() {
                                 {!link && !text && (
                                   <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Belum kumpul</span>
                                 )}
+
+                                {m.isGroupAssignment && training?.learningModel === 'GROUP' && (
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    {p.isGroupLeader ? '👑 Ketua (Penyetor)' : 'Anggota (Nilai mengikuti ketua)'}
+                                  </div>
+                                )}
                                 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -297,9 +323,12 @@ export default function AssignmentsPage() {
                                       placeholder="Nilai..."
                                       value={currentVal}
                                       onChange={(e) => handleScoreChange(p.userId, m.id, e.target.value)}
-                                      disabled={isSaving}
+                                      disabled={isSaving || (m.isGroupAssignment && training?.learningModel === 'GROUP' && !p.isGroupLeader)}
                                       style={{ width: '80px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
                                     />
+                                    {m.isGroupAssignment && training?.learningModel === 'GROUP' && !p.isGroupLeader && (
+                                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Otomatis dari ketua</span>
+                                    )}
                                   </div>
                                   
                                   {isEditing && (

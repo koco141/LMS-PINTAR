@@ -27,6 +27,9 @@ export default function NewTrainingPage() {
     method: 'daring' as 'daring' | 'luring',
     province: '',
     city: '',
+    learningModel: 'INDIVIDUAL' as 'INDIVIDUAL' | 'GROUP',
+    groupSelectionType: 'RANDOM' as 'RANDOM' | 'MANUAL',
+    enableGroupChat: false,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -110,6 +113,9 @@ export default function NewTrainingPage() {
         method: form.method,
         province: form.method === 'luring' ? form.province : '',
         city: form.method === 'luring' ? form.city : '',
+        learningModel: form.learningModel,
+        groupSelectionType: form.learningModel === 'GROUP' ? form.groupSelectionType : 'RANDOM',
+        enableGroupChat: form.learningModel === 'GROUP' ? form.enableGroupChat : false,
       });
       router.push(`/admin/trainings/${id}`);
     } catch (err: any) {
@@ -191,6 +197,56 @@ export default function NewTrainingPage() {
               <option value="luring">Luring (Offline)</option>
             </select>
           </div>
+
+          <div className="form-group">
+            <label className="form-label">Model Pembelajaran</label>
+            <select
+              className="form-input"
+              value={form.learningModel}
+              onChange={(e) => setForm({ ...form, learningModel: e.target.value as 'INDIVIDUAL' | 'GROUP' })}
+            >
+              <option value="INDIVIDUAL">Individu</option>
+              <option value="GROUP">Kelompok (Group Learning)</option>
+            </select>
+          </div>
+
+          {form.learningModel === 'GROUP' && (
+            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Pengaturan Kelompok</h3>
+              
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Metode Pembagian Kelompok</label>
+                <select
+                  className="form-input"
+                  value={form.groupSelectionType}
+                  onChange={(e) => setForm({ ...form, groupSelectionType: e.target.value as 'RANDOM' | 'MANUAL' })}
+                >
+                  <option value="RANDOM">Acak (Otomatis)</option>
+                  <option value="MANUAL">Pilih Manual (Oleh Peserta / Admin)</option>
+                </select>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  {form.groupSelectionType === 'RANDOM' 
+                    ? 'Sistem akan membagi peserta secara merata secara otomatis ke kelompok yang Anda tentukan nanti.' 
+                    : 'Peserta akan diminta memilih kelompok mereka sendiri ketika bergabung, atau admin menempatkannya secara manual.'}
+                </p>
+              </div>
+
+              <div className={styles.toggleRow} style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
+                <div>
+                  <p className={styles.toggleLabel} style={{ fontSize: '0.9rem' }}>Aktifkan Chat Kelompok</p>
+                  <p className={styles.toggleHint}>Beri ruang diskusi khusus per kelompok pada pengerjaan tugas</p>
+                </div>
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={form.enableGroupChat}
+                    onChange={(e) => setForm({ ...form, enableGroupChat: e.target.checked })}
+                  />
+                  <span className="toggle-slider" />
+                </label>
+              </div>
+            </div>
+          )}
 
           <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', opacity: form.method === 'daring' ? 0.6 : 1, transition: 'all 0.3s ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>

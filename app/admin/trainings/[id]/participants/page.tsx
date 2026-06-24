@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module, getGroups, createGroup, deleteGroup, assignUserToGroup, Group } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { Users, BarChart2, FileText, Trash2, Loader2, ArrowLeft, ClipboardList, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
@@ -23,6 +23,8 @@ interface ParticipantRow {
   progress: number;
   enrolledAt: any;
   assignments?: Record<string, string>;
+  groupId?: string | null;
+  isGroupLeader?: boolean;
 }
 
 export default function ParticipantsPage({ onReady }: { onReady?: () => void }) {
@@ -37,6 +39,10 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
   const [search, setSearch] = useState('');
   const [modules, setModules] = useState<Module[]>([]);
   const [instructorName, setInstructorName] = useState<string>('-');
+  const [activeTab, setActiveTab] = useState<'peserta' | 'kelompok'>('peserta');
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [randomGroupCount, setRandomGroupCount] = useState<number | ''>('');
   
   const [sortConfig, setSortConfig] = useState<{ key: keyof ParticipantRow | '', direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
 
@@ -46,10 +52,11 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
   }, [user, isAdmin, isInstructor, loading, id]);
 
   const loadData = async () => {
-    const [t, enrollments, modules] = await Promise.all([
+    const [t, enrollments, fetchedModules, fetchedGroups] = await Promise.all([
       getTrainingById(id),
       getTrainingEnrollments(id),
       getModules(id),
+      getGroups(id),
     ]);
 
     if (t) {
@@ -60,7 +67,8 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
     }
 
     setTraining(t);
-    setModules(modules);
+    setModules(fetchedModules);
+    setGroups(fetchedGroups);
 
     if (t?.instructorId) {
       const inst: any = await getUserById(t.instructorId);
@@ -72,7 +80,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
         const u: any = await getUserById(e.userId);
         
         const assignmentScores = (e as any).assignmentScores || {};
-        const tModules = modules.filter(m => m.type === 'tugas');
+        const tModules = fetchedModules.filter(m => m.type === 'tugas');
         
         let sumTask = 0;
         tModules.forEach(m => { sumTask += (Number(assignmentScores[m.id]) || 0); });
@@ -104,10 +112,12 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
           finalScore,
           passed,
           completedModules: validCompletedCount,
-          totalModules: modules.length,
-          progress: modules.length > 0 ? Math.round((validCompletedCount / modules.length) * 100) : 0,
+          totalModules: fetchedModules.length,
+          progress: fetchedModules.length > 0 ? Math.round((validCompletedCount / fetchedModules.length) * 100) : 0,
           enrolledAt: e.enrolledAt,
           assignments: e.assignments,
+          groupId: e.groupId || null,
+          isGroupLeader: e.isGroupLeader || false,
         };
       })
     );
@@ -261,6 +271,94 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
     }
   };
 
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) return;
+    try {
+      await createGroup(id, newGroupName.trim());
+      setNewGroupName('');
+      loadData();
+    } catch (err) {
+      alert('Gagal membuat grup');
+    }
+  };
+
+  const handleGenerateRandomGroups = async () => {
+    if (!randomGroupCount || randomGroupCount <= 0) return;
+    if (!confirm(`Sistem akan membuat ${randomGroupCount} grup dan membagi otomatis seluruh peserta. Lanjutkan?`)) return;
+    
+    try {
+      setPageLoading(true);
+      // Delete existing groups first (optional, but requested for clean slate usually)
+      for (const g of groups) {
+        await deleteGroup(id, g.id);
+      }
+      
+      // Create N groups
+      const newGroupIds: string[] = [];
+      for (let i = 1; i <= randomGroupCount; i++) {
+        const gid = await createGroup(id, `Kelompok ${i}`);
+        newGroupIds.push(gid);
+      }
+      
+      // Shuffle participants
+      const shuffled = [...participants].sort(() => Math.random() - 0.5);
+      
+      // Assign participants evenly
+      const promises = [];
+      for (let i = 0; i < shuffled.length; i++) {
+        const participant = shuffled[i];
+        const groupIndex = i % newGroupIds.length;
+        const targetGroupId = newGroupIds[groupIndex];
+        // The first person assigned to a group becomes leader
+        const isFirstInGroup = i < newGroupIds.length;
+        promises.push(assignUserToGroup(participant.userId, id, targetGroupId, isFirstInGroup));
+      }
+      
+      await Promise.all(promises);
+      await loadData();
+      alert('Berhasil membagi peserta secara acak!');
+    } catch (err) {
+      alert('Gagal membagi grup secara acak.');
+      setPageLoading(false);
+    }
+  };
+
+  const handleChangeGroup = async (userId: string, targetGroupId: string | null) => {
+    try {
+      // Find if target group has a leader, if not, make this person leader
+      let isLeader = false;
+      if (targetGroupId) {
+        const currentMembers = participants.filter(p => p.groupId === targetGroupId && p.userId !== userId);
+        const hasLeader = currentMembers.some(p => p.isGroupLeader);
+        if (!hasLeader) isLeader = true;
+      }
+      
+      await assignUserToGroup(userId, id, targetGroupId, isLeader);
+      await loadData();
+    } catch (err) {
+      alert('Gagal memindahkan peserta.');
+    }
+  };
+
+  const handleSetLeader = async (userId: string, groupId: string) => {
+    try {
+      // Find current leader of the group and remove leader status
+      const currentMembers = participants.filter(p => p.groupId === groupId);
+      const promises = currentMembers.map(p => {
+        if (p.userId === userId) {
+          return assignUserToGroup(p.userId, id, groupId, true);
+        } else if (p.isGroupLeader) {
+          return assignUserToGroup(p.userId, id, groupId, false);
+        }
+        return Promise.resolve();
+      });
+      await Promise.all(promises);
+      await loadData();
+    } catch (err) {
+      alert('Gagal menetapkan ketua.');
+    }
+  };
+
   if (pageLoading) {
     return <div className="loading-screen"><div className="spinner" /></div>;
   }
@@ -360,7 +458,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
           </div>
         </div>
 
-        {/* Search */}
+        {/* Search & Tabs */}
         <div className={`${styles.searchBar} print-hidden`}>
           <input
             className="form-input"
@@ -368,17 +466,151 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
             placeholder="Cari nama atau email peserta..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            style={{ marginBottom: '16px' }}
           />
         </div>
 
-        {/* Table */}
-        {sortedParticipants.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon"><Users size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
-            <h3>Belum ada peserta</h3>
-            <p>Peserta akan muncul setelah mendaftar menggunakan token pelatihan.</p>
+        {training?.learningModel === 'GROUP' && (
+          <div className="print-hidden" style={{ display: 'flex', gap: '16px', marginBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+            <button
+              style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'peserta' ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === 'peserta' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: activeTab === 'peserta' ? 600 : 400, cursor: 'pointer' }}
+              onClick={() => setActiveTab('peserta')}
+            >
+              Daftar Peserta
+            </button>
+            <button
+              style={{ padding: '10px 16px', background: 'none', border: 'none', borderBottom: activeTab === 'kelompok' ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === 'kelompok' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: activeTab === 'kelompok' ? 600 : 400, cursor: 'pointer' }}
+              onClick={() => setActiveTab('kelompok')}
+            >
+              Manajemen Kelompok
+            </button>
           </div>
-        ) : (
+        )}
+
+        {/* Tab Kelompok */}
+        {activeTab === 'kelompok' && (
+          <div className="print-hidden">
+            {training?.groupSelectionType === 'RANDOM' && (
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem' }}>Generate Kelompok Acak</h3>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <input 
+                    type="number" 
+                    className="form-input" 
+                    placeholder="Jumlah kelompok..." 
+                    value={randomGroupCount}
+                    onChange={(e) => setRandomGroupCount(parseInt(e.target.value))}
+                    style={{ maxWidth: '200px' }}
+                  />
+                  <button className="btn btn-primary" onClick={handleGenerateRandomGroups}>Generate & Bagi Rata</button>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>Peringatan: Fitur ini akan menghapus semua kelompok dan penempatan peserta sebelumnya, lalu membaginya ulang.</p>
+              </div>
+            )}
+
+            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem' }}>Tambah Kelompok Manual</h3>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Nama kelompok baru..." 
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  style={{ maxWidth: '300px' }}
+                />
+                <button className="btn btn-secondary" onClick={handleCreateGroup}>Tambah</button>
+              </div>
+            </div>
+
+            <div className="grid-2" style={{ gap: '20px' }}>
+              <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Peserta Belum Berkelompok</span>
+                  <span className="badge">{participants.filter(p => !p.groupId).length}</span>
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+                  {participants.filter(p => !p.groupId).map(p => (
+                    <div key={p.userId} style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{p.name}</span>
+                      <select 
+                        className="form-input" 
+                        style={{ width: 'auto', padding: '4px 8px', fontSize: '0.8rem', minHeight: 'auto' }}
+                        onChange={(e) => handleChangeGroup(p.userId, e.target.value)}
+                        value=""
+                      >
+                        <option value="" disabled>Pilih Grup...</option>
+                        {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                  {participants.filter(p => !p.groupId).length === 0 && (
+                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontSize: '0.9rem' }}>Semua peserta sudah memiliki kelompok.</div>
+                  )}
+                </div>
+              </div>
+
+              {groups.map(g => {
+                const groupMembers = participants.filter(p => p.groupId === g.id);
+                return (
+                  <div key={g.id} style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{g.name} <span className="badge" style={{ marginLeft: '8px' }}>{groupMembers.length} Peserta</span></span>
+                      <button className="btn btn-icon btn-danger btn-sm" onClick={async () => {
+                        if (confirm(`Hapus kelompok ${g.name}? Peserta di dalamnya akan menjadi tanpa kelompok.`)) {
+                          await deleteGroup(id, g.id);
+                          // Also remove groupId from all members of this group
+                          const promises = groupMembers.map(p => assignUserToGroup(p.userId, id, null, false));
+                          await Promise.all(promises);
+                          loadData();
+                        }
+                      }}>✕</button>
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+                      {groupMembers.map(p => (
+                        <div key={p.userId} style={{ padding: '10px', background: p.isGroupLeader ? '#eff6ff' : '#f8fafc', borderRadius: '8px', border: p.isGroupLeader ? '1px solid #bfdbfe' : '1px solid transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: p.isGroupLeader ? 600 : 500, color: p.isGroupLeader ? 'var(--primary)' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {p.name} {p.isGroupLeader && '👑'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {!p.isGroupLeader && (
+                                <a href="#" onClick={(e) => { e.preventDefault(); handleSetLeader(p.userId, g.id); }} style={{ color: 'var(--primary)', textDecoration: 'none' }}>Jadikan Ketua</a>
+                              )}
+                            </div>
+                          </div>
+                          <select 
+                            className="form-input" 
+                            style={{ width: 'auto', padding: '4px 8px', fontSize: '0.8rem', minHeight: 'auto', maxWidth: '100px' }}
+                            onChange={(e) => handleChangeGroup(p.userId, e.target.value === 'null' ? null : e.target.value)}
+                            value={g.id}
+                          >
+                            <option value="null">- Keluarkan -</option>
+                            {groups.map(ag => <option key={ag.id} value={ag.id}>{ag.name}</option>)}
+                          </select>
+                        </div>
+                      ))}
+                      {groupMembers.length === 0 && (
+                        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontSize: '0.9rem' }}>Belum ada peserta di kelompok ini.</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Table Tab */}
+        {activeTab === 'peserta' && (
+          <>
+            {sortedParticipants.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon"><Users size={40} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} /></div>
+                <h3>Belum ada peserta</h3>
+                <p>Peserta akan muncul setelah mendaftar menggunakan token pelatihan.</p>
+              </div>
+            ) : (
           <div className="table-wrapper">
             <table>
               <thead>
@@ -479,6 +711,8 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
               </tbody>
             </table>
           </div>
+            )}
+          </>
         )}
       </div>
     </div>

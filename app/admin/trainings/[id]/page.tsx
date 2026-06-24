@@ -45,7 +45,7 @@ export default function TrainingAdminPage() {
   // Module form
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
-  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string, hasExternalButton?: boolean, externalButtonLabel?: string, externalButtonUrl?: string, externalButtonIcon?: 'paper'|'submit'|'share'|'hyperlink'}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [] });
+  const [moduleForm, setModuleForm] = useState<{title: string, embedUrl: string, description: string, type: 'materi'|'tugas'|'evaluasi', ratingCategories: string[], competencyCategory?: string, submissionType?: 'link'|'text'|'both', startDate?: string, endDate?: string, hasExternalButton?: boolean, externalButtonLabel?: string, externalButtonUrl?: string, externalButtonIcon?: 'paper'|'submit'|'share'|'hyperlink', isGroupAssignment?: boolean}>({ title: '', embedUrl: '', description: '', type: 'materi', ratingCategories: [], isGroupAssignment: false });
 
   // Preview Mode
   const [previewModeModules, setPreviewModeModules] = useState(false);
@@ -57,6 +57,9 @@ export default function TrainingAdminPage() {
     startDate: '', endDate: '', showLeaderboard: false, assignmentLink: '', targetLevel: 5,
     method: 'daring' as 'daring' | 'luring',
     province: '', city: '',
+    learningModel: 'INDIVIDUAL' as 'INDIVIDUAL' | 'GROUP',
+    groupSelectionType: 'RANDOM' as 'RANDOM' | 'MANUAL',
+    enableGroupChat: false,
   });
 
   // Location states
@@ -170,6 +173,9 @@ export default function TrainingAdminPage() {
         method: t.method || 'daring',
         province: t.province || '',
         city: t.city || '',
+        learningModel: t.learningModel || 'INDIVIDUAL',
+        groupSelectionType: t.groupSelectionType || 'RANDOM',
+        enableGroupChat: t.enableGroupChat || false,
       });
     }
     setModules(mods);
@@ -201,6 +207,9 @@ export default function TrainingAdminPage() {
         method: infoForm.method,
         province: infoForm.method === 'luring' ? infoForm.province : '',
         city: infoForm.method === 'luring' ? infoForm.city : '',
+        learningModel: infoForm.learningModel,
+        groupSelectionType: infoForm.learningModel === 'GROUP' ? infoForm.groupSelectionType : 'RANDOM',
+        enableGroupChat: infoForm.learningModel === 'GROUP' ? infoForm.enableGroupChat : false,
         instructorId,
       });
       await loadAll();
@@ -217,10 +226,10 @@ export default function TrainingAdminPage() {
   const openModuleForm = (mod?: Module, type: 'materi' | 'tugas' | 'evaluasi' = 'materi') => {
     if (mod) {
       setEditingModule(mod);
-      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '', hasExternalButton: mod.hasExternalButton || false, externalButtonLabel: mod.externalButtonLabel || '', externalButtonUrl: mod.externalButtonUrl || '', externalButtonIcon: mod.externalButtonIcon || 'hyperlink' });
+      setModuleForm({ title: mod.title, embedUrl: mod.embedUrl || '', description: mod.description || '', type: mod.type || 'materi', ratingCategories: mod.ratingCategories || [], competencyCategory: mod.competencyCategory || '', submissionType: mod.submissionType || 'link', startDate: mod.startDate || '', endDate: mod.endDate || '', hasExternalButton: mod.hasExternalButton || false, externalButtonLabel: mod.externalButtonLabel || '', externalButtonUrl: mod.externalButtonUrl || '', externalButtonIcon: mod.externalButtonIcon || 'hyperlink', isGroupAssignment: mod.isGroupAssignment || false });
     } else {
       setEditingModule(null);
-      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '', hasExternalButton: false, externalButtonLabel: '', externalButtonUrl: '', externalButtonIcon: 'hyperlink' });
+      setModuleForm({ title: '', embedUrl: '', description: '', type, ratingCategories: [], competencyCategory: '', submissionType: 'link', startDate: '', endDate: '', hasExternalButton: false, externalButtonLabel: '', externalButtonUrl: '', externalButtonIcon: 'hyperlink', isGroupAssignment: false });
     }
     setShowModuleForm(true);
   };
@@ -248,6 +257,7 @@ export default function TrainingAdminPage() {
       dataToSave.submissionType = moduleForm.submissionType || 'link';
       dataToSave.startDate = moduleForm.startDate || '';
       dataToSave.endDate = moduleForm.endDate || '';
+      dataToSave.isGroupAssignment = moduleForm.isGroupAssignment || false;
       dataToSave.hasExternalButton = moduleForm.hasExternalButton || false;
       if (moduleForm.hasExternalButton) {
         dataToSave.externalButtonLabel = moduleForm.externalButtonLabel || '';
@@ -436,6 +446,56 @@ export default function TrainingAdminPage() {
                   <option value="luring">Luring (Offline)</option>
                 </select>
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Model Pembelajaran</label>
+                <select
+                  className="form-input"
+                  value={infoForm.learningModel}
+                  onChange={(e) => setInfoForm({ ...infoForm, learningModel: e.target.value as 'INDIVIDUAL' | 'GROUP' })}
+                >
+                  <option value="INDIVIDUAL">Individu</option>
+                  <option value="GROUP">Kelompok (Group Learning)</option>
+                </select>
+              </div>
+
+              {infoForm.learningModel === 'GROUP' && (
+                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+                  <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Pengaturan Kelompok</h3>
+                  
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Metode Pembagian Kelompok</label>
+                    <select
+                      className="form-input"
+                      value={infoForm.groupSelectionType}
+                      onChange={(e) => setInfoForm({ ...infoForm, groupSelectionType: e.target.value as 'RANDOM' | 'MANUAL' })}
+                    >
+                      <option value="RANDOM">Acak (Otomatis)</option>
+                      <option value="MANUAL">Pilih Manual (Oleh Peserta / Admin)</option>
+                    </select>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                      {infoForm.groupSelectionType === 'RANDOM' 
+                        ? 'Sistem akan membagi peserta secara merata secara otomatis ke kelompok yang Anda tentukan nanti.' 
+                        : 'Peserta akan diminta memilih kelompok mereka sendiri ketika bergabung, atau admin menempatkannya secara manual.'}
+                    </p>
+                  </div>
+
+                  <div className={styles.toggleRow} style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
+                    <div>
+                      <p className={styles.toggleLabel} style={{ fontSize: '0.9rem' }}>Aktifkan Chat Kelompok</p>
+                      <p className={styles.toggleHint}>Beri ruang diskusi khusus per kelompok pada pengerjaan tugas</p>
+                    </div>
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={infoForm.enableGroupChat}
+                        onChange={(e) => setInfoForm({ ...infoForm, enableGroupChat: e.target.checked })}
+                      />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px', opacity: infoForm.method === 'daring' ? 0.6 : 1, transition: 'all 0.3s ease' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -869,6 +929,19 @@ export default function TrainingAdminPage() {
                             <input className="form-input" type="datetime-local" value={moduleForm.endDate || ''} onChange={(e) => setModuleForm({ ...moduleForm, endDate: e.target.value })} />
                           </div>
                         </div>
+
+                        {training?.learningModel === 'GROUP' && (
+                          <div className={styles.toggleRow} style={{ marginBottom: '16px', background: 'var(--bg-input)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <div>
+                              <p className={styles.toggleLabel}>Tugas Kelompok</p>
+                              <p className={styles.toggleHint}>Hanya ketua yang bisa mengumpulkan tugas ini</p>
+                            </div>
+                            <label className="toggle">
+                              <input type="checkbox" checked={moduleForm.isGroupAssignment || false} onChange={(e) => setModuleForm({ ...moduleForm, isGroupAssignment: e.target.checked })} />
+                              <span className="toggle-slider" />
+                            </label>
+                          </div>
+                        )}
 
                         <div style={{ marginBottom: '16px', background: 'var(--bg-input)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 600 }}>

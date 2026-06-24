@@ -37,6 +37,9 @@ export interface Training {
   province?: string;
   city?: string;
   instructorId?: string;
+  learningModel?: 'INDIVIDUAL' | 'GROUP';
+  groupSelectionType?: 'RANDOM' | 'MANUAL';
+  enableGroupChat?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -59,6 +62,7 @@ export interface Module {
   externalButtonLabel?: string;
   externalButtonUrl?: string;
   externalButtonIcon?: 'paper' | 'submit' | 'share' | 'hyperlink';
+  isGroupAssignment?: boolean;
 }
 
 export interface QuizQuestion {
@@ -98,12 +102,70 @@ export interface Enrollment {
   preTestCompletedAt: Timestamp | null;
   postTestCompletedAt: Timestamp | null;
   totalTimeSpent: number; // minutes
+  groupId?: string | null;
+  isGroupLeader?: boolean;
   assignments?: Record<string, string>; // moduleId -> submitted link (or text depending on submissionType)
   assignmentTexts?: Record<string, string>; // moduleId -> submitted text
   assignmentScores?: Record<string, number>; // moduleId -> score
   assignmentRubrics?: Record<string, Record<string, number>>; // moduleId -> { dimensionName: score }
   evaluations?: Record<string, { ratings: Record<string, number>, testimonial: string }>; // moduleId -> evaluation data
   postTestHistory?: Array<{ score: number, completedAt: Timestamp }>;
+}
+
+export interface Group {
+  id: string;
+  trainingId: string;
+  name: string;
+  createdAt: Timestamp;
+}
+
+export interface GroupChatMessage {
+  id: string;
+  groupId: string;
+  userId: string;
+  message: string;
+  createdAt: Timestamp;
+}
+
+// ─── Group Learning ────────────────────────────────────────────────────────────
+
+export async function createGroup(trainingId: string, name: string): Promise<string> {
+  const ref = await addDoc(collection(db, 'trainings', trainingId, 'groups'), {
+    trainingId,
+    name,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateGroup(trainingId: string, groupId: string, name: string) {
+  await updateDoc(doc(db, 'trainings', trainingId, 'groups', groupId), { name });
+}
+
+export async function deleteGroup(trainingId: string, groupId: string) {
+  await deleteDoc(doc(db, 'trainings', trainingId, 'groups', groupId));
+}
+
+export async function getGroups(trainingId: string): Promise<Group[]> {
+  const snap = await getDocs(query(collection(db, 'trainings', trainingId, 'groups'), orderBy('createdAt', 'asc')));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Group));
+}
+
+export async function assignUserToGroup(userId: string, trainingId: string, groupId: string | null, isLeader: boolean = false) {
+  const id = `${userId}_${trainingId}`;
+  await updateDoc(doc(db, 'enrollments', id), {
+    groupId,
+    isGroupLeader: isLeader
+  });
+}
+
+export async function sendGroupChatMessage(groupId: string, userId: string, message: string) {
+  await addDoc(collection(db, 'groups', groupId, 'messages'), {
+    groupId,
+    userId,
+    message,
+    createdAt: serverTimestamp(),
+  });
 }
 
 // ─── Token Generator ──────────────────────────────────────────────────────────
@@ -305,10 +367,44 @@ export async function getEnrollment(userId: string, trainingId: string): Promise
   return { id: snap.id, ...snap.data() } as Enrollment;
 }
 
-export async function enrollUser(userId: string, trainingId: string): Promise<void> {
+export async function enrollUser(userId: string, trainingId: string, manualGroupId?: string): Promise<void> {
   const id = `${userId}_${trainingId}`;
   const existing = await getDoc(doc(db, 'enrollments', id));
   if (existing.exists()) return;
+
+  let finalGroupId = manualGroupId || null;
+  let isGroupLeader = false;
+
+  const t = await getTrainingById(trainingId);
+  if (t?.learningModel === 'GROUP') {
+    const enrollments = await getTrainingEnrollments(trainingId);
+    
+    if (t.groupSelectionType === 'RANDOM') {
+      const groups = await getGroups(trainingId);
+      if (groups.length > 0) {
+        let smallestGroup = groups[0];
+        let smallestCount = Infinity;
+        let smallestGroupHasLeader = false;
+
+        for (const g of groups) {
+          const members = enrollments.filter((e: any) => e.groupId === g.id);
+          if (members.length < smallestCount) {
+            smallestCount = members.length;
+            smallestGroup = g;
+            smallestGroupHasLeader = members.some((m: any) => m.isGroupLeader);
+          }
+        }
+        
+        finalGroupId = smallestGroup.id;
+        if (!smallestGroupHasLeader) isGroupLeader = true;
+      }
+    } else if (t.groupSelectionType === 'MANUAL' && manualGroupId) {
+       const members = enrollments.filter((e: any) => e.groupId === manualGroupId);
+       if (!members.some((m: any) => m.isGroupLeader)) {
+         isGroupLeader = true;
+       }
+    }
+  }
 
   await setDoc(doc(db, 'enrollments', id), {
     userId,
@@ -322,6 +418,8 @@ export async function enrollUser(userId: string, trainingId: string): Promise<vo
     preTestCompletedAt: null,
     postTestCompletedAt: null,
     totalTimeSpent: 0,
+    groupId: finalGroupId,
+    isGroupLeader,
   });
 
   // Increment participant count
@@ -331,15 +429,32 @@ export async function enrollUser(userId: string, trainingId: string): Promise<vo
 }
 
 export async function markModuleComplete(userId: string, trainingId: string, moduleId: string) {
-  const id = `${userId}_${trainingId}`;
   const enrollment = await getEnrollment(userId, trainingId);
   if (!enrollment) return;
 
-  const completed = enrollment.completedModules || [];
-  if (!completed.includes(moduleId)) {
-    await updateDoc(doc(db, 'enrollments', id), {
-      completedModules: [...completed, moduleId],
-      totalTimeSpent: increment(5), // estimate 5 min per module
+  const mSnap = await getDoc(doc(db, 'trainings', trainingId, 'modules', moduleId));
+  const m = mSnap.data() as Module;
+  const t = await getTrainingById(trainingId);
+
+  const isGroupTask = t?.learningModel === 'GROUP' && m?.isGroupAssignment && enrollment.groupId;
+
+  if (isGroupTask) {
+    const allEnrolls = await getTrainingEnrollments(trainingId);
+    const groupMembers = allEnrolls.filter((e: any) => e.groupId === enrollment.groupId);
+    
+    const batch = groupMembers.map(member => {
+       if (member.completedModules.includes(moduleId)) return Promise.resolve();
+       return updateDoc(doc(db, 'enrollments', `${member.userId}_${trainingId}`), {
+         completedModules: arrayUnion(moduleId),
+         totalTimeSpent: increment(5),
+       });
+    });
+    await Promise.all(batch);
+  } else {
+    if (enrollment.completedModules.includes(moduleId)) return;
+    await updateDoc(doc(db, 'enrollments', `${userId}_${trainingId}`), {
+      completedModules: arrayUnion(moduleId),
+      totalTimeSpent: increment(5),
     });
   }
 }
@@ -425,12 +540,26 @@ export async function submitAssignment(
   link: string,
   text?: string
 ) {
-  const id = `${userId}_${trainingId}`;
   const updates: any = {};
   if (link !== undefined) updates[`assignments.${moduleId}`] = link;
   if (text !== undefined) updates[`assignmentTexts.${moduleId}`] = text;
 
-  await updateDoc(doc(db, 'enrollments', id), updates);
+  const t = await getTrainingById(trainingId);
+  const mSnap = await getDoc(doc(db, 'trainings', trainingId, 'modules', moduleId));
+  const m = mSnap.data() as Module;
+  
+  const enrollSnap = await getDoc(doc(db, 'enrollments', `${userId}_${trainingId}`));
+  const enroll = enrollSnap.data() as Enrollment;
+
+  if (t?.learningModel === 'GROUP' && m?.isGroupAssignment && enroll?.groupId) {
+     const allEnrolls = await getTrainingEnrollments(trainingId);
+     const groupMembers = allEnrolls.filter((e: any) => e.groupId === enroll.groupId);
+     
+     const batch = groupMembers.map(member => updateDoc(doc(db, 'enrollments', `${member.userId}_${trainingId}`), updates));
+     await Promise.all(batch);
+  } else {
+     await updateDoc(doc(db, 'enrollments', `${userId}_${trainingId}`), updates);
+  }
 }
 
 export async function updateModuleOrders(trainingId: string, moduleIds: string[]) {

@@ -12,7 +12,9 @@ export default function AssignmentViewer({
   onComplete,
   onSubmitLink,
   existingLink,
-  existingText
+  existingText,
+  isGroupAssignment,
+  isGroupLeader
 }: {
   module: Module;
   isCompleted: boolean;
@@ -20,6 +22,8 @@ export default function AssignmentViewer({
   onSubmitLink: (link: string, text?: string) => Promise<void>;
   existingLink?: string;
   existingText?: string;
+  isGroupAssignment?: boolean;
+  isGroupLeader?: boolean;
 }) {
   const [link, setLink] = useState(existingLink || '');
   const [text, setText] = useState(existingText || '');
@@ -156,6 +160,16 @@ export default function AssignmentViewer({
           </div>
         )}
 
+        {isGroupAssignment && !isGroupLeader && (
+          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#a16207', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(234, 179, 8, 0.3)' }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>👥 Tugas Kelompok</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>Anda adalah anggota. Hanya <strong>Ketua Kelompok</strong> yang memiliki akses untuk mengirimkan dan memperbarui jawaban tugas kelompok ini.</p>
+            {(existingLink || existingText) && (
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.9rem', color: 'var(--status-ongoing)', fontWeight: 'bold' }}>✓ Ketua kelompok Anda telah mengumpulkan tugas ini.</p>
+            )}
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {requireText && (
             <div className="form-group" style={{ marginBottom: 0, textAlign: 'left' }}>
@@ -166,7 +180,7 @@ export default function AssignmentViewer({
                 placeholder="Ketik jawaban Anda di sini..." 
                 value={text} 
                 onChange={(e) => setText(e.target.value)}
-                disabled={Boolean(isTooEarly) || Boolean(isTooLate)}
+                disabled={Boolean(isTooEarly) || Boolean(isTooLate) || (isGroupAssignment && !isGroupLeader)}
                 rows={5}
                 style={{ 
                   padding: '12px 16px', 
@@ -194,7 +208,7 @@ export default function AssignmentViewer({
                 placeholder="https://..." 
                 value={link} 
                 onChange={(e) => setLink(e.target.value)}
-                disabled={Boolean(isTooEarly) || Boolean(isTooLate)}
+                disabled={Boolean(isTooEarly) || Boolean(isTooLate) || (isGroupAssignment && !isGroupLeader)}
                 style={{ 
                   padding: '12px 16px', 
                   borderRadius: '8px', 
@@ -213,8 +227,8 @@ export default function AssignmentViewer({
           <button 
             className="btn btn-primary" 
             onClick={handleSubmit} 
-            disabled={submitting || !isFormValid() || Boolean(isTooEarly) || Boolean(isTooLate)}
-            style={{ width: '100%', padding: '12px', marginTop: '8px' }}
+            disabled={submitting || !isFormValid() || Boolean(isTooEarly) || Boolean(isTooLate) || (isGroupAssignment && !isGroupLeader)}
+            style={{ width: '100%', padding: '12px', marginTop: '8px', display: (isGroupAssignment && !isGroupLeader) ? 'none' : 'block' }}
           >
             {submitting ? 'Mengumpulkan...' : ((existingLink || existingText) ? 'Perbarui Jawaban' : 'Kumpulkan Tugas & Lanjut')}
           </button>

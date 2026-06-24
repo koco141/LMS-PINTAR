@@ -17,21 +17,24 @@ import {
   Module,
   Quiz,
   Enrollment,
+  getGroups,
+  Group,
 } from '@/lib/db';
 import QuizPlayer from '@/components/QuizPlayer';
 import ModuleViewer from '@/components/ModuleViewer';
 import AssignmentViewer from '@/components/AssignmentViewer';
 import EvaluationViewer from '@/components/EvaluationViewer';
 import Leaderboard from '@/components/Leaderboard';
+import GroupInfoWidget from '@/components/GroupInfoWidget';
 import styles from './page.module.css';
 import {
   Search, Lock, LogIn, GraduationCap, Package, FileText, ClipboardList,
   CheckCircle2, Trophy, BookOpen, Star, Folder, CalendarClock,
   LayoutDashboard, CheckCheck, ChevronRight, HelpCircle, Timer,
-  Sparkles, Play
+  Sparkles, Play, Users
 } from 'lucide-react';
 
-type Step = 'loading' | 'enroll' | 'login' | 'study';
+type Step = 'loading' | 'enroll' | 'choose-group' | 'login' | 'study';
 type ActiveStep = 'pre-test' | 'module' | 'post-test' | 'completed';
 
 export default function TrainingPage() {
@@ -50,7 +53,9 @@ export default function TrainingPage() {
   const [quizStarted, setQuizStarted] = useState(false);
   const [signInLoading, setSignInLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'group'>('learn');
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -75,7 +80,18 @@ export default function TrainingPage() {
     if (!user) { setStep('login'); return; }
 
     let enroll = await getEnrollment(user.uid, t.id);
-    if (!enroll) { setStep('enroll'); return; }
+    if (!enroll) { 
+      if (t.learningModel === 'GROUP') {
+        const fetchedGroups = await getGroups(t.id);
+        setGroups(fetchedGroups);
+        if (t.groupSelectionType === 'MANUAL' && fetchedGroups.length > 0) {
+          setStep('choose-group');
+          return;
+        }
+      }
+      setStep('enroll'); 
+      return; 
+    }
     setEnrollment(enroll);
     determineStep(enroll, pre, post, mods);
   };
@@ -105,9 +121,9 @@ export default function TrainingPage() {
     setActiveStep('completed');
   };
 
-  const handleEnroll = async () => {
+  const handleEnroll = async (groupId?: string) => {
     if (!user || !training) return;
-    await enrollUser(user.uid, training.id);
+    await enrollUser(user.uid, training.id, typeof groupId === 'string' ? groupId : undefined);
     const enroll = await getEnrollment(user.uid, training.id);
     setEnrollment(enroll);
     determineStep(enroll!, preTest, postTest, modules);
@@ -191,6 +207,46 @@ export default function TrainingPage() {
     );
   }
 
+  if (step === 'choose-group') {
+    return (
+      <div className={styles.enrollPage}>
+        <div className={styles.enrollCard}>
+          <span className={styles.enrollEmoji}>
+            <Users size={44} strokeWidth={1.3} style={{ color: 'var(--primary-light)' }} />
+          </span>
+          <h2>Pilih Kelompok</h2>
+          <p className={styles.trainingTitle}>{training?.title}</p>
+          <p>Pelatihan ini menggunakan sistem kelompok. Silakan pilih kelompok Anda untuk dapat berdiskusi dan mengumpulkan tugas kelompok.</p>
+          
+          <div style={{ margin: '20px 0', textAlign: 'left' }}>
+            <label className="form-label">Kelompok Tersedia</label>
+            <select 
+              className="form-input" 
+              value={selectedGroupId} 
+              onChange={(e) => setSelectedGroupId(e.target.value)}
+            >
+              <option value="" disabled>-- Pilih Kelompok --</option>
+              {groups.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <button 
+            className="btn btn-primary btn-lg" 
+            onClick={() => handleEnroll(selectedGroupId)}
+            disabled={!selectedGroupId}
+            style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+          >
+            <CheckCircle2 size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Pilih &amp; Mulai Pelatihan
+          </button>
+          <a href="/" className="btn btn-secondary btn-sm" style={{ marginTop: '16px', display: 'block', textAlign: 'center' }}>← Kembali</a>
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'enroll') {
     return (
       <div className={styles.enrollPage}>
@@ -206,7 +262,7 @@ export default function TrainingPage() {
             {preTest && <span><FileText size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Pre-test tersedia</span>}
             {postTest && <span><ClipboardList size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />Post-test tersedia</span>}
           </div>
-          <button className="btn btn-primary btn-lg" onClick={handleEnroll}>
+          <button className="btn btn-primary btn-lg" onClick={() => handleEnroll()}>
             <CheckCircle2 size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
             Daftar &amp; Mulai Pelatihan
           </button>
@@ -279,6 +335,36 @@ export default function TrainingPage() {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h3 className={styles.sidebarTitle}>{training?.title}</h3>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+            <button 
+              className={`btn ${activeTab === 'learn' ? 'btn-primary' : 'btn-secondary'}`} 
+              style={{ flex: 1, padding: '6px', fontSize: '0.85rem' }}
+              onClick={() => setActiveTab('learn')}
+            >
+              Belajar
+            </button>
+            {training?.showLeaderboard && (
+              <button 
+                className={`btn ${activeTab === 'leaderboard' ? 'btn-primary' : 'btn-secondary'}`} 
+                style={{ flex: 1, padding: '6px', fontSize: '0.85rem' }}
+                onClick={() => setActiveTab('leaderboard')}
+              >
+                Peringkat
+              </button>
+            )}
+            {training?.learningModel === 'GROUP' && enrollment?.groupId && (
+              <button 
+                className={`btn ${activeTab === 'group' ? 'btn-primary' : 'btn-secondary'}`} 
+                style={{ flex: 1, padding: '6px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                onClick={() => setActiveTab('group')}
+              >
+                <Users size={14} />
+                Kelompok
+              </button>
+            )}
+          </div>
+
           <div className={styles.progressSection}>
             <div className={styles.progressLabel}>
               <span>Progress</span>
@@ -538,6 +624,12 @@ export default function TrainingPage() {
           </div>
         ) : training?.showLeaderboard && activeTab === 'leaderboard' ? (
           <Leaderboard trainingId={training.id} />
+        ) : training?.learningModel === 'GROUP' && enrollment?.groupId && activeTab === 'group' ? (
+          <GroupInfoWidget 
+            trainingId={training.id} 
+            groupId={enrollment.groupId} 
+            groupName={groups.find(g => g.id === enrollment.groupId)?.name || 'Kelompok'}
+          />
         ) : activeStep === 'pre-test' && preTest ? (
               enrollment?.preTestScore !== null ? (
                 /* Pre Test Completed Result */
@@ -708,6 +800,8 @@ export default function TrainingPage() {
                   }}
                   existingLink={enrollment?.assignments?.[activeModule.id]}
                   existingText={enrollment?.assignmentTexts?.[activeModule.id]}
+                  isGroupAssignment={activeModule.isGroupAssignment && training?.learningModel === 'GROUP'}
+                  isGroupLeader={enrollment?.isGroupLeader}
                 />
               ) : activeModule.type === 'evaluasi' ? (
                 <EvaluationViewer
