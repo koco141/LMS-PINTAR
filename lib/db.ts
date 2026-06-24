@@ -13,6 +13,7 @@ import {
   Timestamp,
   setDoc,
   increment,
+  arrayUnion,
 } from 'firebase/firestore';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
