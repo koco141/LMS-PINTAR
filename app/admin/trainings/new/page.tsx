@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { createTraining, updateTraining, deleteTraining } from '@/lib/db';
+import { createTraining, updateTraining, deleteTraining, createGroup } from '@/lib/db';
 import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -33,6 +33,9 @@ export default function NewTrainingPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  
+  const [numberOfGroups, setNumberOfGroups] = useState(2);
+  const [groupNamesText, setGroupNamesText] = useState('Kelompok 1\nKelompok 2');
 
   // Location states
   const [provinces, setProvinces] = useState<{id: string, name: string}[]>([]);
@@ -117,6 +120,20 @@ export default function NewTrainingPage() {
         groupSelectionType: form.learningModel === 'GROUP' ? form.groupSelectionType : 'RANDOM',
         enableGroupChat: form.learningModel === 'GROUP' ? form.enableGroupChat : false,
       });
+
+      if (form.learningModel === 'GROUP') {
+        if (form.groupSelectionType === 'RANDOM') {
+          for (let i = 1; i <= numberOfGroups; i++) {
+            await createGroup(id, `Kelompok ${i}`);
+          }
+        } else if (form.groupSelectionType === 'MANUAL') {
+          const names = groupNamesText.split('\n').map(n => n.trim()).filter(n => n);
+          for (const name of names) {
+            await createGroup(id, name);
+          }
+        }
+      }
+
       router.push(`/admin/trainings/${id}`);
     } catch (err: any) {
       console.error("Gagal menyimpan pelatihan:", err);
@@ -222,14 +239,45 @@ export default function NewTrainingPage() {
                   onChange={(e) => setForm({ ...form, groupSelectionType: e.target.value as 'RANDOM' | 'MANUAL' })}
                 >
                   <option value="RANDOM">Acak (Otomatis)</option>
-                  <option value="MANUAL">Pilih Manual (Oleh Peserta / Admin)</option>
+                  <option value="MANUAL">Manual (Oleh Peserta)</option>
                 </select>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                   {form.groupSelectionType === 'RANDOM' 
-                    ? 'Sistem akan membagi peserta secara merata secara otomatis ke kelompok yang Anda tentukan nanti.' 
-                    : 'Peserta akan diminta memilih kelompok mereka sendiri ketika bergabung, atau admin menempatkannya secara manual.'}
+                    ? 'Sistem akan membagi peserta secara merata secara otomatis ke kelompok yang dibuat.' 
+                    : 'Peserta akan diminta memilih kelompok mereka sendiri ketika bergabung.'}
                 </p>
               </div>
+
+              {form.groupSelectionType === 'RANDOM' ? (
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Jumlah Kelompok yang Ingin Dibuat</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={numberOfGroups}
+                    onChange={(e) => setNumberOfGroups(parseInt(e.target.value) || 1)}
+                  />
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                    Sistem akan otomatis meng-generate kelompok sejumlah ini saat pelatihan disimpan.
+                  </p>
+                </div>
+              ) : (
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Daftar Nama Kelompok (Satu per baris)</label>
+                  <textarea
+                    className="form-textarea"
+                    rows={4}
+                    value={groupNamesText}
+                    onChange={(e) => setGroupNamesText(e.target.value)}
+                    placeholder="Kelompok 1&#10;Kelompok 2&#10;Kelompok 3"
+                  />
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                    Masukkan nama-nama kelompok yang bisa dipilih oleh peserta. Tekan Enter untuk baris baru.
+                  </p>
+                </div>
+              )}
 
               <div className={styles.toggleRow} style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
                 <div>

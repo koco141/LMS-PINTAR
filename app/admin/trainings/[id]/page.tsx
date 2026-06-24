@@ -471,12 +471,12 @@ export default function TrainingAdminPage() {
                       onChange={(e) => setInfoForm({ ...infoForm, groupSelectionType: e.target.value as 'RANDOM' | 'MANUAL' })}
                     >
                       <option value="RANDOM">Acak (Otomatis)</option>
-                      <option value="MANUAL">Pilih Manual (Oleh Peserta / Admin)</option>
+                      <option value="MANUAL">Manual (Oleh Peserta)</option>
                     </select>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                       {infoForm.groupSelectionType === 'RANDOM' 
-                        ? 'Sistem akan membagi peserta secara merata secara otomatis ke kelompok yang Anda tentukan nanti.' 
-                        : 'Peserta akan diminta memilih kelompok mereka sendiri ketika bergabung, atau admin menempatkannya secara manual.'}
+                        ? 'Sistem akan membagi peserta secara merata secara otomatis ke kelompok yang dibuat.' 
+                        : 'Peserta akan diminta memilih kelompok mereka sendiri ketika bergabung.'}
                     </p>
                   </div>
 
