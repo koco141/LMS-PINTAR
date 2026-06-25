@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getTrainingEnrollments, getUserById, AppUser, Enrollment, Group } from '@/lib/db';
+import { getTrainingEnrollments, getUserById, AppUser, Enrollment, Group, transferGroupLeadership } from '@/lib/db';
 import { Users, Crown, User as UserIcon } from 'lucide-react';
 
 interface GroupMemberData {
@@ -12,11 +12,13 @@ interface GroupMemberData {
 export default function GroupInfoWidget({ 
   trainingId, 
   groupId,
-  groupName
+  groupName,
+  currentUser
 }: { 
   trainingId: string;
   groupId: string;
   groupName: string;
+  currentUser: { id: string; name?: string | null } | null;
 }) {
   const [members, setMembers] = useState<GroupMemberData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +49,15 @@ export default function GroupInfoWidget({
     setLoading(false);
   };
 
+  const handleMakeLeader = async (newLeaderId: string) => {
+    if (!confirm('Apakah Anda yakin ingin memindahkan status Ketua Kelompok ke pengguna ini?')) return;
+    
+    const oldLeader = members.find(m => m.enrollment.isGroupLeader);
+    setLoading(true);
+    await transferGroupLeadership(trainingId, groupId, oldLeader?.user?.id || '', newLeaderId);
+    await loadMembers();
+  };
+
   if (loading) {
     return (
       <div style={{ padding: '20px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
@@ -69,16 +80,27 @@ export default function GroupInfoWidget({
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {members.map((m, idx) => (
-          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: 'var(--bg-primary)', borderRadius: '8px', border: m.enrollment.isGroupLeader ? '1px solid var(--primary-light)' : '1px solid var(--border)' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {m.enrollment.isGroupLeader ? <Crown size={16} style={{ color: '#eab308' }} /> : <UserIcon size={16} style={{ color: 'var(--text-muted)' }} />}
+          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--bg-primary)', borderRadius: '8px', border: m.enrollment.isGroupLeader ? '1px solid var(--primary-light)' : '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {m.enrollment.isGroupLeader ? <Crown size={16} style={{ color: '#eab308' }} /> : <UserIcon size={16} style={{ color: 'var(--text-muted)' }} />}
+              </div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem' }}>{m.user?.name || 'User Tanpa Nama'} {m.user?.id === currentUser?.id ? '(Anda)' : ''}</p>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  {m.enrollment.isGroupLeader ? '👑 Ketua Kelompok' : 'Anggota'}
+                </p>
+              </div>
             </div>
-            <div>
-              <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem' }}>{m.user?.name || 'User Tanpa Nama'}</p>
-              <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                {m.enrollment.isGroupLeader ? '👑 Ketua Kelompok' : 'Anggota'}
-              </p>
-            </div>
+            
+            {!m.enrollment.isGroupLeader && m.user?.id && (
+              <button 
+                className="btn btn-secondary btn-sm"
+                onClick={() => handleMakeLeader(m.user!.id)}
+              >
+                Jadikan Ketua
+              </button>
+            )}
           </div>
         ))}
       </div>

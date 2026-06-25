@@ -160,6 +160,15 @@ export async function assignUserToGroup(userId: string, trainingId: string, grou
   });
 }
 
+export async function transferGroupLeadership(trainingId: string, groupId: string, oldLeaderId: string, newLeaderId: string) {
+  if (oldLeaderId) {
+    const oldId = `${oldLeaderId}_${trainingId}`;
+    await updateDoc(doc(db, 'enrollments', oldId), { isGroupLeader: false });
+  }
+  const newId = `${newLeaderId}_${trainingId}`;
+  await updateDoc(doc(db, 'enrollments', newId), { isGroupLeader: true });
+}
+
 export async function sendGroupChatMessage(groupId: string, userId: string, message: string) {
   await addDoc(collection(db, 'groups', groupId, 'messages'), {
     groupId,

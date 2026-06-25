@@ -26,6 +26,7 @@ import AssignmentViewer from '@/components/AssignmentViewer';
 import EvaluationViewer from '@/components/EvaluationViewer';
 import Leaderboard from '@/components/Leaderboard';
 import GroupInfoWidget from '@/components/GroupInfoWidget';
+import GroupChatBubble from '@/components/GroupChatBubble';
 import styles from './page.module.css';
 import {
   Search, Lock, LogIn, GraduationCap, Package, FileText, ClipboardList,
@@ -330,8 +331,9 @@ export default function TrainingPage() {
   const canRetakePostTest = postTestMaxAttempts === 0 || postTestCurrentAttempts < postTestMaxAttempts;
 
   return (
-    <div className={styles.trainingLayout}>
-      {/* Sidebar */}
+    <>
+      <div className={styles.trainingLayout}>
+        {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h3 className={styles.sidebarTitle}>{training?.title}</h3>
@@ -629,6 +631,7 @@ export default function TrainingPage() {
             trainingId={training.id} 
             groupId={enrollment.groupId} 
             groupName={groups.find(g => g.id === enrollment.groupId)?.name || 'Kelompok'}
+            currentUser={user ? { id: user.uid, name: user.displayName } : null}
           />
         ) : activeStep === 'pre-test' && preTest ? (
               enrollment?.preTestScore !== null ? (
@@ -877,5 +880,14 @@ export default function TrainingPage() {
         )}
       </main>
     </div>
-  );
+
+    {/* Group Chat Bubble */}
+    {training?.learningModel === 'GROUP' && training?.enableGroupChat && enrollment?.groupId && (
+      <GroupChatBubble 
+        groupId={enrollment.groupId} 
+        currentUser={user ? { id: user.uid, name: user.displayName } : null} 
+      />
+    )}
+  </>
+);
 }
