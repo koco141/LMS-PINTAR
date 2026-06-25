@@ -86,7 +86,7 @@ export default function GroupInfoWidget({
                 {m.enrollment.isGroupLeader ? <Crown size={16} style={{ color: '#eab308' }} /> : <UserIcon size={16} style={{ color: 'var(--text-muted)' }} />}
               </div>
               <div>
-                <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem' }}>{m.user?.name || 'User Tanpa Nama'} {m.user?.id === currentUser?.id ? '(Anda)' : ''}</p>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem' }}>{m.user?.fullName || m.user?.name || 'User Tanpa Nama'} {m.user?.id === currentUser?.id ? '(Anda)' : ''}</p>
                 <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   {m.enrollment.isGroupLeader ? '👑 Ketua Kelompok' : 'Anggota'}
                 </p>

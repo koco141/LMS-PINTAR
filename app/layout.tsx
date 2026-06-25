@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import Navbar from '@/components/Navbar';
 import CompleteProfileModal from '@/components/CompleteProfileModal';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -34,6 +35,7 @@ export default function RootLayout({
           <CompleteProfileModal />
           <main>{children}</main>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

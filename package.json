@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "chart.js": "^4.5.1",
     "date-fns": "^4.4.0",
     "firebase": "^12.14.0",

@@ -40,7 +40,7 @@ type ActiveStep = 'pre-test' | 'module' | 'post-test' | 'completed';
 
 export default function TrainingPage() {
   const { token } = useParams<{ token: string }>();
-  const { user, loading: authLoading, signInWithGoogle } = useAuth();
+  const { user, userProfile, loading: authLoading, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   const [training, setTraining] = useState<Training | null>(null);
@@ -631,7 +631,7 @@ export default function TrainingPage() {
             trainingId={training.id} 
             groupId={enrollment.groupId} 
             groupName={groups.find(g => g.id === enrollment.groupId)?.name || 'Kelompok'}
-            currentUser={user ? { id: user.uid, name: user.displayName } : null}
+            currentUser={userProfile ? { id: userProfile.id, name: userProfile.fullName || userProfile.name } : user ? { id: user.uid, name: user.displayName } : null}
           />
         ) : activeStep === 'pre-test' && preTest ? (
               enrollment?.preTestScore !== null ? (
@@ -885,7 +885,7 @@ export default function TrainingPage() {
     {training?.learningModel === 'GROUP' && training?.enableGroupChat && enrollment?.groupId && (
       <GroupChatBubble 
         groupId={enrollment.groupId} 
-        currentUser={user ? { id: user.uid, name: user.displayName } : null} 
+        currentUser={userProfile ? { id: userProfile.id, name: userProfile.fullName || userProfile.name } : user ? { id: user.uid, name: user.displayName } : null} 
       />
     )}
   </>
