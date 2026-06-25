@@ -93,7 +93,7 @@ export default function GroupInfoWidget({
               </div>
             </div>
             
-            {!m.enrollment.isGroupLeader && m.user?.id && (
+            {!m.enrollment.isGroupLeader && m.user?.id && members.some(member => member.user?.id === currentUser?.id && member.enrollment.isGroupLeader) && (
               <button 
                 className="btn btn-secondary btn-sm"
                 onClick={() => handleMakeLeader(m.user!.id)}
