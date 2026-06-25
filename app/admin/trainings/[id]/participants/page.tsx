@@ -16,7 +16,7 @@ interface ParticipantRow {
   preTestScore: number | null;
   postTestScore: number | null;
   totalAssignmentScore: number;
-  finalScore: number;
+  finalScore: number | null;
   passed: boolean;
   completedModules: number;
   totalModules: number;
@@ -87,17 +87,19 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
         const avgTaskScore = tModules.length > 0 ? sumTask / tModules.length : 0;
         
         const level = t?.targetLevel || 5;
-        let finalScore = e.postTestScore || 0;
+        let finalScore = e.postTestScore !== undefined && e.postTestScore !== null ? e.postTestScore : null;
+        let passed = false;
         
-        if (tModules.length > 0) {
-          if (level >= 3) {
-            finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
-          } else {
-            finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
+        if (finalScore !== null) {
+          if (tModules.length > 0) {
+            if (level >= 3) {
+              finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
+            } else {
+              finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
+            }
           }
+          passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
         }
-        
-        const passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
 
         const validCompletedCount = (e.completedModules || []).filter((id: string) => modules.some(m => m.id === id)).length;
 
@@ -205,8 +207,8 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
         if (modules.some(m => m.type === 'tugas')) {
           row['Nilai Tugas'] = p.totalAssignmentScore;
         }
-        row['Nilai Akhir'] = p.finalScore;
-        row['Status Lulus'] = p.passed ? 'LULUS' : 'GAGAL';
+        row['Nilai Akhir'] = p.finalScore !== null ? p.finalScore : 'Belum';
+        row['Status Lulus'] = p.finalScore === null ? 'BELUM LULUS' : (p.passed ? 'LULUS' : 'GAGAL');
         row['Progress (%)'] = p.progress;
         return row;
       });
@@ -255,7 +257,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
             p.postTestScore ?? 'Belum',
           ];
           if (exportHasTugas) row.push(p.totalAssignmentScore);
-          row.push(p.finalScore, p.passed ? 'LULUS' : 'GAGAL');
+          row.push(p.finalScore !== null ? p.finalScore : 'Belum', p.finalScore === null ? 'BELUM LULUS' : (p.passed ? 'LULUS' : 'GAGAL'));
           return row;
         }),
         styles: { fontSize: 9, cellPadding: 4 },
@@ -678,11 +680,13 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
                     )}
                     <td>
                       <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
-                        {p.finalScore}
+                        {p.finalScore !== null ? p.finalScore : '—'}
                       </span>
                     </td>
                     <td>
-                      {p.passed ? (
+                      {p.finalScore === null ? (
+                        <span style={{ color: 'var(--text-muted)', fontWeight: '700', padding: '4px 8px', background: 'var(--bg-secondary)', borderRadius: '4px', fontSize: '0.8rem' }}>BELUM LULUS</span>
+                      ) : p.passed ? (
                         <span style={{ color: '#16a34a', fontWeight: '700', padding: '4px 8px', background: '#dcfce7', borderRadius: '4px', fontSize: '0.8rem' }}>LULUS</span>
                       ) : (
                         <span style={{ color: '#dc2626', fontWeight: '700', padding: '4px 8px', background: '#fee2e2', borderRadius: '4px', fontSize: '0.8rem' }}>BELUM LULUS</span>

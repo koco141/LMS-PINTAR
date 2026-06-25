@@ -134,37 +134,46 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
   if (enrollments.length > 0) {
     let sumTotalFinal = 0;
     let sumTotalTask = 0;
+    let validFinalCount = 0;
     
     enrollments.forEach(e => {
       let eSumTask = 0;
       const assignmentScores = (e as any).assignmentScores || {};
       tModules.forEach(m => { eSumTask += (Number(assignmentScores[m.id]) || 0); });
       const eAvgTask = tModules.length > 0 ? eSumTask / tModules.length : 0;
-      sumTotalTask += eAvgTask;
       
-      let eFinal = e.postTestScore || 0;
-      const tLvl = training?.targetLevel || 5;
-      if (tModules.length > 0) {
-        if (tLvl >= 3) {
-          eFinal = (eFinal * 0.4) + (eAvgTask * 0.6);
-        } else {
-          eFinal = (eFinal * 0.7) + (eAvgTask * 0.3);
+      let eFinal = e.postTestScore;
+      
+      // Option 1 & 2: Ignore enrollments without post-test scores
+      if (eFinal !== undefined && eFinal !== null) {
+        sumTotalTask += eAvgTask;
+        
+        const tLvl = training?.targetLevel || 5;
+        if (tModules.length > 0) {
+          if (tLvl >= 3) {
+            eFinal = (eFinal * 0.4) + (eAvgTask * 0.6);
+          } else {
+            eFinal = (eFinal * 0.7) + (eAvgTask * 0.3);
+          }
         }
+        sumTotalFinal += eFinal;
+        validFinalCount++;
+        
+        let passed = false;
+        if (tLvl >= 3) {
+          passed = eFinal >= 75;
+        } else {
+          passed = eFinal >= 70;
+        }
+        if (passed) passedCount++;
       }
-      sumTotalFinal += eFinal;
-      
-      let passed = false;
-      if (tLvl >= 3) {
-        passed = eFinal >= 75;
-      } else {
-        passed = eFinal >= 70;
-      }
-      if (passed) passedCount++;
     });
     
-    avgTaskScore = sumTotalTask / enrollments.length;
-    avgFinalScore = sumTotalFinal / enrollments.length;
+    avgTaskScore = validFinalCount > 0 ? sumTotalTask / validFinalCount : 0;
+    avgFinalScore = validFinalCount > 0 ? sumTotalFinal / validFinalCount : 0;
   }
+  
+  const validCompletedEnrollments = enrollments.filter(e => e.postTestScore !== undefined && e.postTestScore !== null).length;
 
   const delta = avgPostTestScore - avgPreTestScore;
 
@@ -494,7 +503,7 @@ export default function AnalyticsPage({ params, onReady }: { params: Promise<{ i
           {training?.method === 'luring' && training?.province && (
             <> di <strong>{toTitleCase(training.city || '')}</strong>, Provinsi <strong>{toTitleCase(training.province)}</strong></>
           )}
-          {' '}ini berhasil mencapai tingkat kelulusan peserta sebesar <strong>{enrollments.length > 0 ? Math.round((passedCount / enrollments.length) * 100) : 0}%</strong>. Dengan hasil tersebut, tingkat kompetensi peserta saat ini berada pada:
+          {' '}ini berhasil mencapai tingkat kelulusan peserta sebesar <strong>{validCompletedEnrollments > 0 ? Math.round((passedCount / validCompletedEnrollments) * 100) : 0}%</strong> (dari {validCompletedEnrollments} peserta yang menyelesaikan Post-Test). Dengan hasil tersebut, tingkat kompetensi rata-rata kelas saat ini berada pada:
         </p>
         
         <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', width: '100%', marginBottom: '20px' }}>
