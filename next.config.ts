@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['lh3.googleusercontent.com', 'googleusercontent.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'googleusercontent.com' },
+      { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
+    ],
   },
   // Allow iframe from Google Slides
   async headers() {

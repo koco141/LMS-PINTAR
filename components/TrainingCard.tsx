@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Training } from '@/lib/db';
 import { format } from 'date-fns';
@@ -47,14 +48,24 @@ export default function TrainingCard({ training, index = 0, isEnrolled = false }
   };
 
   const isImageCover = training.coverColor && (training.coverColor.startsWith('data:') || training.coverColor.startsWith('http') || !training.coverColor.includes('gradient'));
-  const coverStyle = isImageCover 
-    ? { backgroundImage: `url(${training.coverColor})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }
-    : { background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)' };
+  
+  const coverStyle = !isImageCover 
+    ? { background: training.coverColor || coverGradient }
+    : undefined;
 
   return (
     <div className={styles.card} style={{ animationDelay: `${index * 0.08}s` }}>
       {/* Cover */}
       <div className={styles.cover} style={coverStyle}>
+        {isImageCover && (
+          <Image 
+            src={training.coverColor!} 
+            alt={training.title} 
+            fill 
+            style={{ objectFit: 'cover' }} 
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        )}
         <div className={styles.coverOverlay} />
       </div>
 
