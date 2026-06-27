@@ -11,6 +11,7 @@ interface EnrollmentWithTraining {
   enrollment: Enrollment;
   training: Training;
   isPassed: boolean;
+  finalScore: number;
 }
 
 export default function DashboardPage() {
@@ -54,7 +55,7 @@ export default function DashboardPage() {
         
         const isPassed = e.postTestScore !== null ? (level >= 3 ? finalScore >= 75 : finalScore >= 70) : false;
 
-        return { enrollment: e, training, isPassed };
+        return { enrollment: e, training, isPassed, finalScore };
       })
     );
     setData(withTraining.filter(Boolean) as EnrollmentWithTraining[]);
@@ -138,7 +139,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className={styles.enrollmentList}>
-            {data.map(({ enrollment, training, isPassed }) => {
+            {data.map(({ enrollment, training, isPassed, finalScore }) => {
               const totalMods = enrollment.completedModules.length;
               const isFinished = enrollment.postTestScore !== null;
               return (
@@ -189,10 +190,9 @@ export default function DashboardPage() {
                     </div>
                     {enrollment.preTestScore !== null && enrollment.postTestScore !== null && (
                       <div className={styles.enrollStatItem}>
-                        <span className={styles.enrollStatLabel}>Peningkatan</span>
-                        <span className={styles.enrollStatVal} style={{ color: 'var(--primary-light)' }}>
-                          {enrollment.postTestScore - enrollment.preTestScore > 0 ? '+' : ''}
-                          {enrollment.postTestScore - enrollment.preTestScore} poin
+                        <span className={styles.enrollStatLabel}>Nilai Akhir</span>
+                        <span className={styles.enrollStatVal} style={{ color: isPassed ? '#16a34a' : '#dc2626' }}>
+                          {finalScore} poin
                         </span>
                       </div>
                     )}
