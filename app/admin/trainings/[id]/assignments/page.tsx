@@ -41,6 +41,7 @@ export default function AssignmentsPage() {
   const [taskModules, setTaskModules] = useState<Module[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   
   // State for tracking inline edits: { [userId_moduleId]: value }
   const [editingScores, setEditingScores] = useState<Record<string, string>>({});
@@ -106,11 +107,30 @@ export default function AssignmentsPage() {
     setPageLoading(false);
   };
 
-  const filteredParticipants = participants.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredParticipants = participants.filter((p) => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.email.toLowerCase().includes(search.toLowerCase());
+    if (!matchSearch) return false;
+    
+    if (filterStatus === 'all') return true;
+
+    const submittedCount = taskModules.filter(m => p.assignments[m.id] || p.assignmentTexts[m.id]).length;
+    const gradedCount = taskModules.filter(m => p.assignmentScores[m.id] !== undefined && p.assignmentScores[m.id] > 0).length;
+
+    if (filterStatus === 'complete') {
+      return submittedCount === taskModules.length && taskModules.length > 0;
+    }
+    if (filterStatus === 'incomplete') {
+      return submittedCount < taskModules.length;
+    }
+    if (filterStatus === 'ungraded') {
+      return submittedCount > 0 && gradedCount < submittedCount;
+    }
+    if (filterStatus === 'graded') {
+      return submittedCount > 0 && gradedCount === submittedCount;
+    }
+
+    return true;
+  });
 
   const handleScoreChange = (userId: string, moduleId: string, val: string) => {
     setEditingScores(prev => ({
@@ -219,15 +239,27 @@ export default function AssignmentsPage() {
           </div>
         ) : (
           <div className="card" style={{ padding: '24px' }}>
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="text"
                 placeholder="Cari nama atau email peserta..."
                 className="form-input"
-                style={{ maxWidth: '400px' }}
+                style={{ maxWidth: '400px', flex: 1, minWidth: '250px' }}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              <select
+                className="form-input"
+                style={{ width: 'auto', minWidth: '200px' }}
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">Semua Status Kumpul</option>
+                <option value="complete">Sudah Kumpul Semua</option>
+                <option value="incomplete">Belum Lengkap</option>
+                <option value="ungraded">Perlu Dinilai</option>
+                <option value="graded">Selesai Dinilai</option>
+              </select>
             </div>
 
             {filteredParticipants.length === 0 ? (
