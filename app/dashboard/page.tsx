@@ -12,6 +12,7 @@ interface EnrollmentWithTraining {
   training: Training;
   isPassed: boolean;
   finalScore: number;
+  hasUngradedTasks: boolean;
 }
 
 export default function DashboardPage() {
@@ -38,8 +39,16 @@ export default function DashboardPage() {
         
         const tModules = modules.filter(m => m.type === 'tugas');
         let sumTask = 0;
+        let hasUngradedTasks = false;
         const assignmentScores = e.assignmentScores || {};
-        tModules.forEach(m => { sumTask += (Number(assignmentScores[m.id]) || 0); });
+        tModules.forEach(m => {
+          sumTask += (Number(assignmentScores[m.id]) || 0);
+          const isSubmitted = e.assignments?.[m.id] || e.assignmentTexts?.[m.id] || e.completedModules?.includes(m.id);
+          const isGraded = assignmentScores[m.id] !== undefined && assignmentScores[m.id] !== null;
+          if (isSubmitted && !isGraded) {
+            hasUngradedTasks = true;
+          }
+        });
         const avgTaskScore = tModules.length > 0 ? sumTask / tModules.length : 0;
         
         const level = training.targetLevel || 5;
@@ -55,7 +64,7 @@ export default function DashboardPage() {
         
         const isPassed = e.postTestScore !== null ? (level >= 3 ? finalScore >= 75 : finalScore >= 70) : false;
 
-        return { enrollment: e, training, isPassed, finalScore };
+        return { enrollment: e, training, isPassed, finalScore, hasUngradedTasks };
       })
     );
     setData(withTraining.filter(Boolean) as EnrollmentWithTraining[]);
@@ -139,7 +148,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className={styles.enrollmentList}>
-            {data.map(({ enrollment, training, isPassed, finalScore }) => {
+            {data.map(({ enrollment, training, isPassed, finalScore, hasUngradedTasks }) => {
               const totalMods = enrollment.completedModules.length;
               const isFinished = enrollment.postTestScore !== null;
               return (
@@ -167,12 +176,19 @@ export default function DashboardPage() {
                         {training.status === 'ongoing' ? 'Berlangsung' : training.status === 'upcoming' ? 'Akan Datang' : 'Selesai'}
                       </span>
                     </div>
-                    <a href={`/training/${training.token}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                      {isFinished
-                        ? <><BarChart2 size={13} />Lihat</>
-                        : <><Play size={13} />Lanjutkan</>
-                      }
-                    </a>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                      <a href={`/training/${training.token}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        {isFinished
+                          ? <><BarChart2 size={13} />Lihat</>
+                          : <><Play size={13} />Lanjutkan</>
+                        }
+                      </a>
+                      {hasUngradedTasks && (
+                        <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 600 }}>
+                          *Tugas Belum di Nilai
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className={styles.enrollmentStats}>
