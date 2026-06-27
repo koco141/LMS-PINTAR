@@ -101,7 +101,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
           passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
         }
 
-        const validCompletedCount = (e.completedModules || []).filter((id: string) => modules.some(m => m.id === id)).length;
+        const validCompletedCount = (e.completedModules || []).filter((id: string) => fetchedModules.some(m => m.id === id)).length;
 
         return {
           userId: e.userId,
