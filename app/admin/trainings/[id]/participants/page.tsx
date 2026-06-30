@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getModules, getUserById, Training, Enrollment, deleteEnrollment, Module, getGroups, createGroup, deleteGroup, assignUserToGroup, Group } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getModules, getUsersByIds, getUserById, Training, Enrollment, deleteEnrollment, Module, getGroups, createGroup, deleteGroup, assignUserToGroup, Group } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { Users, BarChart2, FileText, Trash2, Loader2, ArrowLeft, ClipboardList, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
@@ -75,54 +75,56 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
       if (inst) setInstructorName(inst.fullName || inst.name || '-');
     }
 
-    const rows = await Promise.all(
-      enrollments.map(async (e) => {
-        const u: any = await getUserById(e.userId);
-        
-        const assignmentScores = (e as any).assignmentScores || {};
-        const tModules = fetchedModules.filter(m => m.type === 'tugas');
-        
-        let sumTask = 0;
-        tModules.forEach(m => { sumTask += (Number(assignmentScores[m.id]) || 0); });
-        const avgTaskScore = tModules.length > 0 ? sumTask / tModules.length : 0;
-        
-        const level = t?.targetLevel || 5;
-        let finalScore = e.postTestScore !== undefined && e.postTestScore !== null ? e.postTestScore : null;
-        let passed = false;
-        
-        if (finalScore !== null) {
-          if (tModules.length > 0) {
-            if (level >= 3) {
-              finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
-            } else {
-              finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
-            }
+    const userIds = enrollments.map(e => e.userId);
+    const users = await getUsersByIds(userIds);
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    const rows = enrollments.map((e) => {
+      const u = userMap.get(e.userId);
+      
+      const assignmentScores = (e as any).assignmentScores || {};
+      const tModules = fetchedModules.filter(m => m.type === 'tugas');
+      
+      let sumTask = 0;
+      tModules.forEach(m => { sumTask += (Number(assignmentScores[m.id]) || 0); });
+      const avgTaskScore = tModules.length > 0 ? sumTask / tModules.length : 0;
+      
+      const level = t?.targetLevel || 5;
+      let finalScore = e.postTestScore !== undefined && e.postTestScore !== null ? e.postTestScore : null;
+      let passed = false;
+      
+      if (finalScore !== null) {
+        if (tModules.length > 0) {
+          if (level >= 3) {
+            finalScore = Math.round((finalScore * 0.4) + (avgTaskScore * 0.6));
+          } else {
+            finalScore = Math.round((finalScore * 0.7) + (avgTaskScore * 0.3));
           }
-          passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
         }
+        passed = level >= 3 ? finalScore >= 75 : finalScore >= 70;
+      }
 
-        const validCompletedCount = (e.completedModules || []).filter((id: string) => fetchedModules.some(m => m.id === id)).length;
+      const validCompletedCount = (e.completedModules || []).filter((id: string) => fetchedModules.some(m => m.id === id)).length;
 
-        return {
-          userId: e.userId,
-          name: u?.fullName || u?.name || 'Anonim',
-          email: u?.email || '',
-          photoURL: u?.photoURL || null,
-          preTestScore: e.preTestScore,
-          postTestScore: e.postTestScore,
-          totalAssignmentScore: Math.round(avgTaskScore),
-          finalScore,
-          passed,
-          completedModules: validCompletedCount,
-          totalModules: fetchedModules.length,
-          progress: fetchedModules.length > 0 ? Math.round((validCompletedCount / fetchedModules.length) * 100) : 0,
-          enrolledAt: e.enrolledAt,
-          assignments: e.assignments,
-          groupId: e.groupId || null,
-          isGroupLeader: e.isGroupLeader || false,
-        };
-      })
-    );
+      return {
+        userId: e.userId,
+        name: u?.fullName || u?.name || 'Anonim',
+        email: u?.email || '',
+        photoURL: u?.photoURL || null,
+        preTestScore: e.preTestScore,
+        postTestScore: e.postTestScore,
+        totalAssignmentScore: Math.round(avgTaskScore),
+        finalScore,
+        passed,
+        completedModules: validCompletedCount,
+        totalModules: fetchedModules.length,
+        progress: fetchedModules.length > 0 ? Math.round((validCompletedCount / fetchedModules.length) * 100) : 0,
+        enrolledAt: e.enrolledAt,
+        assignments: e.assignments,
+        groupId: e.groupId || null,
+        isGroupLeader: e.isGroupLeader || false,
+      };
+    });
 
     rows.sort((a, b) => (b.postTestScore || 0) - (a.postTestScore || 0));
     setParticipants(rows);

@@ -64,6 +64,7 @@ export default function TrainingCard({ training, index = 0, isEnrolled = false }
             fill 
             style={{ objectFit: 'cover' }} 
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={index === 0}
           />
         )}
         <div className={styles.coverOverlay} />

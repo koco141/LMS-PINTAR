@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getModules, getUserById, updateAssignmentScore, Training, Module } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getModules, getUsersByIds, updateAssignmentScore, Training, Module } from '@/lib/db';
 import Link from 'next/link';
 import { ClipboardEdit, BookOpen, ExternalLink, Users, BarChart2, ArrowLeft, FileText, X } from 'lucide-react';
 
@@ -71,35 +71,38 @@ export default function AssignmentsPage() {
     const tModules = modules.filter(m => m.type === 'tugas');
     setTaskModules(tModules);
 
-    const rows = await Promise.all(
-      enrollments.map(async (e) => {
-        const u: any = await getUserById(e.userId);
-        const scores = (e as any).assignmentScores || {};
-        
-        let sumProduct = 0;
-        let sumWeight = 0;
-        tModules.forEach(m => {
-          const score = Number(scores[m.id]) || 0;
-          const weight = getTaskWeight(m.competencyCategory);
-          sumProduct += score * weight;
-          sumWeight += weight;
-        });
-        const total = sumWeight > 0 ? Math.round(sumProduct / sumWeight) : 0;
+    // Fetch all users in one batch
+    const userIds = enrollments.map(e => e.userId);
+    const users = await getUsersByIds(userIds);
+    const userMap = new Map(users.map(u => [u.id, u]));
 
-        return {
-          userId: e.userId,
-          name: u?.fullName || u?.name || 'Anonim',
-          email: u?.email || '',
-          assignments: e.assignments || {},
-          assignmentTexts: (e as any).assignmentTexts || {},
-          assignmentScores: scores,
-          assignmentRubrics: (e as any).assignmentRubrics || {},
-          totalScore: total,
-          groupId: e.groupId || null,
-          isGroupLeader: e.isGroupLeader || false,
-        };
-      })
-    );
+    const rows = enrollments.map((e) => {
+      const u = userMap.get(e.userId);
+      const scores = (e as any).assignmentScores || {};
+      
+      let sumProduct = 0;
+      let sumWeight = 0;
+      tModules.forEach(m => {
+        const score = Number(scores[m.id]) || 0;
+        const weight = getTaskWeight(m.competencyCategory);
+        sumProduct += score * weight;
+        sumWeight += weight;
+      });
+      const total = sumWeight > 0 ? Math.round(sumProduct / sumWeight) : 0;
+
+      return {
+        userId: e.userId,
+        name: u?.fullName || u?.name || 'Anonim',
+        email: u?.email || '',
+        assignments: e.assignments || {},
+        assignmentTexts: (e as any).assignmentTexts || {},
+        assignmentScores: scores,
+        assignmentRubrics: (e as any).assignmentRubrics || {},
+        totalScore: total,
+        groupId: e.groupId || null,
+        isGroupLeader: e.isGroupLeader || false,
+      };
+    });
 
     // Sort by name
     rows.sort((a, b) => a.name.localeCompare(b.name));

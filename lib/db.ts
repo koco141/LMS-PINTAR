@@ -14,6 +14,7 @@ import {
   setDoc,
   increment,
   arrayUnion,
+  documentId,
 } from 'firebase/firestore';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -630,6 +631,25 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
   } catch (err) {
     console.error("Error in getUserById:", err);
     return null;
+  }
+}
+
+export async function getUsersByIds(userIds: string[]): Promise<AppUser[]> {
+  if (!userIds || userIds.length === 0) return [];
+  const uniqueIds = Array.from(new Set(userIds));
+  const users: AppUser[] = [];
+  
+  try {
+    for (let i = 0; i < uniqueIds.length; i += 30) {
+      const batch = uniqueIds.slice(i, i + 30);
+      const q = query(collection(db, 'users'), where(documentId(), 'in', batch));
+      const snap = await getDocs(q);
+      snap.docs.forEach(d => users.push({ id: d.id, ...d.data() } as AppUser));
+    }
+    return users;
+  } catch (err) {
+    console.error("Error in getUsersByIds:", err);
+    return [];
   }
 }
 
