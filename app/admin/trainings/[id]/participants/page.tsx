@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { getTrainingById, getTrainingEnrollments, getModules, getUsersByIds, getUserById, Training, Enrollment, deleteEnrollment, Module, getGroups, createGroup, deleteGroup, assignUserToGroup, Group } from '@/lib/db';
+import { getTrainingById, getTrainingEnrollments, getModules, getUsersByIds, getUserById, Training, Enrollment, deleteEnrollment, Module, getGroups, createGroup, deleteGroup, assignUserToGroup, Group, getQuiz } from '@/lib/db';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { Users, BarChart2, FileText, Trash2, Loader2, ArrowLeft, ClipboardList, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
@@ -15,6 +15,7 @@ interface ParticipantRow {
   photoURL: string | null;
   preTestScore: number | null;
   postTestScore: number | null;
+  selfAssessmentScore: number | null;
   totalAssignmentScore: number;
   finalScore: number | null;
   passed: boolean;
@@ -43,6 +44,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroupName, setNewGroupName] = useState('');
   const [randomGroupCount, setRandomGroupCount] = useState<number | ''>('');
+  const [hasSelfAssessment, setHasSelfAssessment] = useState(false);
   
   const [sortConfig, setSortConfig] = useState<{ key: keyof ParticipantRow | '', direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
 
@@ -52,12 +54,15 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
   }, [user, isAdmin, isInstructor, loading, id]);
 
   const loadData = async () => {
-    const [t, enrollments, fetchedModules, fetchedGroups] = await Promise.all([
+    const [t, enrollments, fetchedModules, fetchedGroups, postTestQuiz] = await Promise.all([
       getTrainingById(id),
       getTrainingEnrollments(id),
       getModules(id),
       getGroups(id),
+      getQuiz(id, 'post-test'),
     ]);
+
+    setHasSelfAssessment(postTestQuiz?.hasSelfAssessment || false);
 
     if (t) {
       if (isInstructor && !isAdmin && t.instructorId !== user?.uid) {
@@ -113,6 +118,9 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
         photoURL: u?.photoURL || null,
         preTestScore: e.preTestScore,
         postTestScore: e.postTestScore,
+        selfAssessmentScore: e.postTestSelfAssessment && e.postTestSelfAssessment.length > 0 
+          ? Number((e.postTestSelfAssessment.reduce((a: number,b: number)=>a+b, 0) / e.postTestSelfAssessment.length).toFixed(1)) 
+          : null,
         totalAssignmentScore: Math.round(avgTaskScore),
         finalScore,
         passed,
@@ -206,6 +214,9 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
           'Pre-Test': p.preTestScore ?? 'Belum',
           'Post-Test': p.postTestScore ?? 'Belum',
         };
+        if (hasSelfAssessment) {
+          row['Self Assesment'] = p.selfAssessmentScore !== null ? p.selfAssessmentScore : 'Belum';
+        }
         if (modules.some(m => m.type === 'tugas')) {
           row['Nilai Tugas'] = p.totalAssignmentScore;
         }
@@ -243,9 +254,10 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
       doc.text(`Pelaksanaan: ${startDateStr} - ${endDateStr} | Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 28);
 
       const exportHasTugas = modules.some(m => m.type === 'tugas');
-      const headRow = exportHasTugas
-        ? ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Tugas', 'Akhir', 'Status']
-        : ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test', 'Akhir', 'Status'];
+      const headRow = ['No', 'Nama', 'Email', 'Pre-Test', 'Post-Test'];
+      if (hasSelfAssessment) headRow.push('Self Assesment');
+      if (exportHasTugas) headRow.push('Tugas');
+      headRow.push('Akhir', 'Status');
 
       autoTable(doc, {
         startY: 34,
@@ -258,6 +270,7 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
             p.preTestScore ?? 'Belum',
             p.postTestScore ?? 'Belum',
           ];
+          if (hasSelfAssessment) row.push(p.selfAssessmentScore !== null ? p.selfAssessmentScore : 'Belum');
           if (exportHasTugas) row.push(p.totalAssignmentScore);
           row.push(p.finalScore !== null ? p.finalScore : 'Belum', p.finalScore === null ? 'BELUM LULUS' : (p.passed ? 'LULUS' : 'GAGAL'));
           return row;
@@ -629,6 +642,11 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
                   <th onClick={() => requestSort('postTestScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>Post-Test <SortIcon columnKey="postTestScore" /></div>
                   </th>
+                  {hasSelfAssessment && (
+                    <th onClick={() => requestSort('selfAssessmentScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>Self Assesment <SortIcon columnKey="selfAssessmentScore" /></div>
+                    </th>
+                  )}
                   {hasTugas && (
                     <th onClick={() => requestSort('totalAssignmentScore')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                       <div style={{ display: 'flex', alignItems: 'center' }}>Nilai Tugas <SortIcon columnKey="totalAssignmentScore" /></div>
@@ -673,6 +691,13 @@ export default function ParticipantsPage({ onReady }: { onReady?: () => void }) 
                         {p.postTestScore !== null ? `${p.postTestScore}` : '—'}
                       </span>
                     </td>
+                    {hasSelfAssessment && (
+                      <td>
+                        <span style={{ color: '#8b5cf6', fontWeight: '700' }}>
+                          {p.selfAssessmentScore !== null ? `${p.selfAssessmentScore}` : '—'}
+                        </span>
+                      </td>
+                    )}
                     {hasTugas && (
                       <td>
                         <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
